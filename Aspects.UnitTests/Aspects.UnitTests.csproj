@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+
+        <IsPackable>false</IsPackable>
+
+        <AssemblyName>SoftCube.Aspects.UnitTests</AssemblyName>
+
+        <RootNamespace>SoftCube.Aspects.UnitTests</RootNamespace>
+
+        <Platforms>AnyCPU;x64;x86</Platforms>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+        <PackageReference Include="SoftCube.Log" Version="1.0.1" />
+        <PackageReference Include="xunit" Version="2.4.1" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector" Version="1.1.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Aspects.Injector\Aspects.Injector.csproj" />
+      <ProjectReference Include="..\Aspects\Aspects.csproj" />
+    </ItemGroup>
+
+    <!--アスペクトコードを注入します。-->
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="$(SolutionDir)\Aspects.Injector\$(OutDir)\SoftCube.Aspects.Injector.exe $(TargetPath)&#xD;&#xA;" />
+    </Target>
+
+</Project>

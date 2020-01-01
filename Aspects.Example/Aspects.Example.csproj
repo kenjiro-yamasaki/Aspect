@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>SoftCube.Aspects.Sample</AssemblyName>
+    <RootNamespace>SoftCube.Aspects.Sample</RootNamespace>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+
+  <!-- Buildターゲットからビルド後に呼び出されるターゲット -->
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="$(SolutionDir)\Aspects.Injector\$(OutDir)\SoftCube.Aspects.Injector.exe $(TargetPath)&#xD;&#xA;" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aspects.Injector\Aspects.Injector.csproj" />
+    <ProjectReference Include="..\Aspects\Aspects.csproj" />
+  </ItemGroup>
+
+
+</Project>

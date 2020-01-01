@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Injectors.Task": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\kenji\\Projects\\Kernel\\src\\Aspects.Sample\\bin\\Debug\\net472\\SoftCube.Aspects.Sample.exe"
+    }
+  }
+}

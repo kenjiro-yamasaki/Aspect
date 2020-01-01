@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>SoftCube.Aspects</AssemblyName>
+    <RootNamespace>SoftCube.Aspects</RootNamespace>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.1" />
+    <PackageReference Include="SoftCube.Log" Version="1.0.1" />
+  </ItemGroup>
+
+</Project>

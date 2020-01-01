@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Injectors": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\kenji\\Projects\\Kernel\\src\\Injectors.Sample\\bin\\x64\\Debug\\net472\\SoftCube.Injectors.Sample.exe"
+    }
+  }
+}
