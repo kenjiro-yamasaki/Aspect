@@ -2,7 +2,7 @@ using SoftCube.Log;
 using System;
 using Xunit;
 
-namespace SoftCube.Aspects.UnitTests
+namespace SoftCube.Aspects
 {
     public class OnMethodBoundaryAspectTests
     {

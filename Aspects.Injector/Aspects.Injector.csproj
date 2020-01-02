@@ -12,5 +12,11 @@
     <ProjectReference Include="..\Aspects\Aspects.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Logger.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 
 </Project>

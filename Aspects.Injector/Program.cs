@@ -1,7 +1,8 @@
 ﻿using Mono.Cecil;
+using SoftCube.Log;
 using System;
-using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace SoftCube.Aspects.Injector
 {
@@ -19,26 +20,43 @@ namespace SoftCube.Aspects.Injector
             try
             {
                 // カスタムコードの注入対象アセンブリファイルパスを取得します。
-                var assemblyFilePath = args[0];
+                var assemblyFilePath      = args[0];
+                var assemblyDirectoryName = Path.GetDirectoryName(assemblyFilePath);
+                var assemblyFileName      = Path.GetFileName(assemblyFilePath);
+
+                //
+                var copyDirectoryName    = Path.Combine(Path.GetTempPath(), "Aspects.Injector");
+                var copyAssemblyFilePath = Path.Combine(copyDirectoryName, assemblyFileName);
+                using (var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyFilePath, new ReaderParameters() { ReadSymbols = true, ReadWrite = true }))
+                {
+                    if (!Directory.Exists(copyDirectoryName))
+                    { 
+                        Directory.CreateDirectory(copyDirectoryName);
+                    }
+                    assemblyDefinition.Write(copyAssemblyFilePath, new WriterParameters() { WriteSymbols = true });
+                }
 
                 // 対象アセンブリを含むディレクトリをカレントディレクトリに変更します。
-                Environment.CurrentDirectory = Path.GetDirectoryName(assemblyFilePath);
+                Environment.CurrentDirectory = assemblyDirectoryName;
 
                 // 対象アセンブリにアスペクト(カスタムコード)を注入します。
-                Console.Out.WriteLine($" Injecting assembly {assemblyFilePath}...");
-                using (var assembly = AssemblyDefinition.ReadAssembly(assemblyFilePath, new ReaderParameters() { ReadSymbols = true, ReadWrite = true }))
+                Logger.Info($" Injecting assembly {assemblyFilePath}...");
+                using (var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyFilePath, new ReaderParameters() { ReadSymbols = true, ReadWrite = true }))
                 {
-                    assembly.Inject();
-                    assembly.Write(new WriterParameters() { WriteSymbols = true });
+                    var assembly = Assembly.LoadFrom(copyAssemblyFilePath);
+
+                    assemblyDefinition.Inject(assembly);
+                    assemblyDefinition.Write(new WriterParameters() { WriteSymbols = true });
                 }
-                Console.Out.WriteLine($" Assembly injection for {assemblyFilePath} complete.");
+
+                Logger.Info($" Assembly injection for {assemblyFilePath} complete.");
 
                 return 0;
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine(ex.Message);
-                Console.Error.WriteLine(ex.StackTrace.ToString());
+                Logger.Error(ex.Message);
+                Logger.Error(ex.StackTrace.ToString());
 
                 return -1;
             }

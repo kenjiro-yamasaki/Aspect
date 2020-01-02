@@ -7,7 +7,7 @@
 
         <AssemblyName>SoftCube.Aspects.UnitTests</AssemblyName>
 
-        <RootNamespace>SoftCube.Aspects.UnitTests</RootNamespace>
+        <RootNamespace>SoftCube.Aspects</RootNamespace>
 
         <Platforms>AnyCPU;x64;x86</Platforms>
     </PropertyGroup>

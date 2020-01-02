@@ -1,6 +1,7 @@
-﻿using System;
+﻿using SoftCube.Log;
+using System;
 
-namespace SoftCube.Aspects.Sample
+namespace SoftCube.Aspects
 {
     /// <summary>
     /// プログラム。
@@ -13,8 +14,8 @@ namespace SoftCube.Aspects.Sample
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
+            //Logger.Add(new ConsoleAppender());
             new LoggerTest().Test("BBB", 101, DateTime.Now);
-
             Console.Read();
         }
     }
@@ -31,7 +32,7 @@ namespace SoftCube.Aspects.Sample
         [LoggerAspect]
         public string Test(string arg0, int arg1, DateTime arg2)
         {
-            Console.WriteLine($"{arg0},{arg1},{arg2}");
+            Logger.Info($"{arg0},{arg1},{arg2}");
             return arg0;
             throw new Exception();
         }

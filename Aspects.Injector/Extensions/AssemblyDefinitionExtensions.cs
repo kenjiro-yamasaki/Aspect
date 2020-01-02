@@ -1,25 +1,25 @@
 ﻿using Mono.Cecil;
-using Mono.Cecil.Pdb;
-using System.Linq;
+using System.Reflection;
 
 namespace SoftCube.Aspects.Injector
 {
     /// <summary>
-    /// AssemblyDefinitionの拡張メソッド。
+    /// <see cref="AssemblyDefinition"/> の拡張メソッド。
     /// </summary>
     internal static class AssemblyDefinitionExtensions
     {
         #region 静的メソッド
 
         /// <summary>
-        /// アスペクト(カスタムコード)を注入します。
+        /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="assembly">注入対象のアセンブリ</param>
-        internal static void Inject(this AssemblyDefinition assembly)
+        /// <param name="assemblyDefinition">注入対象の <see cref="AssemblyDefinition"/>。</param>
+        /// <param name="assembly">アセンブリ。</param>
+        internal static void Inject(this AssemblyDefinition assemblyDefinition, Assembly assembly)
         {
-            foreach (var module in assembly.Modules)
+            foreach (var module in assemblyDefinition.Modules)
             {
-                module.Inject();
+                module.Inject(assembly);
             }
         }
 
