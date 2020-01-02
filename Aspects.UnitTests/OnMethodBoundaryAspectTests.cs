@@ -98,46 +98,7 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        #region 戻り値あり
-
-        #region string
-
-        [TestAspect]
-        public string stringの変数()
-        {
-            string result = "B";
-            Logger.Trace("A");
-            return result;
-        }
-
-        [Fact]
-        public void stringの変数_成功する()
-        {
-            var appender = InitializeLogger();
-
-            stringの変数();
-
-            Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
-        }
-
-        [TestAspect]
-        public string stringの値()
-        {
-            Logger.Trace("A");
-            return "B";
-        }
-
-        [Fact]
-        public void stringの値_成功する()
-        {
-            var appender = InitializeLogger();
-
-            stringの値();
-
-            Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
-        }
-
-        #endregion
+        #region 定数の戻り値あり
 
         #region intの定数
 
@@ -1540,8 +1501,162 @@ namespace SoftCube.Aspects
 
         #endregion
 
+        #region doubleの定数
+
+        [TestAspect]
+        public double double_0()
+        {
+            Logger.Trace("A");
+            return 0.0;
+        }
+
+        [TestAspect]
+        public double double_p05()
+        {
+            Logger.Trace("A");
+            return 0.5;
+        }
+
+        [TestAspect]
+        public double double_n05()
+        {
+            Logger.Trace("A");
+            return -0.5;
+        }
+
+        [Fact]
+        public void double_0_成功する()
+        {
+            var appender = InitializeLogger();
+
+            double_0();
+
+            Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+        }
+
+        [Fact]
+        public void double_p05_成功する()
+        {
+            var appender = InitializeLogger();
+
+            double_p05();
+
+            Assert.Equal($"OnEntry A OnSuccess 0.5 OnExit ", appender.ToString());
+        }
+
+        [Fact]
+        public void double_n05_成功する()
+        {
+            var appender = InitializeLogger();
+
+            double_n05();
+
+            Assert.Equal($"OnEntry A OnSuccess -0.5 OnExit ", appender.ToString());
+        }
+
+        #endregion
+
+        #region floatの定数
+
+        [TestAspect]
+        public float float_0()
+        {
+            Logger.Trace("A");
+            return 0.0f;
+        }
+
+        [TestAspect]
+        public float float_p05()
+        {
+            Logger.Trace("A");
+            return 0.5f;
+        }
+
+        [TestAspect]
+        public float float_n05()
+        {
+            Logger.Trace("A");
+            return -0.5f;
+        }
+
+        [Fact]
+        public void float_0_成功する()
+        {
+            var appender = InitializeLogger();
+
+            float_0();
+
+            Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+        }
+
+        [Fact]
+        public void float_p05_成功する()
+        {
+            var appender = InitializeLogger();
+
+            float_p05();
+
+            Assert.Equal($"OnEntry A OnSuccess 0.5 OnExit ", appender.ToString());
+        }
+
+        [Fact]
+        public void float_n05_成功する()
+        {
+            var appender = InitializeLogger();
+
+            float_n05();
+
+            Assert.Equal($"OnEntry A OnSuccess -0.5 OnExit ", appender.ToString());
+        }
+
+        #endregion
 
 
+
+
+
+
+
+
+
+        #region string
+
+        [TestAspect]
+        public string stringの変数()
+        {
+            string result = "B";
+            Logger.Trace("A");
+            return result;
+        }
+
+        [Fact]
+        public void stringの変数_成功する()
+        {
+            var appender = InitializeLogger();
+
+            stringの変数();
+
+            Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
+        }
+
+        [TestAspect]
+        public string stringの値()
+        {
+            Logger.Trace("A");
+            return "B";
+        }
+
+        [Fact]
+        public void stringの値_成功する()
+        {
+            var appender = InitializeLogger();
+
+            stringの値();
+
+            Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
+        }
+
+        #endregion
 
         #region byte
 

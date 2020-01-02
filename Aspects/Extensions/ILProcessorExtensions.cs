@@ -33,6 +33,7 @@ namespace SoftCube.Aspects
                 case Mono.Cecil.MetadataType.UInt16:
                 case Mono.Cecil.MetadataType.Int32:
                 case Mono.Cecil.MetadataType.UInt32:
+                case Mono.Cecil.MetadataType.Double:
                 case Mono.Cecil.MetadataType.Single:
                 case Mono.Cecil.MetadataType.String:
                 case Mono.Cecil.MetadataType.Pointer:
@@ -56,7 +57,6 @@ namespace SoftCube.Aspects
 
                 case Mono.Cecil.MetadataType.Int64:
                 case Mono.Cecil.MetadataType.UInt64:
-                case Mono.Cecil.MetadataType.Double:
                     return processor.Body.Instructions.Last().Previous.Previous.Previous.Previous.Previous;
 
                 default:
@@ -80,26 +80,25 @@ namespace SoftCube.Aspects
             {
                 return processor.Create(source.OpCode, source.Operand as string);
             }
-            else if (source.OpCode == OpCodes.Ldc_I4_0 ||
-                     source.OpCode == OpCodes.Ldc_I4_1 ||
-                     source.OpCode == OpCodes.Ldc_I4_2 ||
-                     source.OpCode == OpCodes.Ldc_I4_3 ||
-                     source.OpCode == OpCodes.Ldc_I4_4 ||
-                     source.OpCode == OpCodes.Ldc_I4_5 ||
-                     source.OpCode == OpCodes.Ldc_I4_6 ||
-                     source.OpCode == OpCodes.Ldc_I4_7 ||
-                     source.OpCode == OpCodes.Ldc_I4_8 ||
-                     source.OpCode == OpCodes.Ldc_I4_M1)
+            else if (source.OpCode == OpCodes.Ldc_I4_0 || source.OpCode == OpCodes.Ldc_I4_1 || source.OpCode == OpCodes.Ldc_I4_2 || source.OpCode == OpCodes.Ldc_I4_3 || source.OpCode == OpCodes.Ldc_I4_4 || source.OpCode == OpCodes.Ldc_I4_5 || source.OpCode == OpCodes.Ldc_I4_6 || source.OpCode == OpCodes.Ldc_I4_7 || source.OpCode == OpCodes.Ldc_I4_8 || source.OpCode == OpCodes.Ldc_I4_M1)
             {
                 return processor.Create(source.OpCode);
             }
             else if (source.OpCode == OpCodes.Ldc_I4_S)
             {
-                return processor.Create(OpCodes.Ldc_I4_S, (sbyte)source.Operand);
+                return processor.Create(source.OpCode, (sbyte)source.Operand);
             }
             else if (source.OpCode == OpCodes.Conv_I8)
             {
                 return processor.Create(source.OpCode);
+            }
+            else if (source.OpCode == OpCodes.Ldc_R4)
+            {
+                return processor.Create(source.OpCode, (float)source.Operand);
+            }
+            else if (source.OpCode == OpCodes.Ldc_R8)
+            {
+                return processor.Create(source.OpCode, (double)source.Operand);
             }
             else
             {

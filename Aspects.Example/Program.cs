@@ -27,13 +27,13 @@ namespace SoftCube.Aspects
     class LoggerTest
     {
         [LoggerAspect]
-        public long 戻り値あり()
+        public double 戻り値あり()
         {
             //var args = new MethodExecutionArgs(null, null);
             //args.ReturnValue = 2;
 
             Logger.Trace("A");
-            return 3;
+            return 0.0;
         }
 
 
