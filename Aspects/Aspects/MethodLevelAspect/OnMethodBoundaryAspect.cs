@@ -50,28 +50,27 @@ namespace SoftCube.Aspects
             var exceptionIndex = processor.Body.Variables.Count();
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
-            var returnValueIndex = processor.Body.Variables.Count();
-            processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(object))));
-
             // 命令を書き換えます。
-            var first = processor.Body.Instructions.First();
-            var last  = processor.Body.Instructions.Last();
-            Instruction tryStart;
-            Instruction handlerStart;
+            var first = processor.FirstInstruction();
+            var last  = processor.LastInstruction();
 
-            if (last.OpCode == OpCodes.Throw)
-            {
-                processor.Append(last = processor.Create(OpCodes.Ret));
-            }
-            else
-            {
-                if (method.HasReturnValue())
-                {
-                    last = last.Previous.Previous.Previous.Previous;
-                }
-            }
+            //var first = processor.Body.Instructions.First();
+            //var last  = processor.Body.Instructions.Last();
+
+            //if (last.OpCode == OpCodes.Throw)
+            //{
+            //    processor.Append(last = processor.Create(OpCodes.Ret));
+            //}
+            //else
+            //{
+            //    if (method.HasReturnValue())
+            //    {
+            //        last = last.Previous.Previous.Previous.Previous;
+            //    }
+            //}
 
             //
+            Instruction tryStart;
             {
                 // OnMethodBoundaryAspect の派生クラスを生成します。
                 processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(new Type[] { }))));
@@ -117,6 +116,11 @@ namespace SoftCube.Aspects
                 {
                     processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
                     processor.InsertBefore(last, processor.Copy(last));
+
+                    if (method.ReturnType.MetadataType == MetadataType.Int64)
+                    {
+                        processor.InsertBefore(last, processor.Copy(last.Next));
+                    }
                     if (method.ReturnType.IsValueType)
                     {
                         processor.InsertBefore(last, processor.Create(OpCodes.Box, method.ReturnType));
@@ -137,6 +141,8 @@ namespace SoftCube.Aspects
 
                 processor.InsertBefore(last, processor.Create(OpCodes.Leave_S, last));
             }
+
+            Instruction handlerStart;
             {
                 // catch の開始位置を挿入します。
                 processor.InsertBefore(last, handlerStart = processor.Create(OpCodes.Stloc, exceptionIndex));
@@ -216,19 +222,6 @@ namespace SoftCube.Aspects
         }
 
         #endregion
-
-
-        //private Instruction Copy(ILProcessor processor, Instruction source)
-        //{
-        //    if (source.OpCode == OpCodes.Ldstr)
-        //    {
-        //        return processor.Create(OpCodes.Ldstr, source.Operand as string);
-        //    }
-        //    else
-        //    {
-        //        throw new NotSupportedException();
-        //    }
-        //}
 
         #endregion
     }
