@@ -14,11 +14,24 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            var result = new Program().戻り値あり();
+            var result = new Program().戻り値();
             Logger.Info(result.ToString());
 
             Console.Read();
         }
+
+        public class Class
+        {
+            public string Property { get; set; }
+        }
+
+        [LoggerAspect]
+        public Class 戻り値()
+        {
+            Logger.Trace("A");
+            return new Class() { Property = "a" };
+        }
+
 
         //[LoggerAspect]
         //public int 戻り値あり()
@@ -27,14 +40,12 @@ namespace SoftCube.Aspects
         //    return 0;
         //}
 
-        [LoggerAspect]
-        public decimal 戻り値あり()
-        {
-            Logger.Trace("A");
-            return 0.0m;
-        }
-
-
+        //[LoggerAspect]
+        //public decimal 戻り値あり()
+        //{
+        //    Logger.Trace("A");
+        //    return 0.0m;
+        //}
     }
 
     //class LoggerTest

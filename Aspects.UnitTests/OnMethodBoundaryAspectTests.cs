@@ -3304,6 +3304,38 @@ namespace SoftCube.Aspects
                     }
                 }
             }
+
+
+            public class @class
+            {
+                public class Class
+                {
+                    public string Property { get; set; }
+
+                    public override string ToString() => Property;
+                }
+
+                [TestAspect]
+                public Class a()
+                {
+                    Logger.Trace("A");
+                    return new Class() { Property = "a" };
+                }
+
+                [Fact]
+                public void a_成功する()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        a();
+
+                        Assert.Equal($"OnEntry A OnSuccess a OnExit ", appender.ToString());
+                    }
+                }
+            }
+
         }
 
 

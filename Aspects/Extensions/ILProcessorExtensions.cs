@@ -51,11 +51,11 @@ namespace SoftCube.Aspects
                 case MetadataType.ValueType:
                 case MetadataType.Int64:
                 case MetadataType.UInt64:
+                case MetadataType.Class:
                     return processor.ReturnInstructions().First();
 
                 case MetadataType.Pointer:
                 case MetadataType.ByReference:
-                case MetadataType.Class:
                 case MetadataType.Var:
                 case MetadataType.Array:
                 case MetadataType.GenericInstance:
@@ -74,37 +74,58 @@ namespace SoftCube.Aspects
             }
         }
 
-
-
-
         internal static IReadOnlyList<Instruction> ReturnInstructions(this ILProcessor processor)
         {
-            var result = new List<Instruction>();
+            var returns = new List<Instruction>();
 
-            for (var instruction = processor.Body.Instructions.Last(); instruction.OpCode != OpCodes.Nop; instruction = instruction.Previous)
+            var instruction = processor.Body.Instructions.Last();
+            for (; instruction.OpCode != OpCodes.Stloc_0; instruction = instruction.Previous)
             {
-                result.Add(instruction);
+                returns.Add(instruction);
             }
-            result.Reverse();
 
-            return result;
+            var returnLoads = new List<Instruction>();
+            while (returnLoads.Count == 0)
+            {
+                instruction = instruction.Previous;
+                for (; instruction.OpCode != OpCodes.Nop; instruction = instruction.Previous)
+                {
+                    returns.Add(instruction);
+                    returnLoads.Add(instruction);
+                }
+            }
+
+            returns.Reverse();
+            returnLoads.Reverse();
+
+            return returns;
         }
 
         internal static IReadOnlyList<Instruction> ReturnLoadInstructions(this ILProcessor processor)
         {
-            var result = new List<Instruction>();
+            var returns = new List<Instruction>();
 
-            foreach (var instruction in processor.ReturnInstructions())
+            var instruction = processor.Body.Instructions.Last();
+            for (; instruction.OpCode != OpCodes.Stloc_0; instruction = instruction.Previous)
             {
-                if (instruction.OpCode == OpCodes.Stloc_0)
-                {
-                    break;
-                }
-
-                result.Add(instruction);
+                returns.Add(instruction);
             }
 
-            return result;
+            var returnLoads = new List<Instruction>();
+            while (returnLoads.Count == 0)
+            {
+                instruction = instruction.Previous;
+                for (; instruction.OpCode != OpCodes.Nop; instruction = instruction.Previous)
+                {
+                    returns.Add(instruction);
+                    returnLoads.Add(instruction);
+                }
+            }
+
+            returns.Reverse();
+            returnLoads.Reverse();
+
+            return returnLoads;
         }
 
 
@@ -123,36 +144,32 @@ namespace SoftCube.Aspects
                 return processor.Create(source.OpCode);
             }
 
-            if (source.OpCode == OpCodes.Ldstr)
+            switch (source.Operand)
             {
-                return processor.Create(source.OpCode, source.Operand as string);
-            }
-            if (source.OpCode == OpCodes.Ldc_I4)
-            {
-                return processor.Create(source.OpCode, (int)source.Operand);
-            }
-            if (source.OpCode == OpCodes.Ldc_I4_S)
-            {
-                return processor.Create(source.OpCode, (sbyte)source.Operand);
-            }
-            if (source.OpCode == OpCodes.Ldc_R4)
-            {
-                return processor.Create(source.OpCode, (float)source.Operand);
-            }
-            if (source.OpCode == OpCodes.Ldc_R8)
-            {
-                return processor.Create(source.OpCode, (double)source.Operand);
-            }
-            if (source.OpCode == OpCodes.Ldsfld)
-            {
-                return processor.Create(source.OpCode, (FieldReference)source.Operand);
-            }
-            if (source.OpCode == OpCodes.Newobj)
-            {
-                return processor.Create(source.OpCode, (MethodReference)source.Operand);
-            }
+                case string value:
+                    return processor.Create(source.OpCode, value);
 
-            throw new NotSupportedException($"{source} のコピーには対応していません。");
+                case int value:
+                    return processor.Create(source.OpCode, value);
+
+                case sbyte value:
+                    return processor.Create(source.OpCode, value);
+
+                case float value:
+                    return processor.Create(source.OpCode, value);
+
+                case double value:
+                    return processor.Create(source.OpCode, value);
+
+                case FieldReference value:
+                    return processor.Create(source.OpCode, value);
+
+                case MethodReference value:
+                    return processor.Create(source.OpCode, value);
+
+                default:
+                    throw new NotSupportedException($"{source} のコピーには対応していません。");
+            }
         }
 
         #endregion
