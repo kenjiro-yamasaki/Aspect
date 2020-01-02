@@ -21,6 +21,11 @@ namespace SoftCube.Aspects
         public Arguments Arguments { get; }
 
         /// <summary>
+        /// 戻り値。
+        /// </summary>
+        public object ReturnValue { get; set; }
+
+        /// <summary>
         /// 例外。
         /// </summary>
         public Exception Exception { get; set; }

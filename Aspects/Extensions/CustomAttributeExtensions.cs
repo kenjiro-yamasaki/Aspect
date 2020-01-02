@@ -3,12 +3,12 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace SoftCube.Aspects.Injector
+namespace SoftCube.Aspects
 {
     /// <summary>
     /// <see cref="CustomAttribute"/> の拡張メッソド。
     /// </summary>
-    internal static class CustomAttributeExtensions
+    public static class CustomAttributeExtensions
     {
         #region メソッド
 

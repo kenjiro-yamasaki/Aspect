@@ -10,6 +10,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aspects.UnitTests", "Aspects.UnitTests\Aspects.UnitTests.csproj", "{F7A43735-C3E8-4E4C-856E-817F5ADAF826}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aspects.Example", "Aspects.Example\Aspects.Example.csproj", "{ED9A1068-1914-4F20-B2D1-40F7B87B6816}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B46A4B9E-4F3A-48F4-A8EF-EEABF00DE5C1} = {B46A4B9E-4F3A-48F4-A8EF-EEABF00DE5C1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

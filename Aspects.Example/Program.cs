@@ -15,13 +15,29 @@ namespace SoftCube.Aspects
         static void Main(string[] args)
         {
             //Logger.Add(new ConsoleAppender());
-            new LoggerTest().Test("BBB", 101, DateTime.Now);
+            //new LoggerTest().Test("BBB", 101, DateTime.Now);
+
+            var result = new LoggerTest().戻り値あり();
+            Logger.Info(result.ToString());
+
             Console.Read();
         }
     }
 
     class LoggerTest
     {
+        [LoggerAspect]
+        public int 戻り値あり()
+        {
+            //var args = new MethodExecutionArgs(null, null);
+            //args.ReturnValue = 2;
+
+            Logger.Trace("A");
+            return 10;
+        }
+
+
+
         //[LoggerAspect]
         //public void Test(string arg0, int arg1, DateTime arg2)
         //{
@@ -29,13 +45,13 @@ namespace SoftCube.Aspects
         //    throw new ArgumentNullException(nameof(arg1));
         //}
 
-        [LoggerAspect]
-        public string Test(string arg0, int arg1, DateTime arg2)
-        {
-            Logger.Info($"{arg0},{arg1},{arg2}");
-            return arg0;
-            throw new Exception();
-        }
+        //[LoggerAspect]
+        //public string Test(string arg0, int arg1, DateTime arg2)
+        //{
+        //    Logger.Info($"{arg0},{arg1},{arg2}");
+        //    return arg0;
+        //    throw new Exception();
+        //}
 
         //[LoggerAspect]
         //public string Test(string arg0, int arg1, DateTime arg2)

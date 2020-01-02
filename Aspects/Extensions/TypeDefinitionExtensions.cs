@@ -1,12 +1,12 @@
 ﻿using Mono.Cecil;
 using System.Reflection;
 
-namespace SoftCube.Aspects.Injector
+namespace SoftCube.Aspects
 {
     /// <summary>
     /// <see cref="TypeDefinition"/> の拡張メソッド。
     /// </summary>
-    internal static class TypeDefinitionExtensions
+    public static class TypeDefinitionExtensions
     {
         #region メソッド
 

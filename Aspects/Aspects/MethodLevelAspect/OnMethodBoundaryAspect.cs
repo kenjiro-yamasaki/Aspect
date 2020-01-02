@@ -50,6 +50,9 @@ namespace SoftCube.Aspects
             var exceptionIndex = processor.Body.Variables.Count();
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
+            var returnValueIndex = processor.Body.Variables.Count();
+            processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(object))));
+
             // 命令を書き換えます。
             var first = processor.Body.Instructions.First();
             var last  = processor.Body.Instructions.Last();
@@ -62,7 +65,7 @@ namespace SoftCube.Aspects
             }
             else
             {
-                if (method.ReturnType.FullName != "System.Void")
+                if (method.HasReturnValue())
                 {
                     last = last.Previous.Previous.Previous.Previous;
                 }
@@ -108,6 +111,20 @@ namespace SoftCube.Aspects
             }
 
             {
+                //////////////////////////////////////////////////////////////////////////////////////////
+                ///
+                if (method.HasReturnValue())
+                {
+                    processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                    processor.InsertBefore(last, processor.Copy(last));
+                    if (method.ReturnType.IsValueType)
+                    {
+                        processor.InsertBefore(last, processor.Create(OpCodes.Box, method.ReturnType));
+                    }
+                    processor.InsertBefore(last, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
+                }
+                //////////////////////////////////////////////////////////////////////////////////////////
+
                 // OnSuccess メソッドを呼び出します。
                 processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, aspectIndex));
                 processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
@@ -199,6 +216,19 @@ namespace SoftCube.Aspects
         }
 
         #endregion
+
+
+        //private Instruction Copy(ILProcessor processor, Instruction source)
+        //{
+        //    if (source.OpCode == OpCodes.Ldstr)
+        //    {
+        //        return processor.Create(OpCodes.Ldstr, source.Operand as string);
+        //    }
+        //    else
+        //    {
+        //        throw new NotSupportedException();
+        //    }
+        //}
 
         #endregion
     }
