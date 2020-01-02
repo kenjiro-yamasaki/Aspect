@@ -1,4 +1,4 @@
-using SoftCube.Log;
+ï»¿using SoftCube.Log;
 using Xunit;
 
 namespace SoftCube.Aspects
@@ -38,7 +38,7 @@ namespace SoftCube.Aspects
 
     public class OnMethodBoundaryAspectTests
     {
-        #region ƒeƒXƒgƒ†[ƒeƒBƒŠƒeƒB
+        #region ãƒ†ã‚¹ãƒˆãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£
 
         public static object @lock = new object();
 
@@ -53,58 +53,65 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        #region ƒƒ\ƒbƒh
+        #region ãƒ¡ã‚½ãƒƒãƒ‰
 
-        #region ˆø”‚Æ–ß‚è’l‚È‚µ
+        #region å¼•æ•°ã¨æˆ»ã‚Šå€¤ãªã—
 
         //[TestAspect]
-        //public void ˆø”‚Æ–ß‚è’l‚È‚µ()
+        //public void å¼•æ•°ã¨æˆ»ã‚Šå€¤ãªã—()
         //{
         //    Console.WriteLine("A");
         //}
 
         //[Fact]
-        //public void ˆø”‚Æ–ß‚è’l‚È‚µ_¬Œ÷‚·‚é()
+        //public void å¼•æ•°ã¨æˆ»ã‚Šå€¤ãªã—_æˆåŠŸã™ã‚‹()
         //{
         //    var appender = new StringAppender();
         //    appender.LogFormat = "{Message} ";
         //    Logger.Add(appender);
 
-        //    ˆø”‚Æ–ß‚è’l‚È‚µ();
+        //    å¼•æ•°ã¨æˆ»ã‚Šå€¤ãªã—();
 
         //    Assert.Equal($"OnEntry OnSuccess OnExit ", appender.ToString());
         //}
 
         #endregion
 
-        #region ˆø”‚ ‚è
+        #region å¼•æ•°ã‚ã‚Š
 
         //[TestAspect]
-        //public void ˆø”‚ ‚è(string message)
+        //public void å¼•æ•°ã‚ã‚Š(string message)
         //{
         //    Console.WriteLine(message);
         //}
 
         //[Fact]
-        //public void ˆø”‚ ‚è_¬Œ÷‚·‚é()
+        //public void å¼•æ•°ã‚ã‚Š_æˆåŠŸã™ã‚‹()
         //{
         //    var appender = new StringAppender();
         //    appender.LogFormat = "{Message} ";
         //    Logger.Add(appender);
 
-        //    ˆø”‚ ‚è("A");
+        //    å¼•æ•°ã‚ã‚Š("A");
 
         //    Assert.Equal($"OnEntry A OnSuccess OnExit ", appender.ToString());
         //}
 
         #endregion
 
-        #region ’è”‚Ì–ß‚è’l‚ ‚è
+        #region å®šæ•°ã®æˆ»ã‚Šå€¤ã‚ã‚Š
 
-        public class ’è”‚Ì–ß‚è’l‚ ‚è
+        public class å®šæ•°ã®æˆ»ã‚Šå€¤ã‚ã‚Š
         {
             public class @int
             {
+                [TestAspect]
+                public int p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
                 [TestAspect]
                 public int p1()
                 {
@@ -176,77 +183,90 @@ namespace SoftCube.Aspects
                 }
 
                 [TestAspect]
-                public int n1()
+                public int m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
                 [TestAspect]
-                public int n2()
+                public int m2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
                 [TestAspect]
-                public int n3()
+                public int m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
                 [TestAspect]
-                public int n4()
+                public int m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
                 [TestAspect]
-                public int n5()
+                public int m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
                 [TestAspect]
-                public int n6()
+                public int m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
                 [TestAspect]
-                public int n7()
+                public int m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
                 [TestAspect]
-                public int n8()
+                public int m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
                 [TestAspect]
-                public int n9()
+                public int m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
                 [TestAspect]
-                public int n10()
+                public int m10()
                 {
                     Logger.Trace("A");
                     return -10;
                 }
 
                 [Fact]
-                public void p1_¬Œ÷‚·‚é()
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -259,7 +279,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p2_¬Œ÷‚·‚é()
+                public void p2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -272,7 +292,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p3_¬Œ÷‚·‚é()
+                public void p3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -285,7 +305,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p4_¬Œ÷‚·‚é()
+                public void p4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -298,7 +318,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p5_¬Œ÷‚·‚é()
+                public void p5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -311,7 +331,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p6_¬Œ÷‚·‚é()
+                public void p6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -324,7 +344,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p7_¬Œ÷‚·‚é()
+                public void p7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -337,7 +357,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p8_¬Œ÷‚·‚é()
+                public void p8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -350,7 +370,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p9_¬Œ÷‚·‚é()
+                public void p9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -363,7 +383,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p10_¬Œ÷‚·‚é()
+                public void p10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -376,130 +396,130 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void n1_¬Œ÷‚·‚é()
+                public void m1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n1();
+                        m1();
 
                         Assert.Equal($"OnEntry A OnSuccess -1 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n2_¬Œ÷‚·‚é()
+                public void n2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n2();
+                        m2();
 
                         Assert.Equal($"OnEntry A OnSuccess -2 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n3_¬Œ÷‚·‚é()
+                public void m3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n3();
+                        m3();
 
                         Assert.Equal($"OnEntry A OnSuccess -3 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n4_¬Œ÷‚·‚é()
+                public void m4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n4();
+                        m4();
 
                         Assert.Equal($"OnEntry A OnSuccess -4 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n5_¬Œ÷‚·‚é()
+                public void m5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n5();
+                        m5();
 
                         Assert.Equal($"OnEntry A OnSuccess -5 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n6_¬Œ÷‚·‚é()
+                public void m6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n6();
+                        m6();
 
                         Assert.Equal($"OnEntry A OnSuccess -6 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n7_¬Œ÷‚·‚é()
+                public void m7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n7();
+                        m7();
 
                         Assert.Equal($"OnEntry A OnSuccess -7 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n8_¬Œ÷‚·‚é()
+                public void m8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n8();
+                        m8();
 
                         Assert.Equal($"OnEntry A OnSuccess -8 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n9_¬Œ÷‚·‚é()
+                public void m9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n9();
+                        m9();
 
                         Assert.Equal($"OnEntry A OnSuccess -9 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n10_¬Œ÷‚·‚é()
+                public void m10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n10();
+                        m10();
 
                         Assert.Equal($"OnEntry A OnSuccess -10 OnExit ", appender.ToString());
                     }
@@ -508,6 +528,13 @@ namespace SoftCube.Aspects
 
             public class @short
             {
+                [TestAspect]
+                public short p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
                 [TestAspect]
                 public short p1()
                 {
@@ -579,7 +606,7 @@ namespace SoftCube.Aspects
                 }
 
                 [TestAspect]
-                public short n1()
+                public short m1()
                 {
                     Logger.Trace("A");
                     return -1;
@@ -593,63 +620,76 @@ namespace SoftCube.Aspects
                 }
 
                 [TestAspect]
-                public short n3()
+                public short m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
                 [TestAspect]
-                public short n4()
+                public short m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
                 [TestAspect]
-                public short n5()
+                public short m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
                 [TestAspect]
-                public short n6()
+                public short m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
                 [TestAspect]
-                public short n7()
+                public short m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
                 [TestAspect]
-                public short n8()
+                public short m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
                 [TestAspect]
-                public short n9()
+                public short m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
                 [TestAspect]
-                public short n10()
+                public short m10()
                 {
                     Logger.Trace("A");
                     return -10;
                 }
 
                 [Fact]
-                public void p1_¬Œ÷‚·‚é()
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -662,7 +702,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p2_¬Œ÷‚·‚é()
+                public void p2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -675,7 +715,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p3_¬Œ÷‚·‚é()
+                public void p3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -688,7 +728,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p4_¬Œ÷‚·‚é()
+                public void p4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -701,7 +741,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p5_¬Œ÷‚·‚é()
+                public void p5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -714,7 +754,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p6_¬Œ÷‚·‚é()
+                public void p6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -727,7 +767,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p7_¬Œ÷‚·‚é()
+                public void p7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -740,7 +780,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p8_¬Œ÷‚·‚é()
+                public void p8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -753,7 +793,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p9_¬Œ÷‚·‚é()
+                public void p9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -766,7 +806,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p10_¬Œ÷‚·‚é()
+                public void p10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -779,20 +819,20 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void n1_¬Œ÷‚·‚é()
+                public void m1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n1();
+                        m1();
 
                         Assert.Equal($"OnEntry A OnSuccess -1 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n2_¬Œ÷‚·‚é()
+                public void n2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -805,104 +845,104 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void n3_¬Œ÷‚·‚é()
+                public void m3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n3();
+                        m3();
 
                         Assert.Equal($"OnEntry A OnSuccess -3 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n4_¬Œ÷‚·‚é()
+                public void m4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n4();
+                        m4();
 
                         Assert.Equal($"OnEntry A OnSuccess -4 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n5_¬Œ÷‚·‚é()
+                public void m5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n5();
+                        m5();
 
                         Assert.Equal($"OnEntry A OnSuccess -5 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n6_¬Œ÷‚·‚é()
+                public void m6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n6();
+                        m6();
 
                         Assert.Equal($"OnEntry A OnSuccess -6 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n7_¬Œ÷‚·‚é()
+                public void m7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n7();
+                        m7();
 
                         Assert.Equal($"OnEntry A OnSuccess -7 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n8_¬Œ÷‚·‚é()
+                public void m8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n8();
+                        m8();
 
                         Assert.Equal($"OnEntry A OnSuccess -8 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n9_¬Œ÷‚·‚é()
+                public void m9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n9();
+                        m9();
 
                         Assert.Equal($"OnEntry A OnSuccess -9 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n10_¬Œ÷‚·‚é()
+                public void m10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n10();
+                        m10();
 
                         Assert.Equal($"OnEntry A OnSuccess -10 OnExit ", appender.ToString());
                     }
@@ -911,6 +951,13 @@ namespace SoftCube.Aspects
 
             public class @long
             {
+                [TestAspect]
+                public long p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
                 [TestAspect]
                 public long p1()
                 {
@@ -982,7 +1029,7 @@ namespace SoftCube.Aspects
                 }
 
                 [TestAspect]
-                public long n1()
+                public long m1()
                 {
                     Logger.Trace("A");
                     return -1;
@@ -996,63 +1043,76 @@ namespace SoftCube.Aspects
                 }
 
                 [TestAspect]
-                public long n3()
+                public long m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
                 [TestAspect]
-                public long n4()
+                public long m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
                 [TestAspect]
-                public long n5()
+                public long m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
                 [TestAspect]
-                public long n6()
+                public long m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
                 [TestAspect]
-                public long n7()
+                public long m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
                 [TestAspect]
-                public long n8()
+                public long m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
                 [TestAspect]
-                public long n9()
+                public long m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
                 [TestAspect]
-                public long n10()
+                public long m10()
                 {
                     Logger.Trace("A");
                     return -10;
                 }
 
                 [Fact]
-                public void p1_¬Œ÷‚·‚é()
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1065,7 +1125,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p2_¬Œ÷‚·‚é()
+                public void p2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1078,7 +1138,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p3_¬Œ÷‚·‚é()
+                public void p3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1091,7 +1151,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p4_¬Œ÷‚·‚é()
+                public void p4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1104,7 +1164,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p5_¬Œ÷‚·‚é()
+                public void p5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1117,7 +1177,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p6_¬Œ÷‚·‚é()
+                public void p6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1130,7 +1190,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p7_¬Œ÷‚·‚é()
+                public void p7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1143,7 +1203,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p8_¬Œ÷‚·‚é()
+                public void p8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1156,7 +1216,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p9_¬Œ÷‚·‚é()
+                public void p9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1169,7 +1229,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p10_¬Œ÷‚·‚é()
+                public void p10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1182,20 +1242,20 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void n1_¬Œ÷‚·‚é()
+                public void m1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n1();
+                        m1();
 
                         Assert.Equal($"OnEntry A OnSuccess -1 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n2_¬Œ÷‚·‚é()
+                public void n2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1208,104 +1268,104 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void n3_¬Œ÷‚·‚é()
+                public void m3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n3();
+                        m3();
 
                         Assert.Equal($"OnEntry A OnSuccess -3 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n4_¬Œ÷‚·‚é()
+                public void m4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n4();
+                        m4();
 
                         Assert.Equal($"OnEntry A OnSuccess -4 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n5_¬Œ÷‚·‚é()
+                public void m5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n5();
+                        m5();
 
                         Assert.Equal($"OnEntry A OnSuccess -5 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n6_¬Œ÷‚·‚é()
+                public void m6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n6();
+                        m6();
 
                         Assert.Equal($"OnEntry A OnSuccess -6 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n7_¬Œ÷‚·‚é()
+                public void m7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n7();
+                        m7();
 
                         Assert.Equal($"OnEntry A OnSuccess -7 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n8_¬Œ÷‚·‚é()
+                public void m8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n8();
+                        m8();
 
                         Assert.Equal($"OnEntry A OnSuccess -8 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n9_¬Œ÷‚·‚é()
+                public void m9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n9();
+                        m9();
 
                         Assert.Equal($"OnEntry A OnSuccess -9 OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void n10_¬Œ÷‚·‚é()
+                public void m10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
                         var appender = InitializeLogger();
 
-                        n10();
+                        m10();
 
                         Assert.Equal($"OnEntry A OnSuccess -10 OnExit ", appender.ToString());
                     }
@@ -1314,6 +1374,13 @@ namespace SoftCube.Aspects
 
             public class @uint
             {
+                [TestAspect]
+                public uint p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
                 [TestAspect]
                 public uint p1()
                 {
@@ -1385,7 +1452,20 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p1_¬Œ÷‚·‚é()
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1398,7 +1478,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p2_¬Œ÷‚·‚é()
+                public void p2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1411,7 +1491,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p3_¬Œ÷‚·‚é()
+                public void p3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1424,7 +1504,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p4_¬Œ÷‚·‚é()
+                public void p4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1437,7 +1517,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p5_¬Œ÷‚·‚é()
+                public void p5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1450,7 +1530,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p6_¬Œ÷‚·‚é()
+                public void p6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1463,7 +1543,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p7_¬Œ÷‚·‚é()
+                public void p7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1476,7 +1556,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p8_¬Œ÷‚·‚é()
+                public void p8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1489,7 +1569,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p9_¬Œ÷‚·‚é()
+                public void p9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1502,7 +1582,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p10_¬Œ÷‚·‚é()
+                public void p10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1517,6 +1597,13 @@ namespace SoftCube.Aspects
 
             public class @ushort
             {
+                [TestAspect]
+                public ushort p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
                 [TestAspect]
                 public ushort p1()
                 {
@@ -1588,7 +1675,20 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p1_¬Œ÷‚·‚é()
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1601,7 +1701,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p2_¬Œ÷‚·‚é()
+                public void p2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1614,7 +1714,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p3_¬Œ÷‚·‚é()
+                public void p3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1627,7 +1727,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p4_¬Œ÷‚·‚é()
+                public void p4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1640,7 +1740,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p5_¬Œ÷‚·‚é()
+                public void p5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1653,7 +1753,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p6_¬Œ÷‚·‚é()
+                public void p6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1666,7 +1766,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p7_¬Œ÷‚·‚é()
+                public void p7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1679,7 +1779,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p8_¬Œ÷‚·‚é()
+                public void p8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1692,7 +1792,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p9_¬Œ÷‚·‚é()
+                public void p9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1705,7 +1805,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p10_¬Œ÷‚·‚é()
+                public void p10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1720,6 +1820,13 @@ namespace SoftCube.Aspects
 
             public class @ulong
             {
+                [TestAspect]
+                public ulong p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
                 [TestAspect]
                 public ulong p1()
                 {
@@ -1791,7 +1898,20 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p1_¬Œ÷‚·‚é()
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1804,7 +1924,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p2_¬Œ÷‚·‚é()
+                public void p2_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1817,7 +1937,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p3_¬Œ÷‚·‚é()
+                public void p3_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1830,7 +1950,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p4_¬Œ÷‚·‚é()
+                public void p4_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1843,7 +1963,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p5_¬Œ÷‚·‚é()
+                public void p5_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1856,7 +1976,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p6_¬Œ÷‚·‚é()
+                public void p6_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1869,7 +1989,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p7_¬Œ÷‚·‚é()
+                public void p7_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1882,7 +2002,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p8_¬Œ÷‚·‚é()
+                public void p8_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1895,7 +2015,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p9_¬Œ÷‚·‚é()
+                public void p9_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1908,7 +2028,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void p10_¬Œ÷‚·‚é()
+                public void p10_æˆåŠŸã™ã‚‹()
                 {
                     lock (@lock)
                     {
@@ -1917,6 +2037,1270 @@ namespace SoftCube.Aspects
                         p10();
 
                         Assert.Equal($"OnEntry A OnSuccess 10 OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @byte
+            {
+                [TestAspect]
+                public byte p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
+                [TestAspect]
+                public byte p1()
+                {
+                    Logger.Trace("A");
+                    return 1;
+                }
+
+                [TestAspect]
+                public byte p2()
+                {
+                    Logger.Trace("A");
+                    return 2;
+                }
+
+                [TestAspect]
+                public byte p3()
+                {
+                    Logger.Trace("A");
+                    return 3;
+                }
+
+                [TestAspect]
+                public byte p4()
+                {
+                    Logger.Trace("A");
+                    return 4;
+                }
+
+                [TestAspect]
+                public byte p5()
+                {
+                    Logger.Trace("A");
+                    return 5;
+                }
+
+                [TestAspect]
+                public byte p6()
+                {
+                    Logger.Trace("A");
+                    return 6;
+                }
+
+                [TestAspect]
+                public byte p7()
+                {
+                    Logger.Trace("A");
+                    return 7;
+                }
+
+                [TestAspect]
+                public byte p8()
+                {
+                    Logger.Trace("A");
+                    return 8;
+                }
+
+                [TestAspect]
+                public byte p9()
+                {
+                    Logger.Trace("A");
+                    return 9;
+                }
+
+                [TestAspect]
+                public byte p10()
+                {
+                    Logger.Trace("A");
+                    return 10;
+                }
+
+                [Fact]
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p1();
+
+                        Assert.Equal($"OnEntry A OnSuccess 1 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p2_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p2();
+
+                        Assert.Equal($"OnEntry A OnSuccess 2 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p3_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p3();
+
+                        Assert.Equal($"OnEntry A OnSuccess 3 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p4_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p4();
+
+                        Assert.Equal($"OnEntry A OnSuccess 4 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p5_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p5();
+
+                        Assert.Equal($"OnEntry A OnSuccess 5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p6_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p6();
+
+                        Assert.Equal($"OnEntry A OnSuccess 6 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p7_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p7();
+
+                        Assert.Equal($"OnEntry A OnSuccess 7 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p8_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p8();
+
+                        Assert.Equal($"OnEntry A OnSuccess 8 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p9_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p9();
+
+                        Assert.Equal($"OnEntry A OnSuccess 9 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p10_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p10();
+
+                        Assert.Equal($"OnEntry A OnSuccess 10 OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @sbyte
+            {
+                [TestAspect]
+                public sbyte p0()
+                {
+                    Logger.Trace("A");
+                    return 0;
+                }
+
+                [TestAspect]
+                public sbyte p1()
+                {
+                    Logger.Trace("A");
+                    return 1;
+                }
+
+                [TestAspect]
+                public sbyte p2()
+                {
+                    Logger.Trace("A");
+                    return 2;
+                }
+
+                [TestAspect]
+                public sbyte p3()
+                {
+                    Logger.Trace("A");
+                    return 3;
+                }
+
+                [TestAspect]
+                public sbyte p4()
+                {
+                    Logger.Trace("A");
+                    return 4;
+                }
+
+                [TestAspect]
+                public sbyte p5()
+                {
+                    Logger.Trace("A");
+                    return 5;
+                }
+
+                [TestAspect]
+                public sbyte p6()
+                {
+                    Logger.Trace("A");
+                    return 6;
+                }
+
+                [TestAspect]
+                public sbyte p7()
+                {
+                    Logger.Trace("A");
+                    return 7;
+                }
+
+                [TestAspect]
+                public sbyte p8()
+                {
+                    Logger.Trace("A");
+                    return 8;
+                }
+
+                [TestAspect]
+                public sbyte p9()
+                {
+                    Logger.Trace("A");
+                    return 9;
+                }
+
+                [TestAspect]
+                public sbyte p10()
+                {
+                    Logger.Trace("A");
+                    return 10;
+                }
+
+                [TestAspect]
+                public sbyte m1()
+                {
+                    Logger.Trace("A");
+                    return -1;
+                }
+
+                [TestAspect]
+                public sbyte m2()
+                {
+                    Logger.Trace("A");
+                    return -2;
+                }
+
+                [TestAspect]
+                public sbyte m3()
+                {
+                    Logger.Trace("A");
+                    return -3;
+                }
+
+                [TestAspect]
+                public sbyte m4()
+                {
+                    Logger.Trace("A");
+                    return -4;
+                }
+
+                [TestAspect]
+                public sbyte m5()
+                {
+                    Logger.Trace("A");
+                    return -5;
+                }
+
+                [TestAspect]
+                public sbyte m6()
+                {
+                    Logger.Trace("A");
+                    return -6;
+                }
+
+                [TestAspect]
+                public sbyte m7()
+                {
+                    Logger.Trace("A");
+                    return -7;
+                }
+
+                [TestAspect]
+                public sbyte m8()
+                {
+                    Logger.Trace("A");
+                    return -8;
+                }
+
+                [TestAspect]
+                public sbyte m9()
+                {
+                    Logger.Trace("A");
+                    return -9;
+                }
+
+                [TestAspect]
+                public sbyte m10()
+                {
+                    Logger.Trace("A");
+                    return -10;
+                }
+
+                [Fact]
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p1();
+
+                        Assert.Equal($"OnEntry A OnSuccess 1 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p2_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p2();
+
+                        Assert.Equal($"OnEntry A OnSuccess 2 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p3_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p3();
+
+                        Assert.Equal($"OnEntry A OnSuccess 3 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p4_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p4();
+
+                        Assert.Equal($"OnEntry A OnSuccess 4 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p5_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p5();
+
+                        Assert.Equal($"OnEntry A OnSuccess 5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p6_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p6();
+
+                        Assert.Equal($"OnEntry A OnSuccess 6 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p7_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p7();
+
+                        Assert.Equal($"OnEntry A OnSuccess 7 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p8_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p8();
+
+                        Assert.Equal($"OnEntry A OnSuccess 8 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p9_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p9();
+
+                        Assert.Equal($"OnEntry A OnSuccess 9 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p10_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p10();
+
+                        Assert.Equal($"OnEntry A OnSuccess 10 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m1();
+
+                        Assert.Equal($"OnEntry A OnSuccess -1 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void n2_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m2();
+
+                        Assert.Equal($"OnEntry A OnSuccess -2 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m3_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m3();
+
+                        Assert.Equal($"OnEntry A OnSuccess -3 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m4_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m4();
+
+                        Assert.Equal($"OnEntry A OnSuccess -4 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m5_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m5();
+
+                        Assert.Equal($"OnEntry A OnSuccess -5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m6_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m6();
+
+                        Assert.Equal($"OnEntry A OnSuccess -6 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m7_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m7();
+
+                        Assert.Equal($"OnEntry A OnSuccess -7 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m8_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m8();
+
+                        Assert.Equal($"OnEntry A OnSuccess -8 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m9_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m9();
+
+                        Assert.Equal($"OnEntry A OnSuccess -9 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m10_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m10();
+
+                        Assert.Equal($"OnEntry A OnSuccess -10 OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @bool
+            {
+                [TestAspect]
+                public bool @true()
+                {
+                    Logger.Trace("A");
+                    return true;
+                }
+
+                [TestAspect]
+                public bool @false()
+                {
+                    Logger.Trace("A");
+                    return false;
+                }
+
+                [Fact]
+                public void true_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        @true();
+
+                        Assert.Equal($"OnEntry A OnSuccess True OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void false_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        @false();
+
+                        Assert.Equal($"OnEntry A OnSuccess False OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @double
+            {
+                [TestAspect]
+                public double p0()
+                {
+                    Logger.Trace("A");
+                    return 0.0;
+                }
+
+                [TestAspect]
+                public double p05()
+                {
+                    Logger.Trace("A");
+                    return 0.5;
+                }
+
+                [TestAspect]
+                public double p1()
+                {
+                    Logger.Trace("A");
+                    return 1.0;
+                }
+
+                [TestAspect]
+                public double p100()
+                {
+                    Logger.Trace("A");
+                    return 100.0;
+                }
+
+                [TestAspect]
+                public double m0()
+                {
+                    Logger.Trace("A");
+                    return -0.0;
+                }
+
+                [TestAspect]
+                public double m05()
+                {
+                    Logger.Trace("A");
+                    return -0.5;
+                }
+
+                [TestAspect]
+                public double m1()
+                {
+                    Logger.Trace("A");
+                    return -1.0;
+                }
+
+                [TestAspect]
+                public double m100()
+                {
+                    Logger.Trace("A");
+                    return -100.0;
+                }
+
+                [Fact]
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p05_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p05();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0.5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p1();
+
+                        Assert.Equal($"OnEntry A OnSuccess 1 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p100_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p100();
+
+                        Assert.Equal($"OnEntry A OnSuccess 100 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m05_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m05();
+
+                        Assert.Equal($"OnEntry A OnSuccess -0.5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m1();
+
+                        Assert.Equal($"OnEntry A OnSuccess -1 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m100_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m100();
+
+                        Assert.Equal($"OnEntry A OnSuccess -100 OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @float
+            {
+                [TestAspect]
+                public float p0()
+                {
+                    Logger.Trace("A");
+                    return 0.0f;
+                }
+
+                [TestAspect]
+                public float p05()
+                {
+                    Logger.Trace("A");
+                    return 0.5f;
+                }
+
+                [TestAspect]
+                public float p1()
+                {
+                    Logger.Trace("A");
+                    return 1.0f;
+                }
+
+                [TestAspect]
+                public float p100()
+                {
+                    Logger.Trace("A");
+                    return 100.0f;
+                }
+
+                [TestAspect]
+                public float m0()
+                {
+                    Logger.Trace("A");
+                    return -0.0f;
+                }
+
+                [TestAspect]
+                public float m05()
+                {
+                    Logger.Trace("A");
+                    return -0.5f;
+                }
+
+                [TestAspect]
+                public float m1()
+                {
+                    Logger.Trace("A");
+                    return -1.0f;
+                }
+
+                [TestAspect]
+                public float m100()
+                {
+                    Logger.Trace("A");
+                    return -100.0f;
+                }
+
+                [Fact]
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p05_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p05();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0.5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p1();
+
+                        Assert.Equal($"OnEntry A OnSuccess 1 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p100_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p100();
+
+                        Assert.Equal($"OnEntry A OnSuccess 100 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m05_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m05();
+
+                        Assert.Equal($"OnEntry A OnSuccess -0.5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m1();
+
+                        Assert.Equal($"OnEntry A OnSuccess -1 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m100_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m100();
+
+                        Assert.Equal($"OnEntry A OnSuccess -100 OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @decimal
+            {
+                [TestAspect]
+                public decimal p0()
+                {
+                    Logger.Trace("A");
+                    return 0.0m;
+                }
+
+                [TestAspect]
+                public decimal p05()
+                {
+                    Logger.Trace("A");
+                    return 0.5m;
+                }
+
+                [TestAspect]
+                public decimal p1()
+                {
+                    Logger.Trace("A");
+                    return 1.0m;
+                }
+
+                [TestAspect]
+                public decimal p100()
+                {
+                    Logger.Trace("A");
+                    return 100.0m;
+                }
+
+                [TestAspect]
+                public decimal m0()
+                {
+                    Logger.Trace("A");
+                    return -0.0m;
+                }
+
+                [TestAspect]
+                public decimal m05()
+                {
+                    Logger.Trace("A");
+                    return -0.5m;
+                }
+
+                [TestAspect]
+                public decimal m1()
+                {
+                    Logger.Trace("A");
+                    return -1.0m;
+                }
+
+                [TestAspect]
+                public decimal m100()
+                {
+                    Logger.Trace("A");
+                    return -100.0m;
+                }
+
+                [Fact]
+                public void p0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0.0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p05_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p05();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0.5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p1();
+
+                        Assert.Equal($"OnEntry A OnSuccess 1.0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void p100_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        p100();
+
+                        Assert.Equal($"OnEntry A OnSuccess 100.0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m0_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m0();
+
+                        Assert.Equal($"OnEntry A OnSuccess 0.0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m05_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m05();
+
+                        Assert.Equal($"OnEntry A OnSuccess -0.5 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m1_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m1();
+
+                        Assert.Equal($"OnEntry A OnSuccess -1.0 OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void m100_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        m100();
+
+                        Assert.Equal($"OnEntry A OnSuccess -100.0 OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @char
+            {
+                [TestAspect]
+                public char a()
+                {
+                    Logger.Trace("A");
+                    return 'a';
+                }
+
+                [TestAspect]
+                public char ã‚()
+                {
+                    Logger.Trace("A");
+                    return 'ã‚';
+                }
+
+                [Fact]
+                public void a_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        a();
+
+                        Assert.Equal($"OnEntry A OnSuccess a OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void ã‚_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        ã‚();
+
+                        Assert.Equal($"OnEntry A OnSuccess ã‚ OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @string
+            {
+                [TestAspect]
+                public string a()
+                {
+                    Logger.Trace("A");
+                    return "a";
+                }
+
+                [TestAspect]
+                public string ã‚()
+                {
+                    Logger.Trace("A");
+                    return "ã‚";
+                }
+
+                [Fact]
+                public void a_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        a();
+
+                        Assert.Equal($"OnEntry A OnSuccess a OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void ã‚_æˆåŠŸã™ã‚‹()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        ã‚();
+
+                        Assert.Equal($"OnEntry A OnSuccess ã‚ OnExit ", appender.ToString());
                     }
                 }
             }
@@ -1929,115 +3313,7 @@ namespace SoftCube.Aspects
 
 
 
-        //#region double‚Ì’è”
 
-        //[TestAspect]
-        //public double double_0()
-        //{
-        //    Logger.Trace("A");
-        //    return 0.0;
-        //}
-
-        //[TestAspect]
-        //public double double_p05()
-        //{
-        //    Logger.Trace("A");
-        //    return 0.5;
-        //}
-
-        //[TestAspect]
-        //public double double_n05()
-        //{
-        //    Logger.Trace("A");
-        //    return -0.5;
-        //}
-
-        //[Fact]
-        //public void double_0_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    double_0();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void double_p05_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    double_p05();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 0.5 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void double_n05_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    double_n05();
-
-        //    Assert.Equal($"OnEntry A OnSuccess -0.5 OnExit ", appender.ToString());
-        //}
-
-        //#endregion
-
-        //#region float‚Ì’è”
-
-        //[TestAspect]
-        //public float float_0()
-        //{
-        //    Logger.Trace("A");
-        //    return 0.0f;
-        //}
-
-        //[TestAspect]
-        //public float float_p05()
-        //{
-        //    Logger.Trace("A");
-        //    return 0.5f;
-        //}
-
-        //[TestAspect]
-        //public float float_n05()
-        //{
-        //    Logger.Trace("A");
-        //    return -0.5f;
-        //}
-
-        //[Fact]
-        //public void float_0_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    float_0();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 0 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void float_p05_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    float_p05();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 0.5 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void float_n05_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    float_n05();
-
-        //    Assert.Equal($"OnEntry A OnSuccess -0.5 OnExit ", appender.ToString());
-        //}
-
-        //#endregion
 
 
 
@@ -2050,7 +3326,7 @@ namespace SoftCube.Aspects
         //#region string
 
         //[TestAspect]
-        //public string string‚Ì•Ï”()
+        //public string stringã®å¤‰æ•°()
         //{
         //    string result = "B";
         //    Logger.Trace("A");
@@ -2058,190 +3334,35 @@ namespace SoftCube.Aspects
         //}
 
         //[Fact]
-        //public void string‚Ì•Ï”_¬Œ÷‚·‚é()
+        //public void stringã®å¤‰æ•°_æˆåŠŸã™ã‚‹()
         //{
         //    var appender = InitializeLogger();
 
-        //    string‚Ì•Ï”();
+        //    stringã®å¤‰æ•°();
 
         //    Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
         //}
 
         //[TestAspect]
-        //public string string‚Ì’l()
+        //public string stringã®å€¤()
         //{
         //    Logger.Trace("A");
         //    return "B";
         //}
 
         //[Fact]
-        //public void string‚Ì’l_¬Œ÷‚·‚é()
+        //public void stringã®å€¤_æˆåŠŸã™ã‚‹()
         //{
         //    var appender = InitializeLogger();
 
-        //    string‚Ì’l();
+        //    stringã®å€¤();
 
         //    Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
         //}
 
         //#endregion
 
-        //#region byte
 
-        //[TestAspect]
-        //public byte byte_p1()
-        //{
-        //    Logger.Trace("A");
-        //    return 1;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p2()
-        //{
-        //    Logger.Trace("A");
-        //    return 2;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p3()
-        //{
-        //    Logger.Trace("A");
-        //    return 3;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p4()
-        //{
-        //    Logger.Trace("A");
-        //    return 4;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p5()
-        //{
-        //    Logger.Trace("A");
-        //    return 5;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p6()
-        //{
-        //    Logger.Trace("A");
-        //    return 6;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p7()
-        //{
-        //    Logger.Trace("A");
-        //    return 7;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p8()
-        //{
-        //    Logger.Trace("A");
-        //    return 8;
-        //}
-
-        //[TestAspect]
-        //public byte byte_p9()
-        //{
-        //    Logger.Trace("A");
-        //    return 9;
-        //}
-
-        //[Fact]
-        //public void byte_p1_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p1();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 1 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p2_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p2();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 2 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p3_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p3();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 3 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p4_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p4();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 4 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p5_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p5();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 5 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p6_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p6();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 6 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p7_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p7();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 7 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p8_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p8();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 8 OnExit ", appender.ToString());
-        //}
-
-        //[Fact]
-        //public void byte_p9_¬Œ÷‚·‚é()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    byte_p9();
-
-        //    Assert.Equal($"OnEntry A OnSuccess 9 OnExit ", appender.ToString());
-        //}
-
-        //#endregion
 
         #endregion
 

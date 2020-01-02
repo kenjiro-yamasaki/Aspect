@@ -1,5 +1,7 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SoftCube.Aspects
@@ -12,108 +14,145 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 
+        /// 最初の命令を取得します。
         /// </summary>
-        /// <param name="processor"><see cref="ILProcessor"/>。</param>
-        /// <returns></returns>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <returns>最初の命令。</returns>
         internal static Instruction FirstInstruction(this ILProcessor processor)
         {
             return processor.Body.Instructions.First();
         }
 
         /// <summary>
-        /// 
+        /// リターン命令 (戻り値がある場合、戻り値をスタックにロードする命令) を取得します。
         /// </summary>
-        /// <param name="processor"><see cref="ILProcessor"/>。</param>
-        /// <returns></returns>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <returns>リターン命令 (戻り値がある場合、戻り値をスタックにロードする命令)。</returns>
         internal static Instruction ReturnInstruction(this ILProcessor processor)
         {
             var method = processor.Body.Method;
 
             switch (method.ReturnType.MetadataType)
             {
-                case Mono.Cecil.MetadataType.Void:
+                case MetadataType.Void:
                     return processor.Body.Instructions.Last();
 
-                case Mono.Cecil.MetadataType.Boolean:
-                case Mono.Cecil.MetadataType.Char:
-                case Mono.Cecil.MetadataType.SByte:
-                case Mono.Cecil.MetadataType.Byte:
-                case Mono.Cecil.MetadataType.Int16:
-                case Mono.Cecil.MetadataType.UInt16:
-                case Mono.Cecil.MetadataType.Int32:
-                case Mono.Cecil.MetadataType.UInt32:
-                case Mono.Cecil.MetadataType.Double:
-                case Mono.Cecil.MetadataType.Single:
-                case Mono.Cecil.MetadataType.String:
-                    return processor.Body.Instructions.Last().Previous.Previous.Previous.Previous;
+                case MetadataType.Boolean:
+                case MetadataType.Char:
+                case MetadataType.SByte:
+                case MetadataType.Byte:
+                case MetadataType.Int16:
+                case MetadataType.UInt16:
+                case MetadataType.Int32:
+                case MetadataType.UInt32:
+                case MetadataType.Double:
+                case MetadataType.Single:
+                case MetadataType.String:
+                case MetadataType.ValueType:
+                case MetadataType.Int64:
+                case MetadataType.UInt64:
+                    return processor.ReturnInstructions().First();
 
-                case Mono.Cecil.MetadataType.Int64:
-                case Mono.Cecil.MetadataType.UInt64:
-                    return processor.Body.Instructions.Last().Previous.Previous.Previous.Previous.Previous;
-
-                case Mono.Cecil.MetadataType.Pointer:
-                case Mono.Cecil.MetadataType.ByReference:
-                case Mono.Cecil.MetadataType.ValueType:
-                case Mono.Cecil.MetadataType.Class:
-                case Mono.Cecil.MetadataType.Var:
-                case Mono.Cecil.MetadataType.Array:
-                case Mono.Cecil.MetadataType.GenericInstance:
-                case Mono.Cecil.MetadataType.TypedByReference:
-                case Mono.Cecil.MetadataType.IntPtr:
-                case Mono.Cecil.MetadataType.UIntPtr:
-                case Mono.Cecil.MetadataType.FunctionPointer:
-                case Mono.Cecil.MetadataType.Object:
-                case Mono.Cecil.MetadataType.MVar:
-                case Mono.Cecil.MetadataType.RequiredModifier:
-                case Mono.Cecil.MetadataType.OptionalModifier:
-                case Mono.Cecil.MetadataType.Sentinel:
-                case Mono.Cecil.MetadataType.Pinned:
+                case MetadataType.Pointer:
+                case MetadataType.ByReference:
+                case MetadataType.Class:
+                case MetadataType.Var:
+                case MetadataType.Array:
+                case MetadataType.GenericInstance:
+                case MetadataType.TypedByReference:
+                case MetadataType.IntPtr:
+                case MetadataType.UIntPtr:
+                case MetadataType.FunctionPointer:
+                case MetadataType.Object:
+                case MetadataType.MVar:
+                case MetadataType.RequiredModifier:
+                case MetadataType.OptionalModifier:
+                case MetadataType.Sentinel:
+                case MetadataType.Pinned:
                 default:
                     throw new NotSupportedException();
             }
         }
 
+
+
+
+        internal static IReadOnlyList<Instruction> ReturnInstructions(this ILProcessor processor)
+        {
+            var result = new List<Instruction>();
+
+            for (var instruction = processor.Body.Instructions.Last(); instruction.OpCode != OpCodes.Nop; instruction = instruction.Previous)
+            {
+                result.Add(instruction);
+            }
+            result.Reverse();
+
+            return result;
+        }
+
+        internal static IReadOnlyList<Instruction> ReturnLoadInstructions(this ILProcessor processor)
+        {
+            var result = new List<Instruction>();
+
+            foreach (var instruction in processor.ReturnInstructions())
+            {
+                if (instruction.OpCode == OpCodes.Stloc_0)
+                {
+                    break;
+                }
+
+                result.Add(instruction);
+            }
+
+            return result;
+        }
+
+
+
+
         /// <summary>
-        /// <see cref="Instruction"/> をコピーします。
+        /// 命令をコピーします。
         /// </summary>
-        /// <param name="processor"><see cref="ILProcessor"/>。</param>
-        /// <param name="source">コピー元の <see cref="Instruction">。</param>
-        /// <returns>コピーした <see cref="Instruction">。</returns>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="source">コピー元の命令。</param>
+        /// <returns>コピーした命令。</returns>
         internal static Instruction Copy(this ILProcessor processor, Instruction source)
         {
-            if (source.OpCode == OpCodes.Ldloc_0 || source.OpCode == OpCodes.Ldloc_1 || source.OpCode == OpCodes.Ldloc_2 || source.OpCode == OpCodes.Ldloc_3)
+            if (source.Operand == null)
             {
                 return processor.Create(source.OpCode);
             }
-            else if (source.OpCode == OpCodes.Ldstr)
+
+            if (source.OpCode == OpCodes.Ldstr)
             {
                 return processor.Create(source.OpCode, source.Operand as string);
             }
-            else if (source.OpCode == OpCodes.Ldc_I4_0 || source.OpCode == OpCodes.Ldc_I4_1 || source.OpCode == OpCodes.Ldc_I4_2 || source.OpCode == OpCodes.Ldc_I4_3 || source.OpCode == OpCodes.Ldc_I4_4 || source.OpCode == OpCodes.Ldc_I4_5 || source.OpCode == OpCodes.Ldc_I4_6 || source.OpCode == OpCodes.Ldc_I4_7 || source.OpCode == OpCodes.Ldc_I4_8 || source.OpCode == OpCodes.Ldc_I4_M1)
+            if (source.OpCode == OpCodes.Ldc_I4)
             {
-                return processor.Create(source.OpCode);
+                return processor.Create(source.OpCode, (int)source.Operand);
             }
-            else if (source.OpCode == OpCodes.Ldc_I4_S)
+            if (source.OpCode == OpCodes.Ldc_I4_S)
             {
                 return processor.Create(source.OpCode, (sbyte)source.Operand);
             }
-            else if (source.OpCode == OpCodes.Conv_I8)
-            {
-                return processor.Create(source.OpCode);
-            }
-            else if (source.OpCode == OpCodes.Ldc_R4)
+            if (source.OpCode == OpCodes.Ldc_R4)
             {
                 return processor.Create(source.OpCode, (float)source.Operand);
             }
-            else if (source.OpCode == OpCodes.Ldc_R8)
+            if (source.OpCode == OpCodes.Ldc_R8)
             {
                 return processor.Create(source.OpCode, (double)source.Operand);
             }
-            else
+            if (source.OpCode == OpCodes.Ldsfld)
             {
-                throw new NotSupportedException($"{source} のコピーには対応していません。");
+                return processor.Create(source.OpCode, (FieldReference)source.Operand);
             }
+            if (source.OpCode == OpCodes.Newobj)
+            {
+                return processor.Create(source.OpCode, (MethodReference)source.Operand);
+            }
+
+            throw new NotSupportedException($"{source} のコピーには対応していません。");
         }
 
         #endregion

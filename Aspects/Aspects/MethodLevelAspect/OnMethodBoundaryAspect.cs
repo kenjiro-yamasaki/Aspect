@@ -51,8 +51,11 @@ namespace SoftCube.Aspects
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
             // 命令を書き換えます。
-            var first = processor.FirstInstruction();
-            var last  = processor.ReturnInstruction();
+            var first   = processor.FirstInstruction();
+            var last    = processor.ReturnInstruction();
+
+            var returns     = processor.ReturnInstructions();
+            var returnLoads = processor.ReturnLoadInstructions();
 
             //var first = processor.Body.Instructions.First();
             //var last  = processor.Body.Instructions.Last();
@@ -115,16 +118,17 @@ namespace SoftCube.Aspects
                 if (method.HasReturnValue())
                 {
                     processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
-                    processor.InsertBefore(last, processor.Copy(last));
 
-                    if (method.ReturnType.MetadataType == MetadataType.Int64)
+                    foreach (var returnLoad in returnLoads)
                     {
-                        processor.InsertBefore(last, processor.Copy(last.Next));
+                        processor.InsertBefore(last, processor.Copy(returnLoad));
                     }
+
                     if (method.ReturnType.IsValueType)
                     {
                         processor.InsertBefore(last, processor.Create(OpCodes.Box, method.ReturnType));
                     }
+
                     processor.InsertBefore(last, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
                 }
                 //////////////////////////////////////////////////////////////////////////////////////////
