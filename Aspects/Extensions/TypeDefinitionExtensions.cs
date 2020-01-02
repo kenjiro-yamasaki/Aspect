@@ -21,6 +21,11 @@ namespace SoftCube.Aspects
             {
                 method.Inject(assembly);
             }
+
+            foreach (var nestedType in type.NestedTypes)
+            {
+                nestedType.Inject(assembly);
+            }
         }
 
         #endregion

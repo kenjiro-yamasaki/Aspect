@@ -11,12 +11,22 @@ namespace SoftCube.Aspects
     {
         #region メソッド
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"><see cref="ILProcessor"/>。</param>
+        /// <returns></returns>
         internal static Instruction FirstInstruction(this ILProcessor processor)
         {
             return processor.Body.Instructions.First();
         }
 
-        internal static Instruction LastInstruction(this ILProcessor processor)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"><see cref="ILProcessor"/>。</param>
+        /// <returns></returns>
+        internal static Instruction ReturnInstruction(this ILProcessor processor)
         {
             var method = processor.Body.Method;
 
@@ -36,6 +46,12 @@ namespace SoftCube.Aspects
                 case Mono.Cecil.MetadataType.Double:
                 case Mono.Cecil.MetadataType.Single:
                 case Mono.Cecil.MetadataType.String:
+                    return processor.Body.Instructions.Last().Previous.Previous.Previous.Previous;
+
+                case Mono.Cecil.MetadataType.Int64:
+                case Mono.Cecil.MetadataType.UInt64:
+                    return processor.Body.Instructions.Last().Previous.Previous.Previous.Previous.Previous;
+
                 case Mono.Cecil.MetadataType.Pointer:
                 case Mono.Cecil.MetadataType.ByReference:
                 case Mono.Cecil.MetadataType.ValueType:
@@ -53,12 +69,6 @@ namespace SoftCube.Aspects
                 case Mono.Cecil.MetadataType.OptionalModifier:
                 case Mono.Cecil.MetadataType.Sentinel:
                 case Mono.Cecil.MetadataType.Pinned:
-                    return processor.Body.Instructions.Last().Previous.Previous.Previous.Previous;
-
-                case Mono.Cecil.MetadataType.Int64:
-                case Mono.Cecil.MetadataType.UInt64:
-                    return processor.Body.Instructions.Last().Previous.Previous.Previous.Previous.Previous;
-
                 default:
                     throw new NotSupportedException();
             }

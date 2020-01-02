@@ -52,7 +52,7 @@ namespace SoftCube.Aspects
 
             // 命令を書き換えます。
             var first = processor.FirstInstruction();
-            var last  = processor.LastInstruction();
+            var last  = processor.ReturnInstruction();
 
             //var first = processor.Body.Instructions.First();
             //var last  = processor.Body.Instructions.Last();

@@ -17,7 +17,7 @@ namespace SoftCube.Aspects
             //Logger.Add(new ConsoleAppender());
             //new LoggerTest().Test("BBB", 101, DateTime.Now);
 
-            var result = new LoggerTest().戻り値あり();
+            var result = new LoggerTest.Nest().戻り値あり();
             Logger.Info(result.ToString());
 
             Console.Read();
@@ -26,15 +26,19 @@ namespace SoftCube.Aspects
 
     class LoggerTest
     {
-        [LoggerAspect]
-        public double 戻り値あり()
+        public class Nest
         {
-            //var args = new MethodExecutionArgs(null, null);
-            //args.ReturnValue = 2;
+            [LoggerAspect]
+            public double 戻り値あり()
+            {
+                //var args = new MethodExecutionArgs(null, null);
+                //args.ReturnValue = 2;
 
-            Logger.Trace("A");
-            return 0.0;
+                Logger.Trace("A");
+                return 0.0;
+            }
         }
+
 
 
 
