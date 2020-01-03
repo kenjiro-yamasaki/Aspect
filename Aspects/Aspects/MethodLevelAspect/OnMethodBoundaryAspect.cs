@@ -52,8 +52,8 @@ namespace SoftCube.Aspects
 
             // 命令を書き換えます。
             var first       = processor.FirstInstruction();
-            var returnLoads = processor.ReturnLoadInstructions();
-            var last        = returnLoads.First();
+            var returnLoad = processor.ReturnLoadInstruction();
+            var last       = returnLoad.Previous;
 
             //if (last.OpCode == OpCodes.Throw)
             //{
@@ -106,11 +106,7 @@ namespace SoftCube.Aspects
                 if (method.HasReturnValue())
                 {
                     processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
-
-                    foreach (var returnLoad in returnLoads)
-                    {
-                        processor.InsertBefore(last, processor.Copy(returnLoad));
-                    }
+                    processor.InsertBefore(last, processor.Copy(returnLoad));
 
                     if (method.ReturnType.IsValueType)
                     {

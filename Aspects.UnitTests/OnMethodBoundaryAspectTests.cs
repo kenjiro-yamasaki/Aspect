@@ -3305,7 +3305,6 @@ namespace SoftCube.Aspects
                 }
             }
 
-
             public class @class
             {
                 public class Class
@@ -3320,6 +3319,36 @@ namespace SoftCube.Aspects
                 {
                     Logger.Trace("A");
                     return new Class() { Property = "a" };
+                }
+
+                [Fact]
+                public void a_成功する()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        a();
+
+                        Assert.Equal($"OnEntry A OnSuccess a OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class @struct
+            {
+                public struct Struct
+                {
+                    public string Property { get; set; }
+
+                    public override string ToString() => Property;
+                }
+
+                [TestAspect]
+                public Struct a()
+                {
+                    Logger.Trace("A");
+                    return new Struct() { Property = "a" };
                 }
 
                 [Fact]

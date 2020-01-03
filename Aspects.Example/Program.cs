@@ -20,32 +20,24 @@ namespace SoftCube.Aspects
             Console.Read();
         }
 
-        public class Class
-        {
-            public string Property { get; set; }
-        }
+        //public struct Class
+        //{
+        //    public string Property { get; set; }
+        //}
+
+        //[LoggerAspect]
+        //public Class 戻り値()
+        //{
+        //    Logger.Trace("A");
+        //    return new Class() { Property = "a" };
+        //}
 
         [LoggerAspect]
-        public Class 戻り値()
+        public int 戻り値()
         {
             Logger.Trace("A");
-            return new Class() { Property = "a" };
+            return 0;
         }
-
-
-        //[LoggerAspect]
-        //public int 戻り値あり()
-        //{
-        //    Logger.Trace("A");
-        //    return 0;
-        //}
-
-        //[LoggerAspect]
-        //public decimal 戻り値あり()
-        //{
-        //    Logger.Trace("A");
-        //    return 0.0m;
-        //}
     }
 
     //class LoggerTest
