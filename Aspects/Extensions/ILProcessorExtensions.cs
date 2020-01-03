@@ -23,125 +23,15 @@ namespace SoftCube.Aspects
             return processor.Body.Instructions.First();
         }
 
-        ///// <summary>
-        ///// リターン命令 (戻り値がある場合、戻り値をスタックにロードする命令) を取得します。
-        ///// </summary>
-        ///// <param name="processor">IL プロセッサー。</param>
-        ///// <returns>リターン命令 (戻り値がある場合、戻り値をスタックにロードする命令)。</returns>
-        //internal static Instruction ReturnInstruction(this ILProcessor processor)
-        //{
-        //    var method = processor.Body.Method;
-
-        //    switch (method.ReturnType.MetadataType)
-        //    {
-        //        case MetadataType.Void:
-        //            return processor.Body.Instructions.Last();
-
-        //        case MetadataType.Boolean:
-        //        case MetadataType.Char:
-        //        case MetadataType.SByte:
-        //        case MetadataType.Byte:
-        //        case MetadataType.Int16:
-        //        case MetadataType.UInt16:
-        //        case MetadataType.Int32:
-        //        case MetadataType.UInt32:
-        //        case MetadataType.Double:
-        //        case MetadataType.Single:
-        //        case MetadataType.String:
-        //        case MetadataType.ValueType:
-        //        case MetadataType.Int64:
-        //        case MetadataType.UInt64:
-        //        case MetadataType.Class:
-        //            return processor.ReturnInstructions().First();
-
-        //        case MetadataType.Pointer:
-        //        case MetadataType.ByReference:
-        //        case MetadataType.Var:
-        //        case MetadataType.Array:
-        //        case MetadataType.GenericInstance:
-        //        case MetadataType.TypedByReference:
-        //        case MetadataType.IntPtr:
-        //        case MetadataType.UIntPtr:
-        //        case MetadataType.FunctionPointer:
-        //        case MetadataType.Object:
-        //        case MetadataType.MVar:
-        //        case MetadataType.RequiredModifier:
-        //        case MetadataType.OptionalModifier:
-        //        case MetadataType.Sentinel:
-        //        case MetadataType.Pinned:
-        //        default:
-        //            throw new NotSupportedException();
-        //    }
-        //}
-
-        //internal static IReadOnlyList<Instruction> ReturnInstructions(this ILProcessor processor)
-        //{
-        //    var returns = new List<Instruction>();
-
-        //    var instruction = processor.Body.Instructions.Last();
-        //    for (; instruction.OpCode != OpCodes.Stloc_0; instruction = instruction.Previous)
-        //    {
-        //        returns.Add(instruction);
-        //    }
-
-        //    var returnLoads = new List<Instruction>();
-        //    while (returnLoads.Count == 0)
-        //    {
-        //        instruction = instruction.Previous;
-        //        for (; instruction.OpCode != OpCodes.Nop; instruction = instruction.Previous)
-        //        {
-        //            returns.Add(instruction);
-        //            returnLoads.Add(instruction);
-        //        }
-        //    }
-
-        //    returns.Reverse();
-        //    returnLoads.Reverse();
-
-        //    return returns;
-        //}
-
+        /// <summary>
+        /// 戻り値をスタックにロードする命令を取得します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <returns>戻り値をスタックにロードする命令。</returns>
         internal static Instruction ReturnLoadInstruction(this ILProcessor processor)
         {
             return processor.Body.Instructions.Last().Previous;
-
-
-            //var returns = new List<Instruction>();
-            //var returnLoads = new List<Instruction>();
-
-            //var instruction = processor.Body.Instructions.Last();
-            //while (true)
-            //{
-            //    if (instruction.OpCode == OpCodes.Ldloc_0)
-            //    {
-            //        returns.Add(instruction);
-            //        returnLoads.Add(instruction);
-            //        break;
-            //    }
-
-            //    returns.Add(instruction);
-
-            //    instruction = instruction.Previous;
-            //}
-
-            //while (returnLoads.Count == 1)
-            //{
-            //    instruction = instruction.Previous;
-            //    for (; instruction.OpCode != OpCodes.Nop; instruction = instruction.Previous)
-            //    {
-            //        returns.Add(instruction);
-            //        returnLoads.Add(instruction);
-            //    }
-            //}
-
-            //returns.Reverse();
-            //returnLoads.Reverse();
-
-            //return returnLoads;
         }
-
-
-
 
         /// <summary>
         /// 命令をコピーします。
