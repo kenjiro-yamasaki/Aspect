@@ -1,4 +1,7 @@
 ﻿using SoftCube.Log;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Xunit;
 
 namespace SoftCube.Aspects
@@ -19,10 +22,43 @@ namespace SoftCube.Aspects
         {
             Logger.Trace("OnSuccess");
 
-            if (args.ReturnValue != null)
+            if (args.ReturnValue == null)
             {
-                Logger.Trace(args.ReturnValue.ToString());
+                return;
             }
+            switch (args.ReturnValue)
+            {
+                case IReadOnlyList<int> list:
+                    var builder = new StringBuilder();
+                    builder.Append("[");
+
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        var item = list[i];
+                        builder.Append(item.ToString());
+
+                        if (i != list.Count - 1)
+                        {
+                            builder.Append(",");
+                        }
+                    }
+
+                    builder.Append("]");
+                    Logger.Trace(builder.ToString());
+                    break;
+
+                default:
+                    Logger.Trace(args.ReturnValue.ToString());
+                    break;
+            }
+
+
+
+
+            //if (args.ReturnValue != null)
+            //{
+            //    Logger.Trace(args.ReturnValue.ToString());
+            //}
         }
 
         public override void OnException(MethodExecutionArgs args)
@@ -99,9 +135,9 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        #region 定数の戻り値あり
+        #region 戻り値あり
 
-        public class 定数の戻り値あり
+        public class 戻り値あり
         {
             public class @int
             {
@@ -3365,6 +3401,77 @@ namespace SoftCube.Aspects
                 }
             }
 
+            public class @List
+            {
+                [TestAspect]
+                public List<int> Item0()
+                {
+                    Logger.Trace("A");
+
+                    var result = new List<int>();
+                    return result;
+                }
+
+                [TestAspect]
+                public List<int> Item1()
+                {
+                    Logger.Trace("A");
+
+                    var result = new List<int>();
+                    result.Add(0);
+                    return result;
+                }
+
+                [TestAspect]
+                public List<int> Item2()
+                {
+                    Logger.Trace("A");
+
+                    var result = new List<int>();
+                    result.Add(0);
+                    result.Add(1);
+                    return result;
+                }
+
+                [Fact]
+                public void Item0_成功する()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        Item0();
+
+                        Assert.Equal($"OnEntry A OnSuccess [] OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void Item1_成功する()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        Item1();
+
+                        Assert.Equal($"OnEntry A OnSuccess [0] OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void Item2_成功する()
+                {
+                    lock (@lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        Item2();
+
+                        Assert.Equal($"OnEntry A OnSuccess [0,1] OnExit ", appender.ToString());
+                    }
+                }
+            }
         }
 
 
