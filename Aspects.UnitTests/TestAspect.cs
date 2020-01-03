@@ -55,6 +55,8 @@ namespace SoftCube.Aspects
         public override void OnException(MethodExecutionArgs args)
         {
             Logger.Trace("OnException");
+
+            Logger.Trace(args.Exception.Message);
         }
 
         public override void OnExit(MethodExecutionArgs args)

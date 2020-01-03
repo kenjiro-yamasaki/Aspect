@@ -15,7 +15,7 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            new Program().引数(1);
+            new Program().例外();
 
             Logger.Trace("B");
 
@@ -23,18 +23,24 @@ namespace SoftCube.Aspects
         }
 
         [LoggerAspect]
-        public void 引数(int value)
+        public void 例外()
         {
-            Logger.Trace("A");
+            throw new Exception("A");;
         }
 
+        //[LoggerAspect]
+        //public void 引数(int value)
+        //{
+        //    Logger.Trace("A");
+        //}
 
-        [LoggerAspect]
-        public int 戻り値()
-        {
-            Logger.Trace("A");
-            return 1;
-        }
+
+        //[LoggerAspect]
+        //public int 戻り値()
+        //{
+        //    Logger.Trace("A");
+        //    return 1;
+        //}
 
     }
 

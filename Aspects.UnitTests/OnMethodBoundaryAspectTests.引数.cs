@@ -13,7 +13,7 @@ namespace SoftCube.Aspects
             #region int
 
             [TestAspect]
-            public void @int(int value)
+            private void @int(int value)
             {
                 Logger.Trace("A");
             }
@@ -55,7 +55,7 @@ namespace SoftCube.Aspects
             #region short
 
             [TestAspect]
-            public void @short(short value)
+            private void @short(short value)
             {
                 Logger.Trace("A");
             }
@@ -97,7 +97,7 @@ namespace SoftCube.Aspects
             #region long
 
             [TestAspect]
-            public void @long(long value)
+            private void @long(long value)
             {
                 Logger.Trace("A");
             }
@@ -139,7 +139,7 @@ namespace SoftCube.Aspects
             #region uint
 
             [TestAspect]
-            public void @uint(uint value)
+            private void @uint(uint value)
             {
                 Logger.Trace("A");
             }
@@ -172,7 +172,7 @@ namespace SoftCube.Aspects
             #region ushort
 
             [TestAspect]
-            public void @ushort(ushort value)
+            private void @ushort(ushort value)
             {
                 Logger.Trace("A");
             }
@@ -205,7 +205,7 @@ namespace SoftCube.Aspects
             #region ulong
 
             [TestAspect]
-            public void @ulong(ulong value)
+            private void @ulong(ulong value)
             {
                 Logger.Trace("A");
             }
@@ -238,7 +238,7 @@ namespace SoftCube.Aspects
             #region byte
 
             [TestAspect]
-            public void @byte(byte value)
+            private void @byte(byte value)
             {
                 Logger.Trace("A");
             }
@@ -271,7 +271,7 @@ namespace SoftCube.Aspects
             #region sbyte
 
             [TestAspect]
-            public void @sbyte(sbyte value)
+            private void @sbyte(sbyte value)
             {
                 Logger.Trace("A");
             }
@@ -313,7 +313,7 @@ namespace SoftCube.Aspects
             #region bool
 
             [TestAspect]
-            public void @bool(bool value)
+            private void @bool(bool value)
             {
                 Logger.Trace("A");
             }
@@ -338,7 +338,7 @@ namespace SoftCube.Aspects
             #region double
 
             [TestAspect]
-            public void @double(double value)
+            private void @double(double value)
             {
                 Logger.Trace("A");
             }
@@ -368,7 +368,7 @@ namespace SoftCube.Aspects
             #region float
 
             [TestAspect]
-            public void @float(float value)
+            private void @float(float value)
             {
                 Logger.Trace("A");
             }
@@ -398,7 +398,7 @@ namespace SoftCube.Aspects
             #region decimal
 
             [TestAspect]
-            public void @decimal(decimal value)
+            private void @decimal(decimal value)
             {
                 Logger.Trace("A");
             }
@@ -428,7 +428,7 @@ namespace SoftCube.Aspects
             #region char
 
             [TestAspect]
-            public void @char(char value)
+            private void @char(char value)
             {
                 Logger.Trace("A");
             }
@@ -453,7 +453,7 @@ namespace SoftCube.Aspects
             #region string
 
             [TestAspect]
-            public void @string(string value)
+            private void @string(string value)
             {
                 Logger.Trace("A");
             }
@@ -485,7 +485,7 @@ namespace SoftCube.Aspects
             }
 
             [TestAspect]
-            public void @class(Class value)
+            private void @class(Class value)
             {
                 Logger.Trace("A");
             }
@@ -516,7 +516,7 @@ namespace SoftCube.Aspects
             }
 
             [TestAspect]
-            public void @struct(Struct value)
+            private void @struct(Struct value)
             {
                 Logger.Trace("A");
             }
@@ -540,19 +540,19 @@ namespace SoftCube.Aspects
             #region Collection
 
             [TestAspect]
-            public void IEnumerable(IEnumerable value)
+            private void IEnumerable(IEnumerable value)
             {
                 Logger.Trace("A");
             }
 
             [TestAspect]
-            public void IEnumerableT(IEnumerable<int> value)
+            private void IEnumerableT(IEnumerable<int> value)
             {
                 Logger.Trace("A");
             }
 
             [TestAspect]
-            public void ListT(List<int> value)
+            private void ListT(List<int> value)
             {
                 Logger.Trace("A");
             }
