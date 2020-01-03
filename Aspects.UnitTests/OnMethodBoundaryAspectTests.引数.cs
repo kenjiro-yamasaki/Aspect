@@ -1,4 +1,6 @@
 ﻿using SoftCube.Log;
+using System.Collections;
+using System.Collections.Generic;
 using Xunit;
 using static SoftCube.Aspects.Constants;
 
@@ -40,7 +42,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @int(value);
 
@@ -82,7 +84,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @short(value);
 
@@ -124,7 +126,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @long(value);
 
@@ -157,7 +159,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @uint(value);
 
@@ -190,7 +192,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @ushort(value);
 
@@ -223,7 +225,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @ulong(value);
 
@@ -256,7 +258,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @byte(value);
 
@@ -298,7 +300,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @sbyte(value);
 
@@ -323,7 +325,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @bool(value);
 
@@ -353,7 +355,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @double(value);
 
@@ -383,7 +385,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @float(value);
 
@@ -413,7 +415,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @decimal(value);
 
@@ -438,7 +440,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @char(value);
 
@@ -463,7 +465,7 @@ namespace SoftCube.Aspects
             {
                 lock (Lock)
                 {
-                    var appender = InitializeLogger();
+                    var appender = CreateAppender();
 
                     @string(value);
 
@@ -472,7 +474,132 @@ namespace SoftCube.Aspects
             }
 
             #endregion
+
+            #region class
+
+            public class Class
+            {
+                public string Property { get; set; }
+
+                public override string ToString() => Property;
+            }
+
+            [TestAspect]
+            public void @class(Class value)
+            {
+                Logger.Trace("A");
+            }
+
+            [Fact]
+            public void class_成功する()
+            {
+                lock (Lock)
+                {
+                    var appender = CreateAppender();
+                    var value = new Class() { Property = "a" };
+
+                    @class(value);
+
+                    Assert.Equal($"OnEntry {value} A OnSuccess null OnExit ", appender.ToString());
+                }
+            }
+
+            #endregion
+
+            #region struct
+
+            public struct Struct
+            {
+                public string Property { get; set; }
+
+                public override string ToString() => Property;
+            }
+
+            [TestAspect]
+            public void @struct(Struct value)
+            {
+                Logger.Trace("A");
+            }
+
+            [Fact]
+            public void struct_成功する()
+            {
+                lock (Lock)
+                {
+                    var appender = CreateAppender();
+                    var value = new Struct() { Property = "a" };
+
+                    @struct(value);
+
+                    Assert.Equal($"OnEntry {value} A OnSuccess null OnExit ", appender.ToString());
+                }
+            }
+
+            #endregion
+
+            #region Collection
+
+            [TestAspect]
+            public void IEnumerable(IEnumerable value)
+            {
+                Logger.Trace("A");
+            }
+
+            [TestAspect]
+            public void IEnumerableT(IEnumerable<int> value)
+            {
+                Logger.Trace("A");
+            }
+
+            [TestAspect]
+            public void ListT(List<int> value)
+            {
+                Logger.Trace("A");
+            }
+
+            [Fact]
+            public void IEnumerable_成功する()
+            {
+                lock (Lock)
+                {
+                    var appender = CreateAppender();
+                    var value    = new List<int>() { 0 };
+
+                    IEnumerable(value);
+
+                    Assert.Equal($"OnEntry {value} A OnSuccess null OnExit ", appender.ToString());
+                }
+            }
+
+            [Fact]
+            public void IEnumerableT_成功する()
+            {
+                lock (Lock)
+                {
+                    var appender = CreateAppender();
+                    var value    = new List<int>() { 0 };
+
+                    IEnumerableT(value);
+
+                    Assert.Equal($"OnEntry {value} A OnSuccess null OnExit ", appender.ToString());
+                }
+            }
+
+            [Fact]
+            public void ListT_成功する()
+            {
+                lock (Lock)
+                {
+                    var appender = CreateAppender();
+                    var value    = new List<int>() { 0 };
+
+                    ListT(value);
+
+                    Assert.Equal($"OnEntry {value} A OnSuccess null OnExit ", appender.ToString());
+                }
+            }
+
+            #endregion
         }
     }
-
 }

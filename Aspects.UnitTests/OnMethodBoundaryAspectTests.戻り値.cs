@@ -10,7 +10,7 @@ namespace SoftCube.Aspects
     {
         #region テストユーティリティ
 
-        internal static StringAppender InitializeLogger()
+        internal static StringAppender CreateAppender()
         {
             var appender = new StringAppender();
             appender.LogFormat = "{Message} ";
@@ -177,7 +177,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -190,7 +190,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -203,7 +203,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -216,7 +216,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -229,7 +229,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -242,7 +242,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -255,7 +255,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -268,7 +268,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -281,7 +281,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -294,7 +294,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -307,7 +307,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -320,7 +320,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m1();
 
@@ -333,7 +333,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m2();
 
@@ -346,7 +346,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m3();
 
@@ -359,7 +359,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m4();
 
@@ -372,7 +372,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m5();
 
@@ -385,7 +385,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m6();
 
@@ -398,7 +398,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m7();
 
@@ -411,7 +411,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m8();
 
@@ -424,7 +424,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m9();
 
@@ -437,7 +437,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m10();
 
@@ -600,7 +600,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -613,7 +613,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -626,7 +626,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -639,7 +639,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -652,7 +652,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -665,7 +665,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -678,7 +678,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -691,7 +691,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -704,7 +704,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -717,7 +717,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -730,7 +730,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -743,7 +743,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m1();
 
@@ -756,7 +756,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         n2();
 
@@ -769,7 +769,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m3();
 
@@ -782,7 +782,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m4();
 
@@ -795,7 +795,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m5();
 
@@ -808,7 +808,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m6();
 
@@ -821,7 +821,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m7();
 
@@ -834,7 +834,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m8();
 
@@ -847,7 +847,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m9();
 
@@ -860,7 +860,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m10();
 
@@ -1023,7 +1023,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -1036,7 +1036,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -1049,7 +1049,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -1062,7 +1062,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -1075,7 +1075,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -1088,7 +1088,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -1101,7 +1101,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -1114,7 +1114,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -1127,7 +1127,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -1140,7 +1140,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -1153,7 +1153,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -1166,7 +1166,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m1();
 
@@ -1179,7 +1179,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         n2();
 
@@ -1192,7 +1192,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m3();
 
@@ -1205,7 +1205,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m4();
 
@@ -1218,7 +1218,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m5();
 
@@ -1231,7 +1231,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m6();
 
@@ -1244,7 +1244,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m7();
 
@@ -1257,7 +1257,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m8();
 
@@ -1270,7 +1270,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m9();
 
@@ -1283,7 +1283,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m10();
 
@@ -1376,7 +1376,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -1389,7 +1389,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -1402,7 +1402,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -1415,7 +1415,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -1428,7 +1428,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -1441,7 +1441,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -1454,7 +1454,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -1467,7 +1467,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -1480,7 +1480,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -1493,7 +1493,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -1506,7 +1506,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -1599,7 +1599,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -1612,7 +1612,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -1625,7 +1625,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -1638,7 +1638,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -1651,7 +1651,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -1664,7 +1664,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -1677,7 +1677,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -1690,7 +1690,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -1703,7 +1703,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -1716,7 +1716,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -1729,7 +1729,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -1822,7 +1822,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -1835,7 +1835,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -1848,7 +1848,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -1861,7 +1861,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -1874,7 +1874,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -1887,7 +1887,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -1900,7 +1900,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -1913,7 +1913,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -1926,7 +1926,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -1939,7 +1939,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -1952,7 +1952,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -2045,7 +2045,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -2058,7 +2058,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -2071,7 +2071,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -2084,7 +2084,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -2097,7 +2097,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -2110,7 +2110,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -2123,7 +2123,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -2136,7 +2136,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -2149,7 +2149,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -2162,7 +2162,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -2175,7 +2175,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -2338,7 +2338,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -2351,7 +2351,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -2364,7 +2364,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p2();
 
@@ -2377,7 +2377,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p3();
 
@@ -2390,7 +2390,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p4();
 
@@ -2403,7 +2403,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p5();
 
@@ -2416,7 +2416,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p6();
 
@@ -2429,7 +2429,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p7();
 
@@ -2442,7 +2442,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p8();
 
@@ -2455,7 +2455,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p9();
 
@@ -2468,7 +2468,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p10();
 
@@ -2481,7 +2481,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m1();
 
@@ -2494,7 +2494,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m2();
 
@@ -2507,7 +2507,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m3();
 
@@ -2520,7 +2520,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m4();
 
@@ -2533,7 +2533,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m5();
 
@@ -2546,7 +2546,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m6();
 
@@ -2559,7 +2559,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m7();
 
@@ -2572,7 +2572,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m8();
 
@@ -2585,7 +2585,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m9();
 
@@ -2598,7 +2598,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m10();
 
@@ -2628,7 +2628,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         @true();
 
@@ -2641,7 +2641,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         @false();
 
@@ -2713,7 +2713,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -2726,7 +2726,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p05();
 
@@ -2739,7 +2739,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -2752,7 +2752,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p100();
 
@@ -2765,7 +2765,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m0();
 
@@ -2778,7 +2778,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m05();
 
@@ -2791,7 +2791,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m1();
 
@@ -2804,7 +2804,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m100();
 
@@ -2876,7 +2876,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -2889,7 +2889,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p05();
 
@@ -2902,7 +2902,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -2915,7 +2915,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p100();
 
@@ -2928,7 +2928,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m0();
 
@@ -2941,7 +2941,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m05();
 
@@ -2954,7 +2954,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m1();
 
@@ -2967,7 +2967,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m100();
 
@@ -3039,7 +3039,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p0();
 
@@ -3052,7 +3052,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p05();
 
@@ -3065,7 +3065,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p1();
 
@@ -3078,7 +3078,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         p100();
 
@@ -3091,7 +3091,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m0();
 
@@ -3104,7 +3104,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m05();
 
@@ -3117,7 +3117,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m1();
 
@@ -3130,7 +3130,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         m100();
 
@@ -3160,7 +3160,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         a();
 
@@ -3173,7 +3173,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         あ();
 
@@ -3203,7 +3203,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         a();
 
@@ -3216,7 +3216,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         あ();
 
@@ -3246,7 +3246,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         a();
 
@@ -3276,7 +3276,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         a();
 
@@ -3331,7 +3331,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         IEnumerable();
 
@@ -3344,7 +3344,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         IEnumerableT();
 
@@ -3357,7 +3357,7 @@ namespace SoftCube.Aspects
                 {
                     lock (Lock)
                     {
-                        var appender = InitializeLogger();
+                        var appender = CreateAppender();
 
                         ListT();
 

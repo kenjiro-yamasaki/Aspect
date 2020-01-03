@@ -51,8 +51,8 @@ namespace SoftCube.Aspects
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
             // 命令を書き換えます。
-            var first      = processor.FirstInstruction();
-            var last       = processor.LastInstruction();
+            var first = processor.EntryInstruction();
+            var last  = processor.ExitInstruction();
 
             //if (last.OpCode == OpCodes.Throw)
             //{

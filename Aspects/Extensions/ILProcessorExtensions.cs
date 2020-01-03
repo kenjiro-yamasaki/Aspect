@@ -18,12 +18,12 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <returns>最初の命令。</returns>
-        internal static Instruction FirstInstruction(this ILProcessor processor)
+        internal static Instruction EntryInstruction(this ILProcessor processor)
         {
             return processor.Body.Instructions.First();
         }
 
-        internal static Instruction LastInstruction(this ILProcessor processor)
+        internal static Instruction ExitInstruction(this ILProcessor processor)
         {
             if (processor.Body.Method.HasReturnValue())
             {
