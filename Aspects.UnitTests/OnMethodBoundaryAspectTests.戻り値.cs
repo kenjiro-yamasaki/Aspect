@@ -1,82 +1,14 @@
 ﻿using SoftCube.Log;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Xunit;
+using static SoftCube.Aspects.Constants;
 
 namespace SoftCube.Aspects
 {
-    public class TestAspect : OnMethodBoundaryAspect
-    {
-        public override void OnEntry(MethodExecutionArgs args)
-        {
-            Logger.Info("OnEntry");
-
-            foreach (var arg in args.Arguments)
-            {
-                Logger.Trace(arg.ToString());
-            }
-        }
-
-        public override void OnSuccess(MethodExecutionArgs args)
-        {
-            Logger.Trace("OnSuccess");
-
-            if (args.ReturnValue == null)
-            {
-                return;
-            }
-            switch (args.ReturnValue)
-            {
-                case IReadOnlyList<int> list:
-                    var builder = new StringBuilder();
-                    builder.Append("[");
-
-                    for (int i = 0; i < list.Count; i++)
-                    {
-                        var item = list[i];
-                        builder.Append(item.ToString());
-
-                        if (i != list.Count - 1)
-                        {
-                            builder.Append(",");
-                        }
-                    }
-
-                    builder.Append("]");
-                    Logger.Trace(builder.ToString());
-                    break;
-
-                default:
-                    Logger.Trace(args.ReturnValue.ToString());
-                    break;
-            }
-
-
-
-
-            //if (args.ReturnValue != null)
-            //{
-            //    Logger.Trace(args.ReturnValue.ToString());
-            //}
-        }
-
-        public override void OnException(MethodExecutionArgs args)
-        {
-            Logger.Trace("OnException");
-        }
-
-        public override void OnExit(MethodExecutionArgs args)
-        {
-            Logger.Trace("OnExit");
-        }
-    }
-
-    public class OnMethodBoundaryAspectTests
+    public partial class OnMethodBoundaryAspectTests
     {
         #region テストユーティリティ
-
-        public static object @lock = new object();
 
         internal static StringAppender InitializeLogger()
         {
@@ -89,55 +21,7 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        #region メソッド
-
-        #region 引数と戻り値なし
-
-        //[TestAspect]
-        //public void 引数と戻り値なし()
-        //{
-        //    Console.WriteLine("A");
-        //}
-
-        //[Fact]
-        //public void 引数と戻り値なし_成功する()
-        //{
-        //    var appender = new StringAppender();
-        //    appender.LogFormat = "{Message} ";
-        //    Logger.Add(appender);
-
-        //    引数と戻り値なし();
-
-        //    Assert.Equal($"OnEntry OnSuccess OnExit ", appender.ToString());
-        //}
-
-        #endregion
-
-        #region 引数あり
-
-        //[TestAspect]
-        //public void 引数あり(string message)
-        //{
-        //    Console.WriteLine(message);
-        //}
-
-        //[Fact]
-        //public void 引数あり_成功する()
-        //{
-        //    var appender = new StringAppender();
-        //    appender.LogFormat = "{Message} ";
-        //    Logger.Add(appender);
-
-        //    引数あり("A");
-
-        //    Assert.Equal($"OnEntry A OnSuccess OnExit ", appender.ToString());
-        //}
-
-        #endregion
-
-        #region 戻り値あり
-
-        public class 戻り値あり
+        public class 戻り値
         {
             public class @int
             {
@@ -291,7 +175,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -304,7 +188,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -317,7 +201,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -330,7 +214,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -343,7 +227,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -356,7 +240,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -369,7 +253,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -382,7 +266,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -395,7 +279,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -408,7 +292,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -421,7 +305,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -434,7 +318,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -447,7 +331,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void n2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -460,7 +344,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -473,7 +357,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -486,7 +370,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -499,7 +383,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -512,7 +396,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -525,7 +409,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -538,7 +422,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -551,7 +435,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -714,7 +598,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -727,7 +611,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -740,7 +624,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -753,7 +637,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -766,7 +650,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -779,7 +663,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -792,7 +676,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -805,7 +689,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -818,7 +702,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -831,7 +715,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -844,7 +728,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -857,7 +741,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -870,7 +754,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void n2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -883,7 +767,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -896,7 +780,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -909,7 +793,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -922,7 +806,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -935,7 +819,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -948,7 +832,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -961,7 +845,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -974,7 +858,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1137,7 +1021,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1150,7 +1034,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1163,7 +1047,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1176,7 +1060,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1189,7 +1073,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1202,7 +1086,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1215,7 +1099,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1228,7 +1112,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1241,7 +1125,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1254,7 +1138,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1267,7 +1151,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1280,7 +1164,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1293,7 +1177,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void n2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1306,7 +1190,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1319,7 +1203,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1332,7 +1216,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1345,7 +1229,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1358,7 +1242,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1371,7 +1255,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1384,7 +1268,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1397,7 +1281,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1490,7 +1374,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1503,7 +1387,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1516,7 +1400,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1529,7 +1413,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1542,7 +1426,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1555,7 +1439,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1568,7 +1452,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1581,7 +1465,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1594,7 +1478,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1607,7 +1491,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1620,7 +1504,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1713,7 +1597,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1726,7 +1610,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1739,7 +1623,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1752,7 +1636,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1765,7 +1649,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1778,7 +1662,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1791,7 +1675,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1804,7 +1688,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1817,7 +1701,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1830,7 +1714,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1843,7 +1727,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1936,7 +1820,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1949,7 +1833,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1962,7 +1846,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1975,7 +1859,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -1988,7 +1872,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2001,7 +1885,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2014,7 +1898,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2027,7 +1911,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2040,7 +1924,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2053,7 +1937,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2066,7 +1950,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2159,7 +2043,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2172,7 +2056,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2185,7 +2069,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2198,7 +2082,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2211,7 +2095,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2224,7 +2108,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2237,7 +2121,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2250,7 +2134,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2263,7 +2147,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2276,7 +2160,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2289,7 +2173,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2452,7 +2336,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2465,7 +2349,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2478,7 +2362,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2491,7 +2375,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2504,7 +2388,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2517,7 +2401,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2530,7 +2414,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2543,7 +2427,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2556,7 +2440,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2569,7 +2453,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2582,7 +2466,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2595,7 +2479,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2608,7 +2492,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void n2_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2621,7 +2505,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m3_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2634,7 +2518,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m4_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2647,7 +2531,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m5_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2660,7 +2544,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m6_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2673,7 +2557,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m7_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2686,7 +2570,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m8_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2699,7 +2583,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m9_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2712,7 +2596,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m10_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2742,7 +2626,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void true_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2755,7 +2639,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void false_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2827,7 +2711,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2840,7 +2724,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p05_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2853,7 +2737,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2866,7 +2750,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p100_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2879,7 +2763,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2892,7 +2776,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m05_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2905,7 +2789,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2918,7 +2802,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m100_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -2990,7 +2874,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3003,7 +2887,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p05_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3016,7 +2900,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3029,7 +2913,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p100_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3042,7 +2926,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3055,7 +2939,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m05_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3068,7 +2952,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3081,7 +2965,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m100_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3153,7 +3037,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3166,7 +3050,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p05_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3179,7 +3063,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3192,7 +3076,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void p100_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3205,7 +3089,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m0_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3218,7 +3102,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m05_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3231,7 +3115,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m1_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3244,7 +3128,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void m100_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3274,7 +3158,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void a_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3287,7 +3171,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void あ_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3317,7 +3201,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void a_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3330,7 +3214,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void あ_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3360,7 +3244,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void a_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3390,7 +3274,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void a_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
@@ -3401,19 +3285,10 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class @List
+            public class Collection
             {
                 [TestAspect]
-                public List<int> Item0()
-                {
-                    Logger.Trace("A");
-
-                    var result = new List<int>();
-                    return result;
-                }
-
-                [TestAspect]
-                public List<int> Item1()
+                public IEnumerable IEnumerable()
                 {
                     Logger.Trace("A");
 
@@ -3423,118 +3298,88 @@ namespace SoftCube.Aspects
                 }
 
                 [TestAspect]
-                public List<int> Item2()
+                public IEnumerable<int> IEnumerableT()
                 {
                     Logger.Trace("A");
 
                     var result = new List<int>();
                     result.Add(0);
-                    result.Add(1);
                     return result;
                 }
 
-                [Fact]
-                public void Item0_成功する()
+                [TestAspect]
+                public List<int> ListT()
                 {
-                    lock (@lock)
-                    {
-                        var appender = InitializeLogger();
+                    Logger.Trace("A");
 
-                        Item0();
+                    var result = new List<int>();
+                    result.Add(0);
+                    return result;
+                }
 
-                        Assert.Equal($"OnEntry A OnSuccess [] OnExit ", appender.ToString());
-                    }
+                [TestAspect]
+                public IEnumerable<int> 遅延評価()
+                {
+                    Logger.Trace("A");
+
+                    yield return 0;
+                    yield return 1;
                 }
 
                 [Fact]
-                public void Item1_成功する()
+                public void IEnumerable_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
-                        Item1();
+                        IEnumerable();
 
                         Assert.Equal($"OnEntry A OnSuccess [0] OnExit ", appender.ToString());
                     }
                 }
 
                 [Fact]
-                public void Item2_成功する()
+                public void IEnumerableT_成功する()
                 {
-                    lock (@lock)
+                    lock (Lock)
                     {
                         var appender = InitializeLogger();
 
-                        Item2();
+                        IEnumerableT();
 
-                        Assert.Equal($"OnEntry A OnSuccess [0,1] OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry A OnSuccess [0] OnExit ", appender.ToString());
                     }
                 }
+
+                [Fact]
+                public void ListT_成功する()
+                {
+                    lock (Lock)
+                    {
+                        var appender = InitializeLogger();
+
+                        ListT();
+
+                        Assert.Equal($"OnEntry A OnSuccess [0] OnExit ", appender.ToString());
+                    }
+                }
+
+                //[Fact]
+                //public void 遅延評価_成功する()
+                //{
+                //    lock (Lock)
+                //    {
+                //        var appender = InitializeLogger();
+
+                //        foreach (var item in 遅延評価())
+                //        {
+                //        }
+
+                //        Assert.Equal($"OnEntry A OnSuccess [0] OnExit ", appender.ToString());
+                //    }
+                //}
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //#region string
-
-        //[TestAspect]
-        //public string stringの変数()
-        //{
-        //    string result = "B";
-        //    Logger.Trace("A");
-        //    return result;
-        //}
-
-        //[Fact]
-        //public void stringの変数_成功する()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    stringの変数();
-
-        //    Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
-        //}
-
-        //[TestAspect]
-        //public string stringの値()
-        //{
-        //    Logger.Trace("A");
-        //    return "B";
-        //}
-
-        //[Fact]
-        //public void stringの値_成功する()
-        //{
-        //    var appender = InitializeLogger();
-
-        //    stringの値();
-
-        //    Assert.Equal($"OnEntry A OnSuccess B OnExit ", appender.ToString());
-        //}
-
-        //#endregion
-
-
-
-        #endregion
-
-        #endregion
     }
-
 }

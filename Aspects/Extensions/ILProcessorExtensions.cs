@@ -23,6 +23,18 @@ namespace SoftCube.Aspects
             return processor.Body.Instructions.First();
         }
 
+        internal static Instruction LastInstruction(this ILProcessor processor)
+        {
+            if (processor.Body.Method.HasReturnValue())
+            {
+                return processor.Body.Instructions.Last().Previous.Previous;
+            }
+            else
+            {
+                return processor.Body.Instructions.Last();
+            }
+        }
+
         /// <summary>
         /// 戻り値をスタックにロードする命令を取得します。
         /// </summary>

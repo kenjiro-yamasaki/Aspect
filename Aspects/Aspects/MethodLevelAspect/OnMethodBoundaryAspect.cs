@@ -51,9 +51,8 @@ namespace SoftCube.Aspects
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
             // 命令を書き換えます。
-            var first       = processor.FirstInstruction();
-            var returnLoad = processor.ReturnLoadInstruction();
-            var last       = returnLoad.Previous;
+            var first      = processor.FirstInstruction();
+            var last       = processor.LastInstruction();
 
             //if (last.OpCode == OpCodes.Throw)
             //{
@@ -105,6 +104,8 @@ namespace SoftCube.Aspects
                 ///
                 if (method.HasReturnValue())
                 {
+                    var returnLoad = processor.ReturnLoadInstruction();
+
                     processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
                     processor.InsertBefore(last, processor.Copy(returnLoad));
 

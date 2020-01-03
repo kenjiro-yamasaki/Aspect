@@ -37,7 +37,15 @@ namespace SoftCube.Aspects
         public override void OnSuccess(MethodExecutionArgs args)
         {
             Logger.Trace("OnSuccess");
-            Logger.Trace(args.ReturnValue.ToString());
+
+            if (args.ReturnValue == null)
+            {
+                Logger.Trace("null");
+            }
+            else
+            {
+                Logger.Trace(args.ReturnValue.ToString());
+            }
         }
 
         /// <summary>

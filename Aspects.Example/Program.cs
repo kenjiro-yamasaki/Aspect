@@ -1,5 +1,6 @@
 ﻿using SoftCube.Log;
 using System;
+using System.Collections.Generic;
 
 namespace SoftCube.Aspects
 {
@@ -14,30 +15,27 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            var result = new Program().戻り値();
-            Logger.Info(result.ToString());
+            new Program().引数(1);
+
+            Logger.Trace("B");
 
             Console.Read();
         }
 
-        //public struct Class
-        //{
-        //    public string Property { get; set; }
-        //}
+        [LoggerAspect]
+        public void 引数(int value)
+        {
+            Logger.Trace("A");
+        }
 
-        //[LoggerAspect]
-        //public Class 戻り値()
-        //{
-        //    Logger.Trace("A");
-        //    return new Class() { Property = "a" };
-        //}
 
         [LoggerAspect]
         public int 戻り値()
         {
             Logger.Trace("A");
-            return 0;
+            return 1;
         }
+
     }
 
     //class LoggerTest
