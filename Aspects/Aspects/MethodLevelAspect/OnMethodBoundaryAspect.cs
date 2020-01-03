@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using SoftCube.Log;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -32,10 +33,10 @@ namespace SoftCube.Aspects
         protected override void OnInject(MethodDefinition method)
         {
             var processor = method.Body.GetILProcessor();
-            Debug.WriteLine($"-------------------");
+            Logger.Trace($"{method.FullName}-------------------");
             foreach (var instruction in processor.Body.Instructions)
             {
-                Debug.WriteLine($"{instruction}");
+                Logger.Trace($"{instruction}");
             }
 
             var module = method.DeclaringType.Module.Assembly.MainModule;
@@ -51,83 +52,98 @@ namespace SoftCube.Aspects
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
             // 命令を書き換えます。
-            var entry = processor.EntryInstruction();
-            var exit  = processor.ExitInstruction();
+            var first = processor.EntryInstruction();
+            var last  = processor.ExitInstruction();
 
-            if (exit.OpCode == OpCodes.Throw)
+            if (last.OpCode == OpCodes.Throw)
             {
-                processor.Append(exit = processor.Create(OpCodes.Ret));
+                processor.Append(last = processor.Create(OpCodes.Ret));
             }
 
             //
             Instruction tryStart;
             {
                 // OnMethodBoundaryAspect の派生クラスを生成します。
-                processor.InsertBefore(entry, processor.Create(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(new Type[] { }))));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Stloc, aspectIndex));
+                processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(new Type[] { }))));
+                processor.InsertBefore(first, processor.Create(OpCodes.Stloc, aspectIndex));
 
                 // MethodExecutionArgs を生成します。
-                processor.InsertBefore(entry, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Ldc_I4, method.Parameters.Count));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, method.Parameters.Count));
+                processor.InsertBefore(first, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
                 for (int parameterIndex = 0; parameterIndex < method.Parameters.Count; parameterIndex++)
                 {
                     var parameter = method.Parameters[parameterIndex];
-                    processor.InsertBefore(entry, processor.Create(OpCodes.Dup));
-                    processor.InsertBefore(entry, processor.Create(OpCodes.Ldc_I4, parameterIndex));
-                    processor.InsertBefore(entry, processor.Create(OpCodes.Ldarg, parameterIndex + 1));
+                    processor.InsertBefore(first, processor.Create(OpCodes.Dup));
+                    processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameterIndex));
+                    processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameterIndex + 1));
                     if (parameter.ParameterType.IsValueType)
                     {
-                        processor.InsertBefore(entry, processor.Create(OpCodes.Box, parameter.ParameterType));
+                        processor.InsertBefore(first, processor.Create(OpCodes.Box, parameter.ParameterType));
                     }
-                    processor.InsertBefore(entry, processor.Create(OpCodes.Stelem_Ref));
+                    processor.InsertBefore(first, processor.Create(OpCodes.Stelem_Ref));
                 }
-                processor.InsertBefore(entry, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) }))));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) }))));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Stloc, methodExecutionArgsIndex));
+                processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) }))));
+                processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) }))));
+                processor.InsertBefore(first, processor.Create(OpCodes.Stloc, methodExecutionArgsIndex));
 
-                processor.InsertBefore(entry, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[]{ }))));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod())));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                processor.InsertBefore(first, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[]{ }))));
+                processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod())));
 
                 // OnEntry メソッドを呼び出します。
-                processor.InsertBefore(entry, processor.Create(OpCodes.Ldloc, aspectIndex));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
-                processor.InsertBefore(entry, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry)))));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectIndex));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry)))));
 
                 // try の開始位置を挿入します。
-                processor.InsertBefore(entry, tryStart = processor.Create(OpCodes.Nop));
+                processor.InsertBefore(first, tryStart = processor.Create(OpCodes.Nop));
             }
 
+            //
+            Instruction exit;
+            if (method.HasReturnValue())
             {
-                //////////////////////////////////////////////////////////////////////////////////////////
-                ///
-                if (method.HasReturnValue())
+                int resultIndex = processor.Body.Variables.Count();
+                processor.Body.Variables.Add(new VariableDefinition(method.ReturnType));
+
+                processor.InsertBefore(last, processor.Create(OpCodes.Stloc, resultIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, resultIndex));
+
+                if (method.ReturnType.IsValueType)
                 {
-                    var returnLoad = processor.ReturnLoadInstruction();
-
-                    processor.InsertBefore(exit, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
-                    processor.InsertBefore(exit, processor.Copy(returnLoad));
-
-                    if (method.ReturnType.IsValueType)
-                    {
-                        processor.InsertBefore(exit, processor.Create(OpCodes.Box, method.ReturnType));
-                    }
-
-                    processor.InsertBefore(exit, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
+                    processor.InsertBefore(last, processor.Create(OpCodes.Box, method.ReturnType));
                 }
-                //////////////////////////////////////////////////////////////////////////////////////////
+
+                processor.InsertBefore(last, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
 
                 // OnSuccess メソッドを呼び出します。
-                processor.InsertBefore(exit, processor.Create(OpCodes.Ldloc, aspectIndex));
-                processor.InsertBefore(exit, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
-                processor.InsertBefore(exit, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, aspectIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
 
                 // OnExit メソッドを呼び出す。
-                processor.InsertBefore(exit, processor.Create(OpCodes.Ldloc, aspectIndex));
-                processor.InsertBefore(exit, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
-                processor.InsertBefore(exit, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, aspectIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
 
+                processor.InsertBefore(last, exit = processor.Create(OpCodes.Ldloc, resultIndex));
+                processor.InsertBefore(exit, processor.Create(OpCodes.Leave_S, exit));
+            }
+            else
+            {
+                // OnSuccess メソッドを呼び出します。
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, aspectIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+
+                // OnExit メソッドを呼び出す。
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, aspectIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Ldloc, methodExecutionArgsIndex));
+                processor.InsertBefore(last, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
+
+                exit = last;
                 processor.InsertBefore(exit, processor.Create(OpCodes.Leave_S, exit));
             }
 
@@ -159,21 +175,22 @@ namespace SoftCube.Aspects
                 // finally ハンドラーを追加します。
                 var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
-                    CatchType    = module.ImportReference(typeof(Exception)),
-                    TryStart     = tryStart,
-                    TryEnd       = handlerStart,
+                    CatchType = module.ImportReference(typeof(Exception)),
+                    TryStart = tryStart,
+                    TryEnd = handlerStart,
                     HandlerStart = handlerStart,
-                    HandlerEnd   = exit,
+                    HandlerEnd = exit,
                 };
 
                 processor.Body.ExceptionHandlers.Add(handler);
             }
 
-            Debug.WriteLine($"-------------------");
+            Logger.Trace($"-------------------");
             foreach (var instruction in processor.Body.Instructions)
             {
-                Debug.WriteLine($"{instruction}");
+                Logger.Trace($"{instruction}");
             }
+            Logger.Trace($"-------------------");
         }
 
         #region イベントハンドラー

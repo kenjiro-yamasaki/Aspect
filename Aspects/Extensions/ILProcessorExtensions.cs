@@ -25,14 +25,15 @@ namespace SoftCube.Aspects
 
         internal static Instruction ExitInstruction(this ILProcessor processor)
         {
-            if (processor.Body.Method.HasReturnValue())
-            {
-                return processor.Body.Instructions.Last().Previous.Previous;
-            }
-            else
-            {
-                return processor.Body.Instructions.Last();
-            }
+            return processor.Body.Instructions.Last();
+            //if (processor.Body.Method.HasReturnValue())
+            //{
+            //    return processor.Body.Instructions.Last().Previous.Previous;
+            //}
+            //else
+            //{
+            //    return processor.Body.Instructions.Last();
+            //}
         }
 
         /// <summary>
