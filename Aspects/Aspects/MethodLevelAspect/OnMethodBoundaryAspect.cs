@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using SoftCube.Log;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -64,40 +63,52 @@ namespace SoftCube.Aspects
         /// <returns>アスペクト変数のインデックス, イベントデータ変数のインデックス, TryStart 命令。</returns>
         private (int AspectIndex, int EventArgsIndex, Instruction TryStart) InjectEntryHandler(MethodDefinition method)
         {
-            var module = method.DeclaringType.Module.Assembly.MainModule;
-            var processor = method.Body.GetILProcessor();
-            var first = processor.Body.Instructions.First();
+            var module       = method.DeclaringType.Module.Assembly.MainModule;                     // モジュール。
+            var parameters   = method.Parameters;                                                   // パラメーターコレクション。
+            var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
+            var instructions = method.Body.Instructions;                                            // 命令コレクション。
+            var variables    = method.Body.Variables;                                               // ローカル変数コレクション。
 
-            var aspectIndex = processor.Body.Variables.Count();
-            processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(GetType())));
+            // ローカル変数にアスペクトとイベントデータを追加する。
+            var aspectIndex = variables.Count();                                                    // アスペクト変数のインデックス。
+            variables.Add(new VariableDefinition(module.ImportReference(GetType())));
 
-            var eventArgsIndex = processor.Body.Variables.Count();
-            processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodExecutionArgs))));
+            var eventArgsIndex = variables.Count();                                                 // イベントデータ変数のインデックス。
+            variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodExecutionArgs))));
 
-            // OnMethodBoundaryAspect の派生クラスを生成します。
+            // アスペクト変数を生成します。
+            var first = instructions.First();
             processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(new Type[] { }))));
             processor.InsertBefore(first, processor.Create(OpCodes.Stloc, aspectIndex));
 
-            // MethodExecutionArgs を生成します。
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, method.Parameters.Count));
-            processor.InsertBefore(first, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
-            for (int parameterIndex = 0; parameterIndex < method.Parameters.Count; parameterIndex++)
+            // イベントデータをローカル変数にストアします。
             {
-                var parameter = method.Parameters[parameterIndex];
-                processor.InsertBefore(first, processor.Create(OpCodes.Dup));
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameterIndex));
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameterIndex + 1));
-                if (parameter.ParameterType.IsValueType)
-                {
-                    processor.InsertBefore(first, processor.Create(OpCodes.Box, parameter.ParameterType));
-                }
-                processor.InsertBefore(first, processor.Create(OpCodes.Stelem_Ref));
-            }
-            processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) }))));
-            processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) }))));
-            processor.InsertBefore(first, processor.Create(OpCodes.Stloc, eventArgsIndex));
+                // アスペクトのインスタンス (第 1 引数) をロードします。
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
 
+                // パラメーターコレクション (第 2 引数) を生成し、ロードします。
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameters.Count));
+                processor.InsertBefore(first, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.InsertBefore(first, processor.Create(OpCodes.Dup));
+                    processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameterIndex));
+                    processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameterIndex + 1));
+                    if (parameter.ParameterType.IsValueType)
+                    {
+                        processor.InsertBefore(first, processor.Create(OpCodes.Box, parameter.ParameterType));
+                    }
+                    processor.InsertBefore(first, processor.Create(OpCodes.Stelem_Ref));
+                }
+                processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) }))));
+
+                // イベントデータを生成し、ローカル変数にストアします。
+                processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) }))));
+                processor.InsertBefore(first, processor.Create(OpCodes.Stloc, eventArgsIndex));
+            }
+
+            // メソッド情報をイベントデータに設定します。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
             processor.InsertBefore(first, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { }))));
             processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod())));
