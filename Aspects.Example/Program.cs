@@ -15,27 +15,57 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            new Program().例外(1);
+            new Program().戻り値();
 
             Logger.Trace("B");
 
             Console.Read();
         }
 
-        [LoggerAspect]
-        public int 例外(object a)
+        public enum Enum
         {
-            if (a == null)
-            {
-                return 3;
-            }
-
-            Logger.Trace("A");
-
-            return 7;
-
-            //throw new Exception("A");
+            A,
+            B,
+            C,
         }
+
+        //[LoggerAspect]
+        //private void Break(Enum condition)
+        //{
+        //    switch (condition)
+        //    {
+        //        case Enum.A:
+        //            Logger.Trace("A");
+        //            break;
+
+        //        case Enum.B:
+        //            Logger.Trace("B");
+        //            break;
+
+        //        case Enum.C:
+        //            Logger.Trace("C");
+        //            break;
+
+        //        default:
+        //            Logger.Trace("D");
+        //            break;
+        //    }
+        //}
+
+        //[LoggerAspect]
+        //public int 例外(object a)
+        //{
+        //    if (a == null)
+        //    {
+        //        return 3;
+        //    }
+
+        //    Logger.Trace("A");
+
+        //    return 7;
+
+        //    //throw new Exception("A");
+        //}
 
         //[LoggerAspect]
         //public void 引数(int value)
@@ -44,12 +74,12 @@ namespace SoftCube.Aspects
         //}
 
 
-        //[LoggerAspect]
-        //public int 戻り値()
-        //{
-        //    Logger.Trace("A");
-        //    return 1;
-        //}
+        [LoggerAspect]
+        public int 戻り値()
+        {
+            Logger.Trace("A");
+            return 1;
+        }
 
     }
 

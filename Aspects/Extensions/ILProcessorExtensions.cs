@@ -14,39 +14,6 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 最初の命令を取得します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <returns>最初の命令。</returns>
-        internal static Instruction EntryInstruction(this ILProcessor processor)
-        {
-            return processor.Body.Instructions.First();
-        }
-
-        internal static Instruction ExitInstruction(this ILProcessor processor)
-        {
-            return processor.Body.Instructions.Last();
-            //if (processor.Body.Method.HasReturnValue())
-            //{
-            //    return processor.Body.Instructions.Last().Previous.Previous;
-            //}
-            //else
-            //{
-            //    return processor.Body.Instructions.Last();
-            //}
-        }
-
-        /// <summary>
-        /// 戻り値をスタックにロードする命令を取得します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <returns>戻り値をスタックにロードする命令。</returns>
-        internal static Instruction ReturnLoadInstruction(this ILProcessor processor)
-        {
-            return processor.Body.Instructions.Last().Previous;
-        }
-
-        /// <summary>
         /// 命令をコピーします。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
