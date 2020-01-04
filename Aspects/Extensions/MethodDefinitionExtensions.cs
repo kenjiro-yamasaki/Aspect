@@ -1,4 +1,7 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+using SoftCube.Log;
+using System.Linq;
 using System.Reflection;
 
 namespace SoftCube.Aspects
@@ -10,15 +13,10 @@ namespace SoftCube.Aspects
     {
         #region メソッド
 
-        public static bool HasReturnValue(this MethodDefinition methodDefinition)
-        {
-            return methodDefinition.ReturnType.FullName != "System.Void";
-        }
-
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="methodDefinition">注入対象のメソッド定義。</param>
+        /// <param name="methodDefinition">メソッド定義。</param>
         /// <param name="assembly">アセンブリ。</param>
         public static void Inject(this MethodDefinition methodDefinition, Assembly assembly)
         {
@@ -40,6 +38,130 @@ namespace SoftCube.Aspects
 
                     baseAttributeType = baseAttributeType.BaseType.Resolve();
                 }
+            }
+        }
+
+        /// <summary>
+        /// 戻り値が存在するかを判断します。
+        /// </summary>
+        /// <param name="methodDefinition">メソッド定義。</param>
+        /// <returns>戻り値が存在するか。</returns>
+        public static bool HasReturnValue(this MethodDefinition methodDefinition)
+        {
+            return methodDefinition.ReturnType.FullName != "System.Void";
+        }
+
+        /// <summary>
+        /// IL コードを最適化します。
+        /// </summary>
+        /// <param name="methodDefinition">メソッド定義。</param>
+        public static void OptimizeIL(this MethodDefinition methodDefinition)
+        {
+            var processor = methodDefinition.Body.GetILProcessor();
+
+            int offset = 0;
+            foreach (var instruction in processor.Body.Instructions)
+            {
+                instruction.Offset = offset++;
+            }
+
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Br_S))
+            {
+                int distance = 0;
+                var current  = instruction;
+                var target   = (Instruction)instruction.Operand;
+
+                while (current != target)
+                {
+                    distance += current.GetSize();
+                    if (instruction.Offset < target.Offset)
+                    {
+                        current = current.Next;
+                    }
+                    else
+                    {
+                        current = current.Previous;
+                    }
+                }
+
+                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                {
+                    instruction.OpCode = OpCodes.Br;
+                }
+            }
+
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brtrue_S))
+            {
+                int distance = 0;
+                var current = instruction;
+                var target = (Instruction)instruction.Operand;
+
+                while (current != target)
+                {
+                    distance += current.GetSize();
+                    if (instruction.Offset < target.Offset)
+                    {
+                        current = current.Next;
+                    }
+                    else
+                    {
+                        current = current.Previous;
+                    }
+                }
+
+                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                {
+                    instruction.OpCode = OpCodes.Brtrue;
+                }
+            }
+
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brfalse_S))
+            {
+                int distance = 0;
+                var current = instruction;
+                var target = (Instruction)instruction.Operand;
+
+                while (current != target)
+                {
+                    distance += current.GetSize();
+                    if (instruction.Offset < target.Offset)
+                    {
+                        current = current.Next;
+                    }
+                    else
+                    {
+                        current = current.Previous;
+                    }
+                }
+
+                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                {
+                    instruction.OpCode = OpCodes.Brfalse;
+                }
+            }
+        }
+
+        /// <summary>
+        /// ログ出力します。
+        /// </summary>
+        /// <param name="methodDefinition">メソッド定義。</param>
+        public static void Log(this MethodDefinition methodDefinition)
+        {
+            var processor = methodDefinition.Body.GetILProcessor();
+
+            Logger.Trace($"{methodDefinition.FullName}");
+
+            foreach (var instruction in processor.Body.Instructions)
+            {
+                Logger.Trace($"{instruction}");
+            }
+
+            foreach (var handler in processor.Body.ExceptionHandlers)
+            {
+                Logger.Trace($"TryStart     : {handler.TryStart}");
+                Logger.Trace($"TryEnd       : {handler.TryEnd}");
+                Logger.Trace($"HandlerStart : {handler.HandlerStart}");
+                Logger.Trace($"HandlerEnd   : {handler.HandlerEnd}");
             }
         }
 

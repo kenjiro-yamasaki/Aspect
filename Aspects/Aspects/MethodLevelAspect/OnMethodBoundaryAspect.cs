@@ -33,75 +33,36 @@ namespace SoftCube.Aspects
         /// <param name="method">注入対象のメソッド定義。</param>
         protected override void OnInject(MethodDefinition method)
         {
-            var processor = method.Body.GetILProcessor();
-            Logger.Trace($"{method.FullName}-------------------");
-            foreach (var instruction in processor.Body.Instructions)
-            {
-                Logger.Trace($"{instruction}");
-            }
-            foreach (var handler in processor.Body.ExceptionHandlers)
-            {
-                Logger.Trace($"TryStart     : {handler.TryStart}");
-                Logger.Trace($"TryEnd       : {handler.TryEnd}");
-                Logger.Trace($"HandlerStart : {handler.HandlerStart}");
-                Logger.Trace($"HandlerEnd   : {handler.HandlerEnd}");
-            }
-
-            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Br_S))
-            {
-                instruction.OpCode = OpCodes.Br;
-            }
-            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brtrue_S))
-            {
-                instruction.OpCode = OpCodes.Brtrue;
-            }
-            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brfalse_S))
-            {
-                instruction.OpCode = OpCodes.Brfalse;
-            }
+            method.Log();
 
             // 最後の命令が throw 命令の場合、return 命令を追加します。
+            var processor = method.Body.GetILProcessor();
             if (processor.Body.Instructions.Last().OpCode == OpCodes.Throw)
             {
                 processor.Append(processor.Create(OpCodes.Ret));
             }
 
-            // OnEntry コードを注入します。
-            var (aspectIndex, eventArgsIndex, tryStart) = InjectEntryCode(method);
+            // エントリーハンドラーを注入します。
+            var (aspectIndex, eventArgsIndex, tryStart) = InjectEntryHandler(method);
 
-            // OnSuccess コードを注入します。
-            InjectSuccessCode(method, aspectIndex, eventArgsIndex);
+            // リターンハンドラーを注入します。
+            InjectReturnHandler(method, aspectIndex, eventArgsIndex);
 
-            // OnException コードを注入します。
-            InjectExceptionHandlerCode(method, aspectIndex, eventArgsIndex, tryStart);
+            // 例外ハンドラーを注入します。
+            InjectExceptionHandler(method, aspectIndex, eventArgsIndex, tryStart);
 
-            int offset = 0;
-            foreach (var instruction in processor.Body.Instructions)
-            {
-                instruction.Offset = offset++;
-            }
+            // IL コードを最適化します。
+            method.OptimizeIL();
 
-            Logger.Trace($"-------------------");
-            foreach (var instruction in processor.Body.Instructions)
-            {
-                Logger.Trace($"{instruction}");
-            }
-            foreach (var handler in processor.Body.ExceptionHandlers)
-            {
-                Logger.Trace($"TryStart     : {handler.TryStart}");
-                Logger.Trace($"TryEnd       : {handler.TryEnd}");
-                Logger.Trace($"HandlerStart : {handler.HandlerStart}");
-                Logger.Trace($"HandlerEnd   : {handler.HandlerEnd}");
-            }
-            Logger.Trace($"-------------------");
+            method.Log();
         }
 
         /// <summary>
-        /// OnEntry コードを注入します。
+        /// エントリーハンドラーを注入します。
         /// </summary>
         /// <param name="method">メソッド定義。</param>
         /// <returns>アスペクト変数のインデックス, イベントデータ変数のインデックス, TryStart 命令。</returns>
-        private (int AspectIndex, int EventArgsIndex, Instruction TryStart) InjectEntryCode(MethodDefinition method)
+        private (int AspectIndex, int EventArgsIndex, Instruction TryStart) InjectEntryHandler(MethodDefinition method)
         {
             var module = method.DeclaringType.Module.Assembly.MainModule;
             var processor = method.Body.GetILProcessor();
@@ -153,55 +114,42 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// OnSuccess コードを注入します。
+        /// リターンハンドラーを注入します。
         /// </summary>
         /// <param name="method">メソッド定義。</param>
         /// <param name="aspectIndex">アスペクト変数のインデックス。</param>
         /// <param name="eventArgsIndex">イベントデータ変数のインデックス。</param>
-        private void InjectSuccessCode(MethodDefinition method, int aspectIndex, int eventArgsIndex)
+        private void InjectReturnHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var module = method.DeclaringType.Module.Assembly.MainModule;
+            var module    = method.DeclaringType.Module.Assembly.MainModule;
             var processor = method.Body.GetILProcessor();
-
-            var returns = processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();
-
-            //
-            int resultIndex = -1;
+            var returns   = processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();
 
             // 新たなリターン命令を追加します。
             var newReturn = processor.Body.Instructions.Last();                                     // 新たなリターン命令。
             if (method.HasReturnValue())
             {
-                resultIndex = processor.Body.Variables.Count();
+                var resultIndex = processor.Body.Variables.Count();
                 processor.Body.Variables.Add(new VariableDefinition(method.ReturnType));
                 processor.Append(newReturn = processor.Create(OpCodes.Ldloc, resultIndex));
                 processor.Append(processor.Create(OpCodes.Ret));
-            }
-            else
-            {
-                processor.Append(newReturn = processor.Create(OpCodes.Ret));
-            }
 
-            // 新たなリターン命令へのジャンプ命令を追加します。
-            // ※以降はこのジャンプ命令の前にコードを追加します。
-            Instruction jumpToNewReturn;                                                            // 新たなリターン命令へのジャンプ命令。
-            processor.InsertBefore(newReturn, jumpToNewReturn = processor.Create(OpCodes.Leave_S, newReturn));
+                // 新たなリターン命令へのジャンプ命令を追加します。
+                // ※以降はこのジャンプ命令の前にコードを追加します。
+                Instruction leave;                                                                  // 新たなリターン命令へのジャンプ命令。
+                processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Leave_S, newReturn));
 
-            //////////////////////////////////////////////////////////////////////////////////////////
-            if (processor.Body.HasExceptionHandlers)
-            {
-                var handler = processor.Body.ExceptionHandlers.Last();
-                if (handler.HandlerEnd == null)
+                //
+                if (processor.Body.HasExceptionHandlers)
                 {
-                    handler.HandlerEnd = jumpToNewReturn;
+                    var handler = processor.Body.ExceptionHandlers.Last();
+                    if (handler.HandlerEnd == null)
+                    {
+                        handler.HandlerEnd = leave;
+                    }
                 }
-            }
-            //////////////////////////////////////////////////////////////////////////////////////////
 
-            foreach (var @return in returns)
-            {
-                Instruction jump;
-                if (method.HasReturnValue())
+                foreach (var @return in returns)
                 {
                     // リターン命令を書き換えて、戻り値をローカル変数にストアします。
                     @return.OpCode = OpCodes.Stloc;
@@ -209,18 +157,49 @@ namespace SoftCube.Aspects
 
                     // 新たなリターン命令へのジャンプ命令を追加します。
                     // ※以降はこのジャンプ命令の前にコードを追加します。
-                    processor.InsertAfter(@return, jump = processor.Create(OpCodes.Br, jumpToNewReturn));
+                    Instruction branch;
+                    processor.InsertAfter(@return, branch = processor.Create(OpCodes.Br_S, leave));
 
                     // 戻り値をイベントデータに設定します。
-                    processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-                    processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, resultIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, resultIndex));
                     if (method.ReturnType.IsValueType)
                     {
-                        processor.InsertBefore(jump, processor.Create(OpCodes.Box, method.ReturnType));
+                        processor.InsertBefore(branch, processor.Create(OpCodes.Box, method.ReturnType));
                     }
-                    processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
+
+                    // OnSuccess メソッドを呼び出します。
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, aspectIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+
+                    // OnExit メソッドを呼び出します。
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, aspectIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
                 }
-                else
+            }
+            else
+            {
+                processor.Append(newReturn = processor.Create(OpCodes.Ret));
+
+                // 新たなリターン命令へのジャンプ命令を追加します。
+                // ※以降はこのジャンプ命令の前にコードを追加します。
+                Instruction leave;                                                                  // 新たなリターン命令へのジャンプ命令。
+                processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Leave_S, newReturn));
+
+                //
+                if (processor.Body.HasExceptionHandlers)
+                {
+                    var handler = processor.Body.ExceptionHandlers.Last();
+                    if (handler.HandlerEnd == null)
+                    {
+                        handler.HandlerEnd = leave;
+                    }
+                }
+
+                foreach (var @return in returns)
                 {
                     // リターン命令を Nop に書き換えます。
                     @return.OpCode = OpCodes.Nop;
@@ -228,29 +207,30 @@ namespace SoftCube.Aspects
 
                     // 新たなリターン命令へのジャンプ命令を追加します。
                     // ※以降はこのジャンプ命令の前にコードを追加します。
-                    processor.InsertAfter(@return, jump = processor.Create(OpCodes.Br, jumpToNewReturn));
+                    Instruction branch;
+                    processor.InsertAfter(@return, branch = processor.Create(OpCodes.Br_S, leave));
+
+                    // OnSuccess メソッドを呼び出します。
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, aspectIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+
+                    // OnExit メソッドを呼び出します。
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, aspectIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
                 }
-
-                // OnSuccess メソッドを呼び出します。
-                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
-                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-                processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
-
-                // OnExit メソッドを呼び出します。
-                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
-                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-                processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
             }
         }
 
         /// <summary>
-        /// OnException コードを注入します。
+        /// 例外ハンドラーを注入します。
         /// </summary>
         /// <param name="method">メソッド定義。</param>
         /// <param name="aspectIndex">アスペクト変数のインデックス。</param>
         /// <param name="eventArgsIndex">イベントデータ変数のインデックス。</param>
         /// <param name="tryStart">TryStart 命令。</param>
-        private void InjectExceptionHandlerCode(MethodDefinition method, int aspectIndex, int eventArgsIndex, Instruction tryStart)
+        private void InjectExceptionHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex, Instruction tryStart)
         {
             var module = method.DeclaringType.Module.Assembly.MainModule;
             var processor = method.Body.GetILProcessor();
@@ -291,11 +271,11 @@ namespace SoftCube.Aspects
             // 例外ハンドラーを追加します。
             var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
             {
-                CatchType = module.ImportReference(typeof(Exception)),
-                TryStart = tryStart,
-                TryEnd = handlerStart,
+                CatchType    = module.ImportReference(typeof(Exception)),
+                TryStart     = tryStart,
+                TryEnd       = handlerStart,
                 HandlerStart = handlerStart,
-                HandlerEnd = @return,
+                HandlerEnd   = @return,
             };
 
             processor.Body.ExceptionHandlers.Add(handler);
