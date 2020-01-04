@@ -167,7 +167,7 @@ namespace SoftCube.Aspects
             }
             else
             {
-                // リターン命令を Nop 書き換えます。
+                // リターン命令を Nop に書き換えます。
                 @return.OpCode  = OpCodes.Nop;
                 @return.Operand = null;
 
