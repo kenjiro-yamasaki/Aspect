@@ -40,7 +40,7 @@ namespace SoftCube.Aspects
             [InlineData(-10)]
             public void int_成功する(int value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -82,7 +82,7 @@ namespace SoftCube.Aspects
             [InlineData(-10)]
             public void short_成功する(short value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -124,7 +124,7 @@ namespace SoftCube.Aspects
             [InlineData(-10)]
             public void long_成功する(long value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -157,7 +157,7 @@ namespace SoftCube.Aspects
             [InlineData(10)]
             public void uint_成功する(uint value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -190,7 +190,7 @@ namespace SoftCube.Aspects
             [InlineData(10)]
             public void ushort_成功する(ushort value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -223,7 +223,7 @@ namespace SoftCube.Aspects
             [InlineData(10)]
             public void ulong_成功する(ulong value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -256,7 +256,7 @@ namespace SoftCube.Aspects
             [InlineData(10)]
             public void byte_成功する(byte value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -298,7 +298,7 @@ namespace SoftCube.Aspects
             [InlineData(-10)]
             public void sbyte_成功する(sbyte value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -323,7 +323,7 @@ namespace SoftCube.Aspects
             [InlineData(false)]
             public void bool_成功する(bool value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -353,7 +353,7 @@ namespace SoftCube.Aspects
             [InlineData(-100.0)]
             public void double_成功する(double value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -383,7 +383,7 @@ namespace SoftCube.Aspects
             [InlineData(-100.0)]
             public void float_成功する(float value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -413,7 +413,7 @@ namespace SoftCube.Aspects
             [InlineData(-100.0)]
             public void decimal_成功する(decimal value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -438,7 +438,7 @@ namespace SoftCube.Aspects
             [InlineData('あ')]
             public void char_成功する(char value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -463,7 +463,7 @@ namespace SoftCube.Aspects
             [InlineData("あ")]
             public void string_成功する(string value)
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
 
@@ -493,7 +493,7 @@ namespace SoftCube.Aspects
             [Fact]
             public void class_成功する()
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
                     var value = new Class() { Property = "a" };
@@ -524,7 +524,7 @@ namespace SoftCube.Aspects
             [Fact]
             public void struct_成功する()
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
                     var value = new Struct() { Property = "a" };
@@ -560,7 +560,7 @@ namespace SoftCube.Aspects
             [Fact]
             public void IEnumerable_成功する()
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
                     var value    = new List<int>() { 0 };
@@ -574,7 +574,7 @@ namespace SoftCube.Aspects
             [Fact]
             public void IEnumerableT_成功する()
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
                     var value    = new List<int>() { 0 };
@@ -588,7 +588,7 @@ namespace SoftCube.Aspects
             [Fact]
             public void ListT_成功する()
             {
-                lock (Lock)
+                lock (LockObject)
                 {
                     var appender = CreateAppender();
                     var value    = new List<int>() { 0 };

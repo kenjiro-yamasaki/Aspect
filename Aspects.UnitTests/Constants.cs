@@ -2,6 +2,6 @@
 {
     internal static class Constants
     {
-        internal static readonly object Lock = new object();
+        internal static readonly object LockObject = new object();
     }
 }

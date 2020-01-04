@@ -1,4 +1,5 @@
 ﻿using SoftCube.Log;
+using SoftCube.Profile;
 using System;
 using Xunit;
 using static SoftCube.Aspects.Constants;
@@ -75,7 +76,7 @@ namespace SoftCube.Aspects
                 [InlineData(false, "B")]
                 public void If_正しくコードが注入される(bool condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -90,7 +91,7 @@ namespace SoftCube.Aspects
                 [InlineData(false, "B")]
                 public void IfElse_正しくコードが注入される(bool condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -107,7 +108,7 @@ namespace SoftCube.Aspects
                 [InlineData(false, false, "D")]
                 public void NestIf_正しくコードが注入される(bool condition0, bool condition1, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -183,7 +184,7 @@ namespace SoftCube.Aspects
                 [InlineData(false, "B")]
                 public void If_正しくコードが注入される(bool condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -198,7 +199,7 @@ namespace SoftCube.Aspects
                 [InlineData(false, "B")]
                 public void IfElse_正しくコードが注入される(bool condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -215,7 +216,7 @@ namespace SoftCube.Aspects
                 [InlineData(false, false, "D")]
                 public void NestIf_正しくコードが注入される(bool condition0, bool condition1, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -265,7 +266,7 @@ namespace SoftCube.Aspects
                 [InlineData((Enum)3, "D")]
                 public void Break_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -305,7 +306,7 @@ namespace SoftCube.Aspects
                 [InlineData((Enum)3, "D")]
                 public void Return_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -344,7 +345,7 @@ namespace SoftCube.Aspects
                 [InlineData(Enum.C, "C")]
                 public void BreakWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -357,7 +358,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void BreakWithDefaultThrow_default_正しくコードが注入される()
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
                         var condition = (Enum)3;
@@ -399,7 +400,7 @@ namespace SoftCube.Aspects
                 [InlineData(Enum.C, "C")]
                 public void ReturnWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -412,7 +413,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void ReturnWithDefaultThrow_default_正しくコードが注入される()
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
                         var condition = (Enum)3;
@@ -467,7 +468,7 @@ namespace SoftCube.Aspects
                 [InlineData((Enum)3, "D")]
                 public void Break_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -507,7 +508,7 @@ namespace SoftCube.Aspects
                 [InlineData((Enum)3, "D")]
                 public void Return_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -548,7 +549,7 @@ namespace SoftCube.Aspects
                 [InlineData(Enum.C, "C")]
                 public void BreakWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -561,7 +562,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void BreakWithDefaultThrow_default_正しくコードが注入される()
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
                         var condition = (Enum)3;
@@ -603,7 +604,7 @@ namespace SoftCube.Aspects
                 [InlineData(Enum.C, "C")]
                 public void ReturnWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -616,7 +617,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void ReturnWithDefaultThrow_default_正しくコードが注入される()
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
                         var condition = (Enum)3;
@@ -630,7 +631,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class 例外
+            public class 特殊制御
             {
                 [LoggerAspect]
                 private void Throw()
@@ -641,7 +642,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void Throw_正しくコードが注入される()
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -649,6 +650,84 @@ namespace SoftCube.Aspects
 
                         Assert.IsType<Exception>(ex);
                         Assert.Equal($"OnEntry OnException A OnExit ", appender.ToString());
+                    }
+                }
+
+                [LoggerAspect]
+                private void ThrowIfTrue(bool condition)
+                {
+                    if (condition)
+                    {
+                        throw new Exception("A");
+                    }
+
+                    Logger.Trace("B");
+                    return;
+                }
+
+                [Fact]
+                public void ThrowIfTrue_true_正しくコードが注入される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var ex = Record.Exception(() => ThrowIfTrue(true));
+
+                        Assert.IsType<Exception>(ex);
+                        Assert.Equal($"OnEntry True OnException A OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void ThrowIfTrue_false_正しくコードが注入される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        ThrowIfTrue(false);
+
+                        Assert.Equal($"OnEntry False B OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
+
+                [LoggerAspect]
+                private void ThrowIfFalse(bool condition)
+                {
+                    if (condition)
+                    {
+                        Logger.Trace("A");
+                        return;
+                    }
+
+                    throw new Exception("B");
+                }
+
+                [Fact]
+                public void ThrowIfFalse_true_正しくコードが注入される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        ThrowIfFalse(true);
+
+                        Assert.Equal($"OnEntry True A OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
+
+                [Fact]
+                public void ThrowIfFalse_false_正しくコードが注入される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var ex = Record.Exception(() => ThrowIfFalse(false));
+
+                        Assert.IsType<Exception>(ex);
+                        Assert.Equal($"OnEntry False OnException B OnExit ", appender.ToString());
                     }
                 }
 
@@ -668,7 +747,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void TryCatch_正しくコードが注入される()
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -695,7 +774,7 @@ namespace SoftCube.Aspects
                 [Fact]
                 public void TryCatchRethrow_正しくコードが注入される()
                 {
-                    lock (Lock)
+                    lock (LockObject)
                     {
                         var appender = CreateAppender();
 
@@ -703,6 +782,82 @@ namespace SoftCube.Aspects
 
                         Assert.IsType<Exception>(ex);
                         Assert.Equal($"OnEntry A OnException A OnExit ", appender.ToString());
+                    }
+                }
+
+                [LoggerAspect]
+                private void TryCatchFinally()
+                {
+                    try
+                    {
+                        throw new Exception("A");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Trace(ex.Message);
+                        throw ex;
+                    }
+                    finally
+                    {
+                        Logger.Trace("B");
+                    }
+                }
+
+                [Fact]
+                public void TryCatchFinally_正しくコードが注入される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var ex = Record.Exception(() => TryCatchFinally());
+
+                        Assert.IsType<Exception>(ex);
+                        Assert.Equal($"OnEntry A B OnException A OnExit ", appender.ToString());
+                    }
+                }
+
+                [LoggerAspect]
+                private void Using()
+                {
+                    using (var transaction = Profiler.Start("Temp"))
+                    {
+                        Logger.Trace("A");
+                    }
+                }
+
+                [Fact]
+                public void Using_正しくコードが注入される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        Using();
+
+                        Assert.Equal($"OnEntry A OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
+
+                [LoggerAspect]
+                private void Lock()
+                {
+                    lock (LockObject)
+                    {
+                        Logger.Trace("A");
+                    }
+                }
+
+                [Fact]
+                public void Lock_正しくコードが注入される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        Lock();
+
+                        Assert.Equal($"OnEntry A OnSuccess null OnExit ", appender.ToString());
                     }
                 }
             }
