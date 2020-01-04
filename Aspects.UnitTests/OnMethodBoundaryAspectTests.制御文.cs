@@ -9,7 +9,7 @@ namespace SoftCube.Aspects
     {
         public class 制御文
         {
-            public class If文
+            public class If文_戻り値あり
             {
                 [TestAspect]
                 private bool If(bool condition)
@@ -114,6 +114,114 @@ namespace SoftCube.Aspects
                         var result = NestIfElse(condition0, condition1);
 
                         Assert.Equal($"OnEntry {condition0} {condition1} {log} OnSuccess {result} OnExit ", appender.ToString());
+                    }
+                }
+            }
+
+            public class If文_戻り値なし
+            {
+                [TestAspect]
+                private void If(bool condition)
+                {
+                    if (condition)
+                    {
+                        Logger.Trace("A");
+                        return;
+                    }
+
+                    Logger.Trace("B");
+                }
+
+                [TestAspect]
+                private void IfElse(bool condition)
+                {
+                    if (condition)
+                    {
+                        Logger.Trace("A");
+                        return;
+                    }
+                    else
+                    {
+                        Logger.Trace("B");
+                        return;
+                    }
+                }
+
+                [TestAspect]
+                private void NestIfElse(bool condition0, bool condition1)
+                {
+                    if (condition0)
+                    {
+                        if (condition1)
+                        {
+                            Logger.Trace("A");
+                            return;
+                        }
+                        else
+                        {
+                            Logger.Trace("B");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (condition1)
+                        {
+                            Logger.Trace("C");
+                            return;
+                        }
+                        else
+                        {
+                            Logger.Trace("D");
+                            return;
+                        }
+                    }
+                }
+
+                [Theory]
+                [InlineData(true, "A")]
+                [InlineData(false, "B")]
+                public void If_正しくコードが注入される(bool condition, string log)
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+
+                        If(condition);
+
+                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
+
+                [Theory]
+                [InlineData(true, "A")]
+                [InlineData(false, "B")]
+                public void IfElse_正しくコードが注入される(bool condition, string log)
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+
+                        IfElse(condition);
+
+                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
+
+                [Theory]
+                [InlineData(true, true, "A")]
+                [InlineData(true, false, "B")]
+                [InlineData(false, true, "C")]
+                [InlineData(false, false, "D")]
+                public void NestIf_正しくコードが注入される(bool condition0, bool condition1, string log)
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+
+                        NestIfElse(condition0, condition1);
+
+                        Assert.Equal($"OnEntry {condition0} {condition1} {log} OnSuccess null OnExit ", appender.ToString());
                     }
                 }
             }
