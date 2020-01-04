@@ -39,6 +39,27 @@ namespace SoftCube.Aspects
             {
                 Logger.Trace($"{instruction}");
             }
+            foreach (var handler in processor.Body.ExceptionHandlers)
+            {
+                Logger.Trace($"TryStart     : {handler.TryStart}");
+                Logger.Trace($"TryEnd       : {handler.TryEnd}");
+                Logger.Trace($"HandlerStart : {handler.HandlerStart}");
+                Logger.Trace($"HandlerEnd   : {handler.HandlerEnd}");
+            }
+
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Br_S))
+            {
+                instruction.OpCode = OpCodes.Br;
+            }
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brtrue_S))
+            {
+                instruction.OpCode = OpCodes.Brtrue;
+            }
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brfalse_S))
+            {
+                instruction.OpCode = OpCodes.Brfalse;
+            }
+
 
             // 最後の命令が throw 命令の場合、return 命令を追加します。
             if (processor.Body.Instructions.Last().OpCode == OpCodes.Throw)
@@ -55,10 +76,23 @@ namespace SoftCube.Aspects
             // OnException コードを注入します。
             InjectExceptionHandlerCode(method, aspectIndex, eventArgsIndex, tryStart);
 
+            int offset = 0;
+            foreach (var instruction in processor.Body.Instructions)
+            {
+                instruction.Offset = offset++;
+            }
+
             Logger.Trace($"-------------------");
             foreach (var instruction in processor.Body.Instructions)
             {
                 Logger.Trace($"{instruction}");
+            }
+            foreach (var handler in processor.Body.ExceptionHandlers)
+            {
+                Logger.Trace($"TryStart     : {handler.TryStart}");
+                Logger.Trace($"TryEnd       : {handler.TryEnd}");
+                Logger.Trace($"HandlerStart : {handler.HandlerStart}");
+                Logger.Trace($"HandlerEnd   : {handler.HandlerEnd}");
             }
             Logger.Trace($"-------------------");
         }
@@ -70,9 +104,9 @@ namespace SoftCube.Aspects
         /// <returns>アスペクト変数のインデックス, イベントデータ変数のインデックス, TryStart 命令。</returns>
         private (int AspectIndex, int EventArgsIndex, Instruction TryStart) InjectEntryCode(MethodDefinition method)
         {
-            var module    = method.DeclaringType.Module.Assembly.MainModule;
+            var module = method.DeclaringType.Module.Assembly.MainModule;
             var processor = method.Body.GetILProcessor();
-            var first     = processor.Body.Instructions.First();
+            var first = processor.Body.Instructions.First();
 
             var aspectIndex = processor.Body.Variables.Count();
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(GetType())));
@@ -105,7 +139,7 @@ namespace SoftCube.Aspects
             processor.InsertBefore(first, processor.Create(OpCodes.Stloc, eventArgsIndex));
 
             processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(first, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[]{ }))));
+            processor.InsertBefore(first, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { }))));
             processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod())));
 
             // OnEntry メソッドを呼び出します。
@@ -127,67 +161,170 @@ namespace SoftCube.Aspects
         /// <param name="eventArgsIndex">イベントデータ変数のインデックス。</param>
         private void InjectSuccessCode(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var module    = method.DeclaringType.Module.Assembly.MainModule;
+            var module = method.DeclaringType.Module.Assembly.MainModule;
             var processor = method.Body.GetILProcessor();
-            var @return   = processor.Body.Instructions.Last();
 
-            // 以下のコードは特に複雑なので、コードの考え方を説明します。
-            // OnSuccess コードはリターン命令の後ろに注入する必要があります。
-            // これは制御文の分岐コードがリターン命令へのジャンプ命令を含む可能性があるために生じる制約です。
-            // ただし、リターン命令をそのままにしておくと、OnSuccess コード以降を実行せずにリターンしてしまいます。
-            // そこで、リターン命令を OnSuccess コードの最初の命令に書き換えます。
-            // さらに書き換えたリターン命令の代わりに新たなリターン命令を末尾に追加します。
-            // OnSuccess コードと OnException コードは、元々のリターン命令と新たなリターン命令の間に注入します。
-            Instruction jump;                                                                       // 新たなリターン命令へのジャンプ命令。
+            var returns = processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();
+
+            //
+            int resultIndex = -1;
+
+            // 新たなリターン命令を追加します。
+            var newReturn = processor.Body.Instructions.Last();                                     // 新たなリターン命令。
             if (method.HasReturnValue())
             {
-                // リターン命令を書き換えて、戻り値をローカル変数にストアします。
-                int resultIndex = processor.Body.Variables.Count();
+                resultIndex = processor.Body.Variables.Count();
                 processor.Body.Variables.Add(new VariableDefinition(method.ReturnType));
-
-                @return.OpCode  = OpCodes.Stloc;
-                @return.Operand = processor.Body.Variables[resultIndex];
-
-                // 新たなリターン命令を追加します。
-                processor.Append(@return = processor.Create(OpCodes.Ldloc, resultIndex));
+                processor.Append(newReturn = processor.Create(OpCodes.Ldloc, resultIndex));
                 processor.Append(processor.Create(OpCodes.Ret));
-
-                // 新たなリターン命令へのジャンプ命令を追加します。
-                // ※以降はこのジャンプ命令の前にコードを追加します。
-                processor.InsertBefore(@return, jump = processor.Create(OpCodes.Leave_S, @return));
-
-                // 戻り値をイベントデータに設定します。
-                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, resultIndex));
-                if (method.ReturnType.IsValueType)
-                {
-                    processor.InsertBefore(jump, processor.Create(OpCodes.Box, method.ReturnType));
-                }
-                processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
             }
             else
             {
-                // リターン命令を Nop 書き換えます。
-                @return.OpCode  = OpCodes.Nop;
-                @return.Operand = null;
-
-                // 新たなリターン命令を追加します。
-                processor.Append(@return = processor.Create(OpCodes.Ret));
-
-                // 新たなリターン命令へのジャンプ命令を追加します。
-                // ※以降はこのジャンプ命令の前にコードを追加します。
-                processor.InsertBefore(@return, jump = processor.Create(OpCodes.Leave_S, @return));
+                processor.Append(newReturn = processor.Create(OpCodes.Ret));
             }
 
-            // OnSuccess メソッドを呼び出します。
-            processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
-            processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+            // 新たなリターン命令へのジャンプ命令を追加します。
+            // ※以降はこのジャンプ命令の前にコードを追加します。
+            Instruction jumpToNewReturn;                                                            // 新たなリターン命令へのジャンプ命令。
+            processor.InsertBefore(newReturn, jumpToNewReturn = processor.Create(OpCodes.Leave_S, newReturn));
 
-            // OnExit メソッドを呼び出します。
-            processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
-            processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
+            //////////////////////////////////////////////////////////////////////////////////////////
+            if (processor.Body.HasExceptionHandlers)
+            {
+                var handler = processor.Body.ExceptionHandlers.Last();
+                if (handler.HandlerEnd == null)
+                {
+                    handler.HandlerEnd = jumpToNewReturn;
+                }
+            }
+            //////////////////////////////////////////////////////////////////////////////////////////
+
+            foreach (var @return in returns)
+            {
+                Instruction jump;
+                if (method.HasReturnValue())
+                {
+                    // リターン命令を書き換えて、戻り値をローカル変数にストアします。
+                    @return.OpCode = OpCodes.Stloc;
+                    @return.Operand = processor.Body.Variables[resultIndex];
+
+                    // 新たなリターン命令へのジャンプ命令を追加します。
+                    // ※以降はこのジャンプ命令の前にコードを追加します。
+                    processor.InsertAfter(@return, jump = processor.Create(OpCodes.Br, jumpToNewReturn));
+
+                    // 戻り値をイベントデータに設定します。
+                    processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                    processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, resultIndex));
+                    if (method.ReturnType.IsValueType)
+                    {
+                        processor.InsertBefore(jump, processor.Create(OpCodes.Box, method.ReturnType));
+                    }
+                    processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
+                }
+                else
+                {
+                    // リターン命令を Nop 書き換えます。
+                    @return.OpCode = OpCodes.Nop;
+                    @return.Operand = null;
+
+                    // 新たなリターン命令へのジャンプ命令を追加します。
+                    // ※以降はこのジャンプ命令の前にコードを追加します。
+                    processor.InsertAfter(@return, jump = processor.Create(OpCodes.Br, jumpToNewReturn));
+                }
+
+                // OnSuccess メソッドを呼び出します。
+                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
+                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+
+                // OnExit メソッドを呼び出します。
+                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
+                processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+                processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
+            }
+
+
+
+
+
+
+
+
+
+
+            //var @return = processor.Body.Instructions.Last();
+
+            //// 以下のコードは特に複雑なので、コードの考え方を説明します。
+            //// OnSuccess コードはリターン命令の後ろに注入する必要があります。
+            //// これは制御文の分岐コードがリターン命令へのジャンプ命令を含む可能性があるために生じる制約です。
+            //// ただし、リターン命令をそのままにしておくと、OnSuccess コード以降を実行せずにリターンしてしまいます。
+            //// そこで、リターン命令を OnSuccess コードの最初の命令に書き換えます。
+            //// さらに書き換えたリターン命令の代わりに新たなリターン命令を末尾に追加します。
+            //// OnSuccess コードと OnException コードは、元々のリターン命令と新たなリターン命令の間に注入します。
+            //Instruction jump;                                                                       // 新たなリターン命令へのジャンプ命令。
+            //Instruction handlerEnd;
+            //if (method.HasReturnValue())
+            //{
+            //    // リターン命令を書き換えて、戻り値をローカル変数にストアします。
+            //    //int resultIndex = processor.Body.Variables.Count();
+            //    //processor.Body.Variables.Add(new VariableDefinition(method.ReturnType));
+
+            //    @return.OpCode = OpCodes.Stloc;
+            //    @return.Operand = processor.Body.Variables[resultIndex];
+            //    handlerEnd = @return;
+
+            //    //// 新たなリターン命令を追加します。
+            //    //processor.Append(@return = processor.Create(OpCodes.Ldloc, resultIndex));
+            //    //processor.Append(processor.Create(OpCodes.Ret));
+
+            //    // 新たなリターン命令へのジャンプ命令を追加します。
+            //    // ※以降はこのジャンプ命令の前にコードを追加します。
+            //    processor.InsertBefore(@return, jump = processor.Create(OpCodes.Leave_S, @return));
+
+            //    // 戻り値をイベントデータに設定します。
+            //    processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+            //    processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, resultIndex));
+            //    if (method.ReturnType.IsValueType)
+            //    {
+            //        processor.InsertBefore(jump, processor.Create(OpCodes.Box, method.ReturnType));
+            //    }
+            //    processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
+            //}
+            //else
+            //{
+            //    // リターン命令を Nop 書き換えます。
+            //    @return.OpCode = OpCodes.Nop;
+            //    @return.Operand = null;
+            //    handlerEnd = @return;
+
+            //    //// 新たなリターン命令を追加します。
+            //    //processor.Append(@return = processor.Create(OpCodes.Ret));
+
+            //    // 新たなリターン命令へのジャンプ命令を追加します。
+            //    // ※以降はこのジャンプ命令の前にコードを追加します。
+            //    processor.InsertBefore(@return, jump = processor.Create(OpCodes.Leave_S, @return));
+            //}
+
+            //////////////////////////////////////////////////////////////////////////////////////////
+            //if (processor.Body.HasExceptionHandlers)
+            //{
+            //    var handler = processor.Body.ExceptionHandlers.Last();
+            //    if (handler.HandlerEnd == null)
+            //    {
+            //        handler.HandlerEnd = handlerEnd;
+            //    }
+            //}
+            //////////////////////////////////////////////////////////////////////////////////////////
+
+            //// OnSuccess メソッドを呼び出します。
+            //processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
+            //processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+            //processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+
+            //// OnExit メソッドを呼び出します。
+            //processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, aspectIndex));
+            //processor.InsertBefore(jump, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+            //processor.InsertBefore(jump, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
         }
 
         /// <summary>
@@ -199,7 +336,7 @@ namespace SoftCube.Aspects
         /// <param name="tryStart">TryStart 命令。</param>
         private void InjectExceptionHandlerCode(MethodDefinition method, int aspectIndex, int eventArgsIndex, Instruction tryStart)
         {
-            var module    = method.DeclaringType.Module.Assembly.MainModule;
+            var module = method.DeclaringType.Module.Assembly.MainModule;
             var processor = method.Body.GetILProcessor();
             Instruction @return;
             if (method.HasReturnValue())
@@ -238,11 +375,11 @@ namespace SoftCube.Aspects
             // 例外ハンドラーを追加します。
             var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
             {
-                CatchType    = module.ImportReference(typeof(Exception)),
-                TryStart     = tryStart,
-                TryEnd       = handlerStart,
+                CatchType = module.ImportReference(typeof(Exception)),
+                TryStart = tryStart,
+                TryEnd = handlerStart,
                 HandlerStart = handlerStart,
-                HandlerEnd   = @return,
+                HandlerEnd = @return,
             };
 
             processor.Body.ExceptionHandlers.Add(handler);

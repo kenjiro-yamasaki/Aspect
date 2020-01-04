@@ -15,7 +15,7 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            new Program().戻り値();
+            new Program().Return(Enum.A);
 
             Logger.Trace("B");
 
@@ -29,58 +29,28 @@ namespace SoftCube.Aspects
             C,
         }
 
-        //[LoggerAspect]
-        //private void Break(Enum condition)
-        //{
-        //    switch (condition)
-        //    {
-        //        case Enum.A:
-        //            Logger.Trace("A");
-        //            break;
-
-        //        case Enum.B:
-        //            Logger.Trace("B");
-        //            break;
-
-        //        case Enum.C:
-        //            Logger.Trace("C");
-        //            break;
-
-        //        default:
-        //            Logger.Trace("D");
-        //            break;
-        //    }
-        //}
-
-        //[LoggerAspect]
-        //public int 例外(object a)
-        //{
-        //    if (a == null)
-        //    {
-        //        return 3;
-        //    }
-
-        //    Logger.Trace("A");
-
-        //    return 7;
-
-        //    //throw new Exception("A");
-        //}
-
-        //[LoggerAspect]
-        //public void 引数(int value)
-        //{
-        //    Logger.Trace("A");
-        //}
-
-
         [LoggerAspect]
-        public int 戻り値()
+        private Enum Return(Enum condition)
         {
-            Logger.Trace("A");
-            return 1;
-        }
+            switch (condition)
+            {
+                case Enum.A:
+                    Logger.Trace("A");
+                    return condition;
 
+                case Enum.B:
+                    Logger.Trace("B");
+                    return condition;
+
+                case Enum.C:
+                    Logger.Trace("C");
+                    return condition;
+
+                default:
+                    Logger.Trace("D");
+                    return condition;
+            }
+        }
     }
 
     //class LoggerTest

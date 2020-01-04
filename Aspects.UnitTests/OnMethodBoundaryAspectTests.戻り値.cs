@@ -25,147 +25,147 @@ namespace SoftCube.Aspects
         {
             public class @int
             {
-                [TestAspect]
+                [LoggerAspect]
                 public int p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public int m10()
                 {
                     Logger.Trace("A");
@@ -448,147 +448,147 @@ namespace SoftCube.Aspects
 
             public class @short
             {
-                [TestAspect]
+                [LoggerAspect]
                 public short p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short n2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public short m10()
                 {
                     Logger.Trace("A");
@@ -871,147 +871,147 @@ namespace SoftCube.Aspects
 
             public class @long
             {
-                [TestAspect]
+                [LoggerAspect]
                 public long p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long n2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public long m10()
                 {
                     Logger.Trace("A");
@@ -1294,77 +1294,77 @@ namespace SoftCube.Aspects
 
             public class @uint
             {
-                [TestAspect]
+                [LoggerAspect]
                 public uint p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public uint p10()
                 {
                     Logger.Trace("A");
@@ -1517,77 +1517,77 @@ namespace SoftCube.Aspects
 
             public class @ushort
             {
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ushort p10()
                 {
                     Logger.Trace("A");
@@ -1740,77 +1740,77 @@ namespace SoftCube.Aspects
 
             public class @ulong
             {
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public ulong p10()
                 {
                     Logger.Trace("A");
@@ -1963,77 +1963,77 @@ namespace SoftCube.Aspects
 
             public class @byte
             {
-                [TestAspect]
+                [LoggerAspect]
                 public byte p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public byte p10()
                 {
                     Logger.Trace("A");
@@ -2186,147 +2186,147 @@ namespace SoftCube.Aspects
 
             public class @sbyte
             {
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public sbyte m10()
                 {
                     Logger.Trace("A");
@@ -2609,14 +2609,14 @@ namespace SoftCube.Aspects
 
             public class @bool
             {
-                [TestAspect]
+                [LoggerAspect]
                 public bool @true()
                 {
                     Logger.Trace("A");
                     return true;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public bool @false()
                 {
                     Logger.Trace("A");
@@ -2652,56 +2652,56 @@ namespace SoftCube.Aspects
 
             public class @double
             {
-                [TestAspect]
+                [LoggerAspect]
                 public double p0()
                 {
                     Logger.Trace("A");
                     return 0.0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public double p05()
                 {
                     Logger.Trace("A");
                     return 0.5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public double p1()
                 {
                     Logger.Trace("A");
                     return 1.0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public double p100()
                 {
                     Logger.Trace("A");
                     return 100.0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public double m0()
                 {
                     Logger.Trace("A");
                     return -0.0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public double m05()
                 {
                     Logger.Trace("A");
                     return -0.5;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public double m1()
                 {
                     Logger.Trace("A");
                     return -1.0;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public double m100()
                 {
                     Logger.Trace("A");
@@ -2815,56 +2815,56 @@ namespace SoftCube.Aspects
 
             public class @float
             {
-                [TestAspect]
+                [LoggerAspect]
                 public float p0()
                 {
                     Logger.Trace("A");
                     return 0.0f;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public float p05()
                 {
                     Logger.Trace("A");
                     return 0.5f;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public float p1()
                 {
                     Logger.Trace("A");
                     return 1.0f;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public float p100()
                 {
                     Logger.Trace("A");
                     return 100.0f;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public float m0()
                 {
                     Logger.Trace("A");
                     return -0.0f;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public float m05()
                 {
                     Logger.Trace("A");
                     return -0.5f;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public float m1()
                 {
                     Logger.Trace("A");
                     return -1.0f;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public float m100()
                 {
                     Logger.Trace("A");
@@ -2978,56 +2978,56 @@ namespace SoftCube.Aspects
 
             public class @decimal
             {
-                [TestAspect]
+                [LoggerAspect]
                 public decimal p0()
                 {
                     Logger.Trace("A");
                     return 0.0m;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public decimal p05()
                 {
                     Logger.Trace("A");
                     return 0.5m;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public decimal p1()
                 {
                     Logger.Trace("A");
                     return 1.0m;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public decimal p100()
                 {
                     Logger.Trace("A");
                     return 100.0m;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public decimal m0()
                 {
                     Logger.Trace("A");
                     return -0.0m;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public decimal m05()
                 {
                     Logger.Trace("A");
                     return -0.5m;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public decimal m1()
                 {
                     Logger.Trace("A");
                     return -1.0m;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public decimal m100()
                 {
                     Logger.Trace("A");
@@ -3141,14 +3141,14 @@ namespace SoftCube.Aspects
 
             public class @char
             {
-                [TestAspect]
+                [LoggerAspect]
                 public char a()
                 {
                     Logger.Trace("A");
                     return 'a';
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public char あ()
                 {
                     Logger.Trace("A");
@@ -3184,14 +3184,14 @@ namespace SoftCube.Aspects
 
             public class @string
             {
-                [TestAspect]
+                [LoggerAspect]
                 public string a()
                 {
                     Logger.Trace("A");
                     return "a";
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public string あ()
                 {
                     Logger.Trace("A");
@@ -3234,7 +3234,7 @@ namespace SoftCube.Aspects
                     public override string ToString() => Property;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public Class a()
                 {
                     Logger.Trace("A");
@@ -3264,7 +3264,7 @@ namespace SoftCube.Aspects
                     public override string ToString() => Property;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public Struct a()
                 {
                     Logger.Trace("A");
@@ -3287,7 +3287,7 @@ namespace SoftCube.Aspects
 
             public class Collection
             {
-                [TestAspect]
+                [LoggerAspect]
                 public IEnumerable IEnumerable()
                 {
                     Logger.Trace("A");
@@ -3297,7 +3297,7 @@ namespace SoftCube.Aspects
                     return result;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public IEnumerable<int> IEnumerableT()
                 {
                     Logger.Trace("A");
@@ -3307,7 +3307,7 @@ namespace SoftCube.Aspects
                     return result;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public List<int> ListT()
                 {
                     Logger.Trace("A");
@@ -3317,7 +3317,7 @@ namespace SoftCube.Aspects
                     return result;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 public IEnumerable<int> 遅延評価()
                 {
                     Logger.Trace("A");

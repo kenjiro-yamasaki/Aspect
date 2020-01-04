@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SoftCube.Aspects
 {
-    public class TestAspect : OnMethodBoundaryAspect
+    public class LoggerAspect : OnMethodBoundaryAspect
     {
         public override void OnEntry(MethodExecutionArgs args)
         {

@@ -11,7 +11,7 @@ namespace SoftCube.Aspects
         {
             public class If文_戻り値あり
             {
-                [TestAspect]
+                [LoggerAspect]
                 private bool If(bool condition)
                 {
                     if (condition)
@@ -24,7 +24,7 @@ namespace SoftCube.Aspects
                     return false;
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private bool IfElse(bool condition)
                 {
                     if (condition)
@@ -39,7 +39,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private (bool, bool) NestIfElse(bool condition0, bool condition1)
                 {
                     if (condition0)
@@ -120,7 +120,7 @@ namespace SoftCube.Aspects
 
             public class If文_戻り値なし
             {
-                [TestAspect]
+                [LoggerAspect]
                 private void If(bool condition)
                 {
                     if (condition)
@@ -132,7 +132,7 @@ namespace SoftCube.Aspects
                     Logger.Trace("B");
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private void IfElse(bool condition)
                 {
                     if (condition)
@@ -147,7 +147,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private void NestIfElse(bool condition0, bool condition1)
                 {
                     if (condition0)
@@ -235,7 +235,7 @@ namespace SoftCube.Aspects
                     C,
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private void Break(Enum condition)
                 {
                     switch (condition)
@@ -275,7 +275,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private void Return(Enum condition)
                 {
                     switch (condition)
@@ -315,7 +315,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private void BreakWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -370,7 +370,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private void ReturnWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -435,7 +435,7 @@ namespace SoftCube.Aspects
                     C,
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private Enum Break(Enum condition)
                 {
                     switch (condition)
@@ -477,7 +477,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private Enum Return(Enum condition)
                 {
                     switch (condition)
@@ -517,7 +517,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private Enum BreakWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -574,7 +574,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [TestAspect]
+                [LoggerAspect]
                 private Enum ReturnWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -630,23 +630,80 @@ namespace SoftCube.Aspects
                 }
             }
 
-            [TestAspect]
-            private void Exception()
+            public class 例外
             {
-                throw new Exception("A");
-            }
-
-            [Fact]
-            public void Exception_成功する()
-            {
-                lock (Lock)
+                [LoggerAspect]
+                private void Throw()
                 {
-                    var appender = CreateAppender();
+                    throw new Exception("A");
+                }
 
-                    var ex = Record.Exception(() => Exception());
+                [Fact]
+                public void Throw_正しくコードが注入される()
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
 
-                    Assert.IsType<Exception>(ex);
-                    Assert.Equal($"OnEntry OnException A OnExit ", appender.ToString());
+                        var ex = Record.Exception(() => Throw());
+
+                        Assert.IsType<Exception>(ex);
+                        Assert.Equal($"OnEntry OnException A OnExit ", appender.ToString());
+                    }
+                }
+
+                [LoggerAspect]
+                private void TryCatch()
+                {
+                    try
+                    {
+                        throw new Exception("A");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Trace(ex.Message);
+                    }
+                }
+
+                [Fact]
+                public void TryCatch_正しくコードが注入される()
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+
+                        TryCatch();
+
+                        Assert.Equal($"OnEntry A OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
+
+                [LoggerAspect]
+                private void TryCatchRethrow()
+                {
+                    try
+                    {
+                        throw new Exception("A");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Trace(ex.Message);
+                        throw ex;
+                    }
+                }
+
+                [Fact]
+                public void TryCatchRethrow_正しくコードが注入される()
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+
+                        var ex = Record.Exception(() => TryCatchRethrow());
+
+                        Assert.IsType<Exception>(ex);
+                        Assert.Equal($"OnEntry A OnException A OnExit ", appender.ToString());
+                    }
                 }
             }
         }
