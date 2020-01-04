@@ -167,144 +167,156 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                //[TestAspect]
-                //private Enum Return(Enum condition)
-                //{
-                //    switch (condition)
-                //    {
-                //        case Enum.A:
-                //            Logger.Trace("A");
-                //            return condition;
+                [TestAspect]
+                private void Return(Enum condition)
+                {
+                    switch (condition)
+                    {
+                        case Enum.A:
+                            Logger.Trace("A");
+                            return;
 
-                //        case Enum.B:
-                //            Logger.Trace("B");
-                //            return condition;
+                        case Enum.B:
+                            Logger.Trace("B");
+                            return;
 
-                //        case Enum.C:
-                //            Logger.Trace("C");
-                //            return condition;
+                        case Enum.C:
+                            Logger.Trace("C");
+                            return;
 
-                //        default:
-                //            Logger.Trace("D");
-                //            return condition;
-                //    }
-                //}
+                        default:
+                            Logger.Trace("D");
+                            return;
+                    }
+                }
 
-                //[Theory]
-                //[InlineData(Enum.A, "A")]
-                //[InlineData(Enum.B, "B")]
-                //[InlineData(Enum.C, "C")]
-                //[InlineData((Enum)3, "D")]
-                //public void Return_正しくコードが注入される(Enum condition, string log)
-                //{
-                //    lock (Lock)
-                //    {
-                //        var appender = CreateAppender();
+                [Theory]
+                [InlineData(Enum.A, "A")]
+                [InlineData(Enum.B, "B")]
+                [InlineData(Enum.C, "C")]
+                [InlineData((Enum)3, "D")]
+                public void Return_正しくコードが注入される(Enum condition, string log)
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
 
-                //        var result = Return(condition);
+                        Return(condition);
 
-                //        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                //    }
-                //}
+                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
 
-                //[TestAspect]
-                //private Enum BreakWithDefaultThrow(Enum condition)
-                //{
-                //    switch (condition)
-                //    {
-                //        case Enum.A:
-                //            Logger.Trace("A");
-                //            break;
+                [TestAspect]
+                private void BreakWithDefaultThrow(Enum condition)
+                {
+                    switch (condition)
+                    {
+                        case Enum.A:
+                            Logger.Trace("A");
+                            break;
 
-                //        case Enum.B:
-                //            Logger.Trace("B");
-                //            break;
+                        case Enum.B:
+                            Logger.Trace("B");
+                            break;
 
-                //        case Enum.C:
-                //            Logger.Trace("C");
-                //            break;
+                        case Enum.C:
+                            Logger.Trace("C");
+                            break;
 
-                //        default:
-                //            Logger.Trace("D");
-                //            throw new NotSupportedException("D");
-                //    }
+                        default:
+                            Logger.Trace("D");
+                            throw new NotSupportedException("D");
+                    }
+                }
 
-                //    return condition;
-                //}
+                [Theory]
+                [InlineData(Enum.A, "A")]
+                [InlineData(Enum.B, "B")]
+                [InlineData(Enum.C, "C")]
+                public void BreakWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
 
-                //[Theory]
-                //[InlineData(Enum.A, "A")]
-                //[InlineData(Enum.B, "B")]
-                //[InlineData(Enum.C, "C")]
-                //public void BreakWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
-                //{
-                //    lock (Lock)
-                //    {
-                //        var appender = CreateAppender();
+                        BreakWithDefaultThrow(condition);
 
-                //        var result = BreakWithDefaultThrow(condition);
+                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
 
-                //        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                //    }
-                //}
+                [Fact]
+                public void BreakWithDefaultThrow_default_正しくコードが注入される()
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+                        var condition = (Enum)3;
+                        var log = "D";
 
-                //[Fact]
-                //public void BreakWithDefaultThrow_default_正しくコードが注入される()
-                //{
-                //    lock (Lock)
-                //    {
-                //        var appender = CreateAppender();
-                //        var condition = (Enum)3;
-                //        var log = "D";
+                        var ex = Record.Exception(() => BreakWithDefaultThrow(condition));
 
-                //        var ex = Record.Exception(() => BreakWithDefaultThrow(condition));
+                        Assert.IsType<NotSupportedException>(ex);
+                        Assert.Equal($"OnEntry {condition} {log} OnException D OnExit ", appender.ToString());
+                    }
+                }
 
-                //        Assert.IsType<NotSupportedException>(ex);
-                //        Assert.Equal($"OnEntry {condition} {log} OnException {log} OnExit ", appender.ToString());
-                //    }
-                //}
+                [TestAspect]
+                private void ReturnWithDefaultThrow(Enum condition)
+                {
+                    switch (condition)
+                    {
+                        case Enum.A:
+                            Logger.Trace("A");
+                            return;
 
-                //[TestAspect]
-                //private Enum ReturnWithDefaultThrow(Enum condition)
-                //{
-                //    switch (condition)
-                //    {
-                //        case Enum.A:
-                //            Logger.Trace("A");
-                //            return condition;
+                        case Enum.B:
+                            Logger.Trace("B");
+                            return;
 
-                //        case Enum.B:
-                //            Logger.Trace("B");
-                //            return condition;
+                        case Enum.C:
+                            Logger.Trace("C");
+                            return;
 
-                //        case Enum.C:
-                //            Logger.Trace("C");
-                //            return condition;
+                        default:
+                            Logger.Trace("D");
+                            throw new NotSupportedException("D");
+                    }
+                }
 
-                //        default:
-                //            Logger.Trace("D");
-                //            throw new NotSupportedException("D");
-                //    }
-                //}
+                [Theory]
+                [InlineData(Enum.A, "A")]
+                [InlineData(Enum.B, "B")]
+                [InlineData(Enum.C, "C")]
+                public void ReturnWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
 
-                //[Theory]
-                //[InlineData(Enum.A, "A")]
-                //[InlineData(Enum.B, "B")]
-                //[InlineData(Enum.C, "C")]
-                //public void ReturnWithDefaultThrow_正しくコードが注入される(Enum condition, string log)
-                //{
-                //    lock (Lock)
-                //    {
-                //        var appender = CreateAppender();
+                        ReturnWithDefaultThrow(condition);
 
-                //        var result = ReturnWithDefaultThrow(condition);
+                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
+                    }
+                }
 
-                //        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                //    }
-                //}
+                [Fact]
+                public void ReturnWithDefaultThrow_default_正しくコードが注入される()
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+                        var condition = (Enum)3;
+                        var log = "D";
+
+                        var ex = Record.Exception(() => BreakWithDefaultThrow(condition));
+
+                        Assert.IsType<NotSupportedException>(ex);
+                        Assert.Equal($"OnEntry {condition} {log} OnException D OnExit ", appender.ToString());
+                    }
+                }
             }
-
-
 
             public class Switch_戻り値あり
             {
@@ -492,16 +504,23 @@ namespace SoftCube.Aspects
                         Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
                     }
                 }
+
+                [Fact]
+                public void ReturnWithDefaultThrow_default_正しくコードが注入される()
+                {
+                    lock (Lock)
+                    {
+                        var appender = CreateAppender();
+                        var condition = (Enum)3;
+                        var log = "D";
+
+                        var ex = Record.Exception(() => BreakWithDefaultThrow(condition));
+
+                        Assert.IsType<NotSupportedException>(ex);
+                        Assert.Equal($"OnEntry {condition} {log} OnException D OnExit ", appender.ToString());
+                    }
+                }
             }
-
-
-
-
-
-
-
-
-
 
             [TestAspect]
             private void Exception()
