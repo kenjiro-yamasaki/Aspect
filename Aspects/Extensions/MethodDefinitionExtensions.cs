@@ -12,6 +12,42 @@ namespace SoftCube.Aspects
     {
         #region メソッド
 
+        #region プロパティに相当する拡張メソッド
+
+        /// <summary>
+        /// 戻り値が存在するかを判断します。
+        /// </summary>
+        /// <param name="method">メソッド定義。</param>
+        /// <returns>戻り値が存在するか。</returns>
+        public static bool HasReturnValue(this MethodDefinition method)
+        {
+            return method.ReturnType.FullName != "System.Void";
+        }
+
+        /// <summary>
+        /// Return 命令を取得します。
+        /// </summary>
+        /// <param name="method">メソッド定義。</param>
+        /// <returns>
+        /// Return 命令。
+        /// メソッドに戻り値がある場合、戻り値のロード命令を返します。
+        /// メソッドに戻り値がない場合、Return 命令そのものを返します。
+        /// </returns>
+        public static Instruction ReturnInstruction(this MethodDefinition method)
+        {
+            var instructions = method.Body.Instructions;                                            // 命令コレクション。
+            if (method.HasReturnValue())
+            {
+                return instructions.Last().Previous;
+            }
+            else
+            {
+                return instructions.Last();
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
@@ -37,16 +73,6 @@ namespace SoftCube.Aspects
                     baseAttributeType = baseAttributeType.BaseType.Resolve();
                 }
             }
-        }
-
-        /// <summary>
-        /// 戻り値が存在するかを判断します。
-        /// </summary>
-        /// <param name="method">メソッド定義。</param>
-        /// <returns>戻り値が存在するか。</returns>
-        public static bool HasReturnValue(this MethodDefinition method)
-        {
-            return method.ReturnType.FullName != "System.Void";
         }
 
         /// <summary>
@@ -92,7 +118,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// メソッドの内部状態をログ出力します (デバッグ用、削除可)。
+        /// IL コードをログ出力します。
         /// </summary>
         /// <param name="method">メソッド定義。</param>
         public static void Log(this MethodDefinition method)

@@ -32,12 +32,13 @@ namespace SoftCube.Aspects
         /// <param name="method">注入対象のメソッド定義。</param>
         protected override void OnInject(MethodDefinition method)
         {
-            // アスペクト注入前のメソッド定義の内部状態をログ出力します (デバッグ用、削除可)。
+            // 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();
 
             // 最後の命令が Throw 命令の場合、Return 命令を追加します。
-            var processor = method.Body.GetILProcessor();
-            if (processor.Body.Instructions.Last().OpCode == OpCodes.Throw)
+            var interactions = method.Body.Instructions;                                            // 命令コレクション。
+            var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
+            if (interactions.Last().OpCode == OpCodes.Throw)
             {
                 processor.Append(processor.Create(OpCodes.Ret));
             }
@@ -62,51 +63,30 @@ namespace SoftCube.Aspects
             var catchLast = InjectExceptionHandler(method, aspectIndex, eventArgsIndex);
 
             // Exit ハンドラーを注入します。
-            var endLast = InjectExitHandler(method, aspectIndex, eventArgsIndex);
+            var finallyLast = InjectExitHandler(method, aspectIndex, eventArgsIndex);
 
-            // 命令アドレスを修正します。
-            var exceptionHandlers = method.Body.ExceptionHandlers;
+            // 書き換えによって、不正な状態になった IL コードを修正します。
             {
-                // Try の最終命令のジャンプ先アドレスを修正します。
+                // Try の最終命令を Catch の最終命令への Leave 命令に修正します。
+                // InjectReturnHandler の <returns> コメントを参照してください。
                 tryLast.OpCode  = OpCodes.Leave_S;
                 tryLast.Operand = catchLast;
 
                 // 元々の例外ハンドラーの終了位置が明示されていない場合、終了位置を Leave 命令 に変更します。
+                var exceptionHandlers = method.Body.ExceptionHandlers;
                 foreach (var handler in exceptionHandlers.Where(eh => eh.HandlerEnd == null))
                 {
                     handler.HandlerEnd = tryLast;
                 }
             }
 
-            // Catch ハンドラーを追加します。
-            {
-                var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
-                {
-                    CatchType    = module.ImportReference(typeof(Exception)),
-                    TryStart     = tryStart,
-                    TryEnd       = tryLast.Next,
-                    HandlerStart = tryLast.Next,
-                    HandlerEnd   = catchLast,
-                };
-                exceptionHandlers.Add(handler);
-            }
+            // 例外ハンドラーを追加します。
+            AddExceptionHandlers(method, tryStart, tryLast, catchLast, finallyLast);
 
-            // Finally ハンドラーを追加します。
-            {
-                var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
-                {
-                    TryStart     = tryStart,
-                    TryEnd       = catchLast.Next,
-                    HandlerStart = catchLast.Next,
-                    HandlerEnd   = endLast.Next,
-                };
-                exceptionHandlers.Add(handler);
-            }
-
-            // IL を最適化します。
+            // IL コードを最適化します。
             method.OptimizeIL();
 
-            // アスペクト注入後のメソッド定義の内部状態をログ出力します (デバッグ用、削除可)。
+            // 書き換え後の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();
         }
 
@@ -180,7 +160,7 @@ namespace SoftCube.Aspects
         /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
         /// <returns>
         /// Try の最終命令 (Catch の最終命令への Leave 命令)。
-        /// ジャンプ先の命令が不明であるため、Nop 命令をプレースフォルダとして追加しています。
+        /// 転送先の命令が不明であるため、Nop 命令をプレースフォルダとして追加しています。
         /// 正しい Leave 命令に書き換える必要があります。
         /// </returns>
         private Instruction InjectReturnHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
@@ -202,19 +182,19 @@ namespace SoftCube.Aspects
                 processor.Append(newReturn = processor.Create(OpCodes.Ldloc, resultIndex));
                 processor.Append(processor.Create(OpCodes.Ret));
 
-                // Catch の最終命令への転送命令 (Leave 命令) を挿入します。
+                // Catch の最終命令への Leave 命令を挿入します。
                 // 転送先の命令が不明であるため、Nop 命令をプレースフォルダとして挿入しています。
-                // 後処理にて、正しい Leave 命令に書き換える必要があります。
+                // 後処理にて、正しい Leave 命令に書き換えます。
                 Instruction leave;                                                                  // Leave 命令。
                 processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Nop));
 
                 foreach (var @return in returns)
                 {
                     // Return 命令を書き換えて、戻り値をローカル変数にストアします。
-                    @return.OpCode = OpCodes.Stloc;
-                    @return.Operand = processor.Body.Variables[resultIndex];
+                    @return.OpCode  = OpCodes.Stloc;
+                    @return.Operand = variables[resultIndex];
 
-                    // Leave 命令への転送命令 (Branch 命令) を挿入します。
+                    // Leave 命令への Branch 命令を挿入します。
                     // 以降は Branch 命令の前にコードを挿入します。
                     Instruction branch;                                                             // Branch 命令。
                     processor.InsertAfter(@return, branch = processor.Create(OpCodes.Br_S, leave));
@@ -242,19 +222,19 @@ namespace SoftCube.Aspects
                 Instruction newReturn;                                                              // 新たな Return 命令。
                 processor.Append(newReturn = processor.Create(OpCodes.Ret));
 
-                // Catch の最終命令への転送命令 (Leave 命令) を挿入します。
+                // Catch の最終命令への Leave 命令を挿入します。
                 // 転送先の命令が不明であるため、Nop 命令をプレースフォルダとして挿入しています。
-                // 後処理にて、正しい Leave 命令に書き換える必要があります。
+                // 後処理にて、正しい Leave 命令に書き換えます。
                 Instruction leave;                                                                  // Leave 命令。
                 processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Nop));
 
                 foreach (var @return in returns)
                 {
                     // Return 命令を Nop に書き換えます。
-                    @return.OpCode = OpCodes.Nop;
+                    @return.OpCode  = OpCodes.Nop;
                     @return.Operand = null;
 
-                    // Leave 命令への転送命令 (Branch 命令) を挿入します。
+                    // Leave 命令への Branch 命令を挿入します。
                     // 以降は Branch 命令の前にコードを挿入します。
                     Instruction branch;                                                             // Branch 命令。
                     processor.InsertAfter(@return, branch = processor.Create(OpCodes.Br_S, leave));
@@ -282,23 +262,14 @@ namespace SoftCube.Aspects
             var module       = method.DeclaringType.Module.Assembly.MainModule;                     // モジュール。
             var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
 
-            Instruction @return;
-            if (method.HasReturnValue())
-            {
-                @return = instructions.Last().Previous;
-            }
-            else
-            {
-                @return = instructions.Last();
-            }
 
             // 例外オブジェクトをローカル変数にストアします。
             var variables      = method.Body.Variables;                                             // ローカル変数コレクション。
             var exceptionIndex = variables.Count();                                                 // 例外オブジェクトの変数インデックス。
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
-            Instruction handlerStart;
-            processor.InsertBefore(@return, handlerStart = processor.Create(OpCodes.Stloc, exceptionIndex));
+            var @return = method.ReturnInstruction();                                               // Return 命令。
+            processor.InsertBefore(@return, processor.Create(OpCodes.Stloc, exceptionIndex));
 
             // 例外オブジェクトをイベントデータに設定します。
             processor.InsertBefore(@return, processor.Create(OpCodes.Ldloc, eventArgsIndex));
@@ -313,7 +284,7 @@ namespace SoftCube.Aspects
             // 例外を再スローします。
             processor.InsertBefore(@return, processor.Create(OpCodes.Rethrow));
 
-            // Return 命令への転送命令 (Leave 命令) を挿入します。
+            // Return 命令への Leave 命令を挿入します。
             Instruction leave;                                                                      // Leave 命令。
             processor.InsertBefore(@return, leave = processor.Create(OpCodes.Leave_S, @return));
 
@@ -333,17 +304,8 @@ namespace SoftCube.Aspects
             var module       = method.DeclaringType.Module.Assembly.MainModule;                     // モジュール。
             var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
 
-            Instruction @return;
-            if (method.HasReturnValue())
-            {
-                @return = instructions.Last().Previous;
-            }
-            else
-            {
-                @return = instructions.Last();
-            }
-
             // Finally ハンドラーの先頭命令 (Nop) を挿入します。
+            var @return = method.ReturnInstruction();
             processor.InsertBefore(@return, processor.Create(OpCodes.Nop));
 
             // OnExit を呼び出します。
@@ -356,6 +318,45 @@ namespace SoftCube.Aspects
             processor.InsertBefore(@return, endFinally = processor.Create(OpCodes.Endfinally));
 
             return endFinally;
+        }
+
+        /// <summary>
+        /// 例外ハンドラー (Catch ハンドラーと Finally ハンドラー) を追加します。
+        /// </summary>
+        /// <param name="method">注入対象のメソッド定義。</param>
+        /// <param name="tryStart">Try の先頭命令。</param>
+        /// <param name="tryLast">Try の最終命令。</param>
+        /// <param name="catchLast">Catch の最終命令。</param>
+        /// <param name="finallyLast">Finally の最終命令。</param>
+        private void AddExceptionHandlers(MethodDefinition method, Instruction tryStart, Instruction tryLast, Instruction catchLast, Instruction finallyLast)
+        {
+            var module = method.DeclaringType.Module.Assembly.MainModule;                           // モジュール。
+
+            // Catch ハンドラーを追加します。
+            var exceptionHandlers = method.Body.ExceptionHandlers;
+            {
+                var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
+                {
+                    CatchType    = module.ImportReference(typeof(Exception)),
+                    TryStart     = tryStart,
+                    TryEnd       = tryLast.Next,
+                    HandlerStart = tryLast.Next,
+                    HandlerEnd   = catchLast,
+                };
+                exceptionHandlers.Add(handler);
+            }
+
+            // Finally ハンドラーを追加します。
+            {
+                var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
+                {
+                    TryStart     = tryStart,
+                    TryEnd       = catchLast.Next,
+                    HandlerStart = catchLast.Next,
+                    HandlerEnd   = finallyLast.Next,
+                };
+                exceptionHandlers.Add(handler);
+            }
         }
 
         #endregion
