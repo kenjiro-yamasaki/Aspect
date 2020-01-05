@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using System.Reflection;
 
 namespace SoftCube.Aspects
 {
@@ -15,16 +14,16 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="type">注入対象の型定義。</param>
         /// <param name="assembly">アセンブリ。</param>
-        internal static void Inject(this TypeDefinition type, Assembly assembly)
+        internal static void Inject(this TypeDefinition type)
         {
             foreach (var method in type.Methods)
             {
-                method.Inject(assembly);
+                method.Inject();
             }
 
             foreach (var nestedType in type.NestedTypes)
             {
-                nestedType.Inject(assembly);
+                nestedType.Inject();
             }
         }
 

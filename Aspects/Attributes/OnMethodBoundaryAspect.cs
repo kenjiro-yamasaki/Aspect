@@ -29,22 +29,22 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="methodDefinition">注入対象のメソッド定義。</param>
-        protected override void OnInject(MethodDefinition methodDefinition)
+        /// <param name="method">注入対象のメソッド定義。</param>
+        protected override void OnInject(MethodDefinition method)
         {
             // アスペクト注入前のメソッド定義の内部状態をログ出力します (デバッグ用、削除可)。
-            methodDefinition.Log();
+            method.Log();
 
             // 最後の命令が Throw 命令の場合、Return 命令を追加します。
-            var processor = methodDefinition.Body.GetILProcessor();
+            var processor = method.Body.GetILProcessor();
             if (processor.Body.Instructions.Last().OpCode == OpCodes.Throw)
             {
                 processor.Append(processor.Create(OpCodes.Ret));
             }
 
             // ローカル変数にアスペクトとイベントデータを追加します。
-            var module    = methodDefinition.DeclaringType.Module.Assembly.MainModule;              // モジュール。
-            var variables = methodDefinition.Body.Variables;                                        // ローカル変数コレクション。
+            var module    = method.DeclaringType.Module.Assembly.MainModule;                        // モジュール。
+            var variables = method.Body.Variables;                                                  // ローカル変数コレクション。
 
             var aspectIndex = variables.Count();                                                    // アスペクトの変数インデックス。
             variables.Add(new VariableDefinition(module.ImportReference(GetType())));
@@ -53,32 +53,32 @@ namespace SoftCube.Aspects
             variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodExecutionArgs))));
 
             // エントリーハンドラーを注入します。
-            InjectEntryHandler(methodDefinition, aspectIndex, eventArgsIndex);
+            InjectEntryHandler(method, aspectIndex, eventArgsIndex);
 
             // リターンハンドラーを注入します。
-            InjectReturnHandler(methodDefinition, aspectIndex, eventArgsIndex);
+            InjectReturnHandler(method, aspectIndex, eventArgsIndex);
 
             // 例外ハンドラーを注入します。
-            InjectExceptionHandler(methodDefinition, aspectIndex, eventArgsIndex);
+            InjectExceptionHandler(method, aspectIndex, eventArgsIndex);
 
             // IL コードを最適化します。
-            methodDefinition.OptimizeIL();
+            method.OptimizeIL();
 
             // アスペクト注入後のメソッド定義の内部状態をログ出力します (デバッグ用、削除可)。
-            methodDefinition.Log();
+            method.Log();
         }
 
         /// <summary>
         /// エントリーハンドラーを注入します。
         /// </summary>
-        /// <param name="methodDefinition">注入対象のメソッド定義。</param>
+        /// <param name="method">注入対象のメソッド定義。</param>
         /// <param name="aspectIndex">アスペクトの変数インデックス。</param>
         /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
-        private void InjectEntryHandler(MethodDefinition methodDefinition, int aspectIndex, int eventArgsIndex)
+        private void InjectEntryHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var instructions = methodDefinition.Body.Instructions;                                  // 命令コレクション。
-            var module       = methodDefinition.DeclaringType.Module.Assembly.MainModule;           // モジュール。
-            var processor    = methodDefinition.Body.GetILProcessor();                              // IL プロセッサー。
+            var instructions = method.Body.Instructions;                                            // 命令コレクション。
+            var module       = method.DeclaringType.Module.Assembly.MainModule;                     // モジュール。
+            var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
 
             // アスペクトをローカル変数にストアします。
             var first = instructions.First();                                                       // 最初の命令。
@@ -91,7 +91,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
 
                 // パラメーターコレクション (第 2 引数) を生成し、ロードします。
-                var parameters = methodDefinition.Parameters;                                       // パラメーターコレクション。
+                var parameters = method.Parameters;                                                 // パラメーターコレクション。
                 processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameters.Count));
                 processor.InsertBefore(first, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
@@ -127,22 +127,22 @@ namespace SoftCube.Aspects
         /// <summary>
         /// リターンハンドラーを注入します。
         /// </summary>
-        /// <param name="methodDefinition">注入対象のメソッド定義。</param>
+        /// <param name="method">注入対象のメソッド定義。</param>
         /// <param name="aspectIndex">アスペクトの変数インデックス。</param>
         /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
-        private void InjectReturnHandler(MethodDefinition methodDefinition, int aspectIndex, int eventArgsIndex)
+        private void InjectReturnHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var instructions = methodDefinition.Body.Instructions;                                  // 命令コレクション。
-            var module       = methodDefinition.DeclaringType.Module.Assembly.MainModule;           // モジュール。
-            var processor    = methodDefinition.Body.GetILProcessor();                              // IL プロセッサー。
+            var instructions = method.Body.Instructions;                                            // 命令コレクション。
+            var module       = method.DeclaringType.Module.Assembly.MainModule;                     // モジュール。
+            var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
 
             var returns = instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();               // Return 命令コレクション。
 
-            if (methodDefinition.HasReturnValue())
+            if (method.HasReturnValue())
             {
-                var variables   = methodDefinition.Body.Variables;                                  // ローカル変数コレクション。
+                var variables   = method.Body.Variables;                                            // ローカル変数コレクション。
                 var resultIndex = variables.Count();                                                // 戻り値の変数インデックス。
-                variables.Add(new VariableDefinition(methodDefinition.ReturnType));
+                variables.Add(new VariableDefinition(method.ReturnType));
 
                 // 新たな Return 命令を追加します。
                 Instruction newReturn;                                                              // 新たな Return 命令。
@@ -154,7 +154,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Leave_S, newReturn));
 
                 // 元々の例外ハンドラーの終了位置が明示されていない場合、終了位置を Leave 命令 に変更します。
-                var exceptionHandlers = methodDefinition.Body.ExceptionHandlers;                    // 例外ハンドラーコレクション。
+                var exceptionHandlers = method.Body.ExceptionHandlers;                              // 例外ハンドラーコレクション。
                 foreach (var handler in exceptionHandlers.Where(eh => eh.HandlerEnd == null))
                 {
                     handler.HandlerEnd = leave;
@@ -174,9 +174,9 @@ namespace SoftCube.Aspects
                     // 戻り値をイベントデータに設定します。
                     processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
                     processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, resultIndex));
-                    if (methodDefinition.ReturnType.IsValueType)
+                    if (method.ReturnType.IsValueType)
                     {
-                        processor.InsertBefore(branch, processor.Create(OpCodes.Box, methodDefinition.ReturnType));
+                        processor.InsertBefore(branch, processor.Create(OpCodes.Box, method.ReturnType));
                     }
                     processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
 
@@ -202,7 +202,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Leave_S, newReturn));
 
                 // 元々の例外ハンドラーの終了位置が明示されていない場合、終了位置を Leave 命令 に変更します。
-                var exceptionHandlers = methodDefinition.Body.ExceptionHandlers;                    // 例外ハンドラーコレクション。
+                var exceptionHandlers = method.Body.ExceptionHandlers;                              // 例外ハンドラーコレクション。
                 foreach (var handler in exceptionHandlers.Where(eh => eh.HandlerEnd == null))
                 {
                     handler.HandlerEnd = leave;
@@ -235,17 +235,17 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 例外ハンドラーを注入します。
         /// </summary>
-        /// <param name="methodDefinition">注入対象のメソッド定義。</param>
+        /// <param name="method">注入対象のメソッド定義。</param>
         /// <param name="aspectIndex">アスペクトの変数インデックス。</param>
         /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
-        private void InjectExceptionHandler(MethodDefinition methodDefinition, int aspectIndex, int eventArgsIndex)
+        private void InjectExceptionHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var instructions = methodDefinition.Body.Instructions;                                  // 命令コレクション。
-            var module       = methodDefinition.DeclaringType.Module.Assembly.MainModule;           // モジュール。
-            var processor    = methodDefinition.Body.GetILProcessor();                              // IL プロセッサー。
+            var instructions = method.Body.Instructions;                                            // 命令コレクション。
+            var module       = method.DeclaringType.Module.Assembly.MainModule;                     // モジュール。
+            var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
 
             Instruction @return;
-            if (methodDefinition.HasReturnValue())
+            if (method.HasReturnValue())
             {
                 @return = instructions.Last().Previous;
             }
@@ -255,7 +255,7 @@ namespace SoftCube.Aspects
             }
 
             // 例外オブジェクトをローカル変数にストアします。
-            var variables      = methodDefinition.Body.Variables;                                   // ローカル変数コレクション。
+            var variables      = method.Body.Variables;                                             // ローカル変数コレクション。
             var exceptionIndex = variables.Count();                                                 // 例外オブジェクトの変数インデックス。
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 

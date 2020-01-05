@@ -43,9 +43,9 @@ namespace SoftCube.Aspects.Injector
                 Logger.Info($" Injecting assembly {assemblyFilePath}...");
                 using (var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyFilePath, new ReaderParameters() { ReadSymbols = true, ReadWrite = true }))
                 {
-                    var assembly = Assembly.LoadFrom(copyAssemblyFilePath);
+                    Assembly.LoadFrom(copyAssemblyFilePath);
 
-                    assemblyDefinition.Inject(assembly);
+                    assemblyDefinition.Inject();
                     assemblyDefinition.Write(new WriterParameters() { WriteSymbols = true });
                 }
 

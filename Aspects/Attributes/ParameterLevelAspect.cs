@@ -24,22 +24,22 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="parameterDefinition">注入対象のパラメーター定義。</param>
-        public void Inject(ParameterDefinition parameterDefinition)
+        /// <param name="parameter">注入対象のパラメーター定義。</param>
+        public void Inject(ParameterDefinition parameter)
         {
-            if (parameterDefinition == null)
+            if (parameter == null)
             {
-                throw new ArgumentNullException(nameof(parameterDefinition));
+                throw new ArgumentNullException(nameof(parameter));
             }
 
-            OnInject(parameterDefinition);
+            OnInject(parameter);
         }
 
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="parameterDefinition">注入対象のパラメーター定義。</param>
-        protected abstract void OnInject(ParameterDefinition parameterDefinition);
+        /// <param name="parameter">注入対象のパラメーター定義。</param>
+        protected abstract void OnInject(ParameterDefinition parameter);
 
         #endregion
     }

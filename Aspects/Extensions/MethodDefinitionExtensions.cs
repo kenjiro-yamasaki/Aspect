@@ -2,7 +2,6 @@
 using Mono.Cecil.Cil;
 using SoftCube.Log;
 using System.Linq;
-using System.Reflection;
 
 namespace SoftCube.Aspects
 {
@@ -16,14 +15,13 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="methodDefinition">メソッド定義。</param>
-        /// <param name="assembly">アセンブリ。</param>
-        public static void Inject(this MethodDefinition methodDefinition, Assembly assembly)
+        /// <param name="method">メソッド定義。</param>
+        public static void Inject(this MethodDefinition method)
         {
             var baseFullName  = $"{nameof(SoftCube)}.{nameof(Aspects)}.{nameof(MethodLevelAspect)}";
             var baseScopeName = $"{nameof(SoftCube)}.{nameof(Aspects)}.dll";
 
-            foreach (var attribute in methodDefinition.CustomAttributes)
+            foreach (var attribute in method.CustomAttributes)
             {
                 var baseAttributeType = attribute.AttributeType.Resolve().BaseType.Resolve();
 
@@ -31,8 +29,8 @@ namespace SoftCube.Aspects
                 {
                     if (baseAttributeType.FullName == baseFullName && baseAttributeType.Scope.Name == baseScopeName)
                     {
-                        var aspect = attribute.Create<MethodLevelAspect>(assembly);
-                        aspect.Inject(methodDefinition);
+                        var aspect = attribute.Create<MethodLevelAspect>();
+                        aspect.Inject(method);
                         break;
                     }
 
@@ -44,20 +42,20 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 戻り値が存在するかを判断します。
         /// </summary>
-        /// <param name="methodDefinition">メソッド定義。</param>
+        /// <param name="method">メソッド定義。</param>
         /// <returns>戻り値が存在するか。</returns>
-        public static bool HasReturnValue(this MethodDefinition methodDefinition)
+        public static bool HasReturnValue(this MethodDefinition method)
         {
-            return methodDefinition.ReturnType.FullName != "System.Void";
+            return method.ReturnType.FullName != "System.Void";
         }
 
         /// <summary>
         /// IL コードを最適化します。
         /// </summary>
-        /// <param name="methodDefinition">メソッド定義。</param>
-        public static void OptimizeIL(this MethodDefinition methodDefinition)
+        /// <param name="method">メソッド定義。</param>
+        public static void OptimizeIL(this MethodDefinition method)
         {
-            var processor = methodDefinition.Body.GetILProcessor();
+            var processor = method.Body.GetILProcessor();
 
             int offset = 0;
             foreach (var instruction in processor.Body.Instructions)
@@ -96,12 +94,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// メソッドの内部状態をログ出力します (デバッグ用、削除可)。
         /// </summary>
-        /// <param name="methodDefinition">メソッド定義。</param>
-        public static void Log(this MethodDefinition methodDefinition)
+        /// <param name="method">メソッド定義。</param>
+        public static void Log(this MethodDefinition method)
         {
-            var processor = methodDefinition.Body.GetILProcessor();
+            var processor = method.Body.GetILProcessor();
 
-            Logger.Trace($"{methodDefinition.FullName}");
+            Logger.Trace($"{method.FullName}");
 
             foreach (var instruction in processor.Body.Instructions)
             {

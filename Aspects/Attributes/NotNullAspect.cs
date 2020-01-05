@@ -31,19 +31,19 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="parameterDefinition">注入対象のパラメーター定義。</param>
-        protected override void OnInject(ParameterDefinition parameterDefinition)
+        /// <param name="parameter">注入対象のパラメーター定義。</param>
+        protected override void OnInject(ParameterDefinition parameter)
         {
-            if (!parameterDefinition.ParameterType.IsValueType)
+            if (!parameter.ParameterType.IsValueType)
             {
-                var methodDefinition = parameterDefinition.Method as MethodDefinition;
+                var methodDefinition = parameter.Method as MethodDefinition;
                 var module           = methodDefinition.DeclaringType.Module.Assembly.MainModule;
                 var processor        = methodDefinition.Body.GetILProcessor();
                 var first            = processor.Body.Instructions[0];
 
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameterDefinition));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameter));
                 processor.InsertBefore(first, processor.Create(OpCodes.Brtrue_S, first));
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldstr, parameterDefinition.Name));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldstr, parameter.Name));
                 processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(ArgumentNullException).GetConstructor(new Type[] { typeof(string) }))));
                 processor.InsertBefore(first, processor.Create(OpCodes.Throw));
             }

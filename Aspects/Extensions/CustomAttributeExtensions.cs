@@ -15,19 +15,16 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="CustomAttribute"/> が表現するアスペクトを生成します。
         /// </summary>
-        /// <typeparam name="TAspect"><see cref="CustomAttribute"/> が表現するアスペクトの型。</typeparam>
+        /// <typeparam name="TAspect">カスタム属性が表現するアスペクトの型。</typeparam>
         /// <param name="customAttribute">カスタム属性。</param>
-        /// <param name="assembly">アセンブリ。</param>
-        /// <returns><see cref="CustomAttribute"/> が表現するアスペクト。</returns>
-        internal static TAspect Create<TAspect>(this CustomAttribute customAttribute, Assembly assembly)
+        /// <returns>カスタム属性が表現するアスペクト。</returns>
+        internal static TAspect Create<TAspect>(this CustomAttribute customAttribute)
             where TAspect : class
         {
-            //var type           = customAttribute.AttributeType.Resolve();
-            //var aspectTypeName = type.FullName + ", " + type.Module.Assembly.Name.Name;
-            //var aspectType     = Type.GetType(aspectTypeName);
-
-            var type = customAttribute.AttributeType.Resolve();
-            var aspectType = assembly.GetType(type.FullName);
+            //
+            var aspectTypeDefinition = customAttribute.AttributeType.Resolve();
+            var assembly             = AppDomain.CurrentDomain.GetAssemblies().Single(a => a.FullName == aspectTypeDefinition.Module.Assembly.FullName);
+            var aspectType           = assembly.GetType(aspectTypeDefinition.FullName);
 
             // アスペクトのコンストラクター引数を取得します。
             object[] arguments = null;

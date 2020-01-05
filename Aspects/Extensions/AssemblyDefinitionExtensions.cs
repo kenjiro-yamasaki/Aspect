@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using System.Reflection;
 
 namespace SoftCube.Aspects
 {
@@ -13,13 +12,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="assemblyDefinition">注入対象のアセンブリ定義。</param>
-        /// <param name="assembly">アセンブリ。</param>
-        public static void Inject(this AssemblyDefinition assemblyDefinition, Assembly assembly)
+        /// <param name="assembly">注入対象のアセンブリ定義。</param>
+        public static void Inject(this AssemblyDefinition assembly)
         {
-            foreach (var module in assemblyDefinition.Modules)
+            foreach (var module in assembly.Modules)
             {
-                module.Inject(assembly);
+                module.Inject();
             }
         }
 
