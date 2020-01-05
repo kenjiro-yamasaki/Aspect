@@ -10,7 +10,7 @@
 
     <!-- Buildターゲットからビルド後に呼び出されるターゲット -->
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <!--<Exec Command="$(SolutionDir)\Aspects.Injector\$(OutDir)\SoftCube.Aspects.Injector.exe $(TargetPath)&#xD;&#xA;" />-->
+        <Exec Command="$(SolutionDir)\Aspects.Injector\$(OutDir)\SoftCube.Aspects.Injector.exe $(TargetPath)&#xD;&#xA;" />
     </Target>
 
     <ItemGroup>
