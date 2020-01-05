@@ -5,11 +5,11 @@ using System;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// 非nullパラメーターアスペクト。
+    /// 非 <c>null</c> パラメーターアスペクト。
     /// </summary>
     /// <remarks>
-    /// この属性を付けたパラメーターが、nullを許容しないことを明示します。
-    /// nullを渡された場合、System.ArgumentNullExceptionを投げる。
+    /// この属性を付けたパラメーターが、<c>null</c> を許容しないことを明示します。
+    /// <c>null</c> を渡された場合、<see cref="ArgumentNullException"/> を投げます。
     /// </remarks>
     [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     [Serializable]
@@ -29,21 +29,21 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト(カスタムコード)を注入します。
+        /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="parameter">注入対象のパラメーター定義</param>
-        protected override void OnInject(ParameterDefinition parameter)
+        /// <param name="parameterDefinition">注入対象のパラメーター定義。</param>
+        protected override void OnInject(ParameterDefinition parameterDefinition)
         {
-            if (!parameter.ParameterType.IsValueType)
+            if (!parameterDefinition.ParameterType.IsValueType)
             {
-                var method    = (parameter.Method as MethodDefinition);
-                var module    = method.DeclaringType.Module.Assembly.MainModule;
-                var processor = method.Body.GetILProcessor();
-                var first     = processor.Body.Instructions[0];
+                var methodDefinition = parameterDefinition.Method as MethodDefinition;
+                var module           = methodDefinition.DeclaringType.Module.Assembly.MainModule;
+                var processor        = methodDefinition.Body.GetILProcessor();
+                var first            = processor.Body.Instructions[0];
 
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameter));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameterDefinition));
                 processor.InsertBefore(first, processor.Create(OpCodes.Brtrue_S, first));
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldstr, parameter.Name));
+                processor.InsertBefore(first, processor.Create(OpCodes.Ldstr, parameterDefinition.Name));
                 processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(ArgumentNullException).GetConstructor(new Type[] { typeof(string) }))));
                 processor.InsertBefore(first, processor.Create(OpCodes.Throw));
             }

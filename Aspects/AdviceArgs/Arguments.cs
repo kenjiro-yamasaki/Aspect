@@ -12,9 +12,9 @@ namespace SoftCube.Aspects
         #region フィールド
 
         /// <summary>
-        /// 引数リスト。
+        /// 引数コレクション。
         /// </summary>
-        private List<object> arguments;
+        private readonly IEnumerable<object> arguments;
 
         #endregion
 
@@ -23,7 +23,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="arguments">引数配列</param>
+        /// <param name="arguments">引数配列。</param>
         public Arguments(params object[] arguments)
         {
             this.arguments = arguments.ToList();

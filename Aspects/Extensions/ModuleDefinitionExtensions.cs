@@ -13,7 +13,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="moduleDefinition">注入対象の <see cref="ModuleDefinition"/>。</param>
+        /// <param name="moduleDefinition">注入対象のモジュール定義。</param>
         /// <param name="assembly">アセンブリ。</param>
         internal static void Inject(this ModuleDefinition moduleDefinition, Assembly assembly)
         {
