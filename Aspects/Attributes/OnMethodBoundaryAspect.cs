@@ -262,7 +262,6 @@ namespace SoftCube.Aspects
             var module       = method.DeclaringType.Module.Assembly.MainModule;                     // モジュール。
             var processor    = method.Body.GetILProcessor();                                        // IL プロセッサー。
 
-
             // 例外オブジェクトをローカル変数にストアします。
             var variables      = method.Body.Variables;                                             // ローカル変数コレクション。
             var exceptionIndex = variables.Count();                                                 // 例外オブジェクトの変数インデックス。
