@@ -16,7 +16,7 @@ namespace SoftCube.Aspects
         /// <see cref="CustomAttribute"/> が表現するアスペクトを生成します。
         /// </summary>
         /// <typeparam name="TAspect"><see cref="CustomAttribute"/> が表現するアスペクトの型。</typeparam>
-        /// <param name="customAttribute">CustomAttribute。</param>
+        /// <param name="customAttribute">カスタム属性。</param>
         /// <param name="assembly">アセンブリ。</param>
         /// <returns><see cref="CustomAttribute"/> が表現するアスペクト。</returns>
         internal static TAspect Create<TAspect>(this CustomAttribute customAttribute, Assembly assembly)

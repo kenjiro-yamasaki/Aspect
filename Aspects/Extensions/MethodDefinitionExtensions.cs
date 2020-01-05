@@ -67,23 +67,7 @@ namespace SoftCube.Aspects
 
             foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Br_S))
             {
-                int distance = 0;
-                var current  = instruction;
-                var target   = (Instruction)instruction.Operand;
-
-                while (current != target)
-                {
-                    distance += current.GetSize();
-                    if (instruction.Offset < target.Offset)
-                    {
-                        current = current.Next;
-                    }
-                    else
-                    {
-                        current = current.Previous;
-                    }
-                }
-
+                var distance = instruction.DistanceTo((Instruction)instruction.Operand);
                 if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
                 {
                     instruction.OpCode = OpCodes.Br;
@@ -92,23 +76,7 @@ namespace SoftCube.Aspects
 
             foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brtrue_S))
             {
-                int distance = 0;
-                var current = instruction;
-                var target = (Instruction)instruction.Operand;
-
-                while (current != target)
-                {
-                    distance += current.GetSize();
-                    if (instruction.Offset < target.Offset)
-                    {
-                        current = current.Next;
-                    }
-                    else
-                    {
-                        current = current.Previous;
-                    }
-                }
-
+                var distance = instruction.DistanceTo((Instruction)instruction.Operand);
                 if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
                 {
                     instruction.OpCode = OpCodes.Brtrue;
@@ -117,23 +85,7 @@ namespace SoftCube.Aspects
 
             foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brfalse_S))
             {
-                int distance = 0;
-                var current = instruction;
-                var target = (Instruction)instruction.Operand;
-
-                while (current != target)
-                {
-                    distance += current.GetSize();
-                    if (instruction.Offset < target.Offset)
-                    {
-                        current = current.Next;
-                    }
-                    else
-                    {
-                        current = current.Previous;
-                    }
-                }
-
+                var distance = instruction.DistanceTo((Instruction)instruction.Operand);
                 if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
                 {
                     instruction.OpCode = OpCodes.Brfalse;
@@ -142,7 +94,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// ログ出力します。
+        /// メソッドの内部状態をログ出力します (デバッグ用、削除可)。
         /// </summary>
         /// <param name="methodDefinition">メソッド定義。</param>
         public static void Log(this MethodDefinition methodDefinition)

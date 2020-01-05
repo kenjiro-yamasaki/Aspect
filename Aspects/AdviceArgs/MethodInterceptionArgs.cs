@@ -60,7 +60,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 現在の引数を渡し、その戻り値を <see cref="ReturnValue"/> に格納することにより、インターセプトされたメソッドの呼び出します
+        /// 現在の引数を渡し、その戻り値を <see cref="ReturnValue"/> に格納することにより、インターセプトされたメソッドの呼び出します。
         /// </summary>
         public void Proceed()
         {
