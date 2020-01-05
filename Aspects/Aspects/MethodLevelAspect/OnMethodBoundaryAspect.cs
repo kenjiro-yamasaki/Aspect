@@ -16,7 +16,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        public OnMethodBoundaryAspect()
+        protected OnMethodBoundaryAspect()
         {
         }
 
