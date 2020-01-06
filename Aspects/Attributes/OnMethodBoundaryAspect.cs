@@ -109,11 +109,19 @@ namespace SoftCube.Aspects
             processor.InsertBefore(first, processor.Create(OpCodes.Stloc, aspectIndex));
 
             // イベントデータを生成し、ローカル変数にストアします。
-            {
-                // アスペクトのインスタンス (第 1 引数) をロードします。
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
+            processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
+            processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object) }))));
+            processor.InsertBefore(first, processor.Create(OpCodes.Stloc, eventArgsIndex));
 
-                // パラメーターコレクション (第 2 引数) を生成し、ロードします。
+            // メソッド情報をイベントデータに設定します。
+            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+            processor.InsertBefore(first, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { }))));
+            processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod())));
+
+            // パラメーター情報をイベントデータに設定します。
+            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
+            {
+                // パラメーターコレクションを生成し、ロードします。
                 var parameters = method.Parameters;                                                 // パラメーターコレクション。
                 processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameters.Count));
                 processor.InsertBefore(first, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
@@ -130,16 +138,8 @@ namespace SoftCube.Aspects
                     processor.InsertBefore(first, processor.Create(OpCodes.Stelem_Ref));
                 }
                 processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) }))));
-
-                // イベントデータを生成し、ローカル変数にストアします。
-                processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) }))));
-                processor.InsertBefore(first, processor.Create(OpCodes.Stloc, eventArgsIndex));
             }
-
-            // メソッド情報をイベントデータに設定します。
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(first, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { }))));
-            processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod())));
+            processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Arguments)).GetSetMethod())));
 
             // OnEntry を呼び出します。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectIndex));
