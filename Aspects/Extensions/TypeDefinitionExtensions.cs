@@ -16,7 +16,7 @@ namespace SoftCube.Aspects
         /// <param name="assembly">アセンブリ。</param>
         internal static void Inject(this TypeDefinition type)
         {
-            foreach (var method in type.Methods)
+            foreach (var method in type.Methods.ToArray())
             {
                 method.Inject();
             }

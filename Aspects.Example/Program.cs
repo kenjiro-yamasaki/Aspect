@@ -1,6 +1,7 @@
 ﻿using SoftCube.Log;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace SoftCube.Aspects
 {
@@ -15,18 +16,23 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            new Program().TryCatchFinally();
+            var result = new Program().TryCatchFinally();
 
-            Logger.Trace("B");
+            Logger.Trace(result.ToString());
 
             Console.Read();
         }
 
 
         [LoggerAspect]
-        private void TryCatchFinally()
+        private int TryCatchFinally()
         {
-            System.Diagnostics.Trace.WriteLine("A");
+
+            return 0;
+
+
+
+
             //try
             //{
             //    System.Diagnostics.Trace.WriteLine("A");
