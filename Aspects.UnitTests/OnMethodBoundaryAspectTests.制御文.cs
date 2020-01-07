@@ -1,5 +1,5 @@
-﻿using SoftCube.Log;
-using SoftCube.Profile;
+﻿using SoftCube.Logging;
+using SoftCube.Profiling;
 using System;
 using Xunit;
 using static SoftCube.Aspects.Constants;

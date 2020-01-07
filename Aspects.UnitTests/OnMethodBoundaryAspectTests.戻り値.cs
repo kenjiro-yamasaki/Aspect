@@ -1,4 +1,4 @@
-﻿using SoftCube.Log;
+﻿using SoftCube.Logging;
 using System.Collections;
 using System.Collections.Generic;
 using Xunit;

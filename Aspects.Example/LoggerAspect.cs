@@ -1,4 +1,4 @@
-﻿using SoftCube.Log;
+﻿using SoftCube.Logging;
 
 namespace SoftCube.Aspects
 {

@@ -1,5 +1,5 @@
 ﻿using Mono.Cecil;
-using SoftCube.Log;
+using SoftCube.Logging;
 using System;
 using System.IO;
 using System.Reflection;

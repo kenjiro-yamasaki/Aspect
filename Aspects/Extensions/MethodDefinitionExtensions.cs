@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using SoftCube.Log;
+using SoftCube.Logging;
 using System.Linq;
 
 namespace SoftCube.Aspects
