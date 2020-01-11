@@ -26,10 +26,11 @@ namespace SoftCube.Aspects
         /// <param name="args"></param>
         public override void OnInvoke(MethodInterceptionArgs args)
         {
-            args.Invoke(args.Arguments);
+            args.ReturnValue = 7;
 
-
-            //args.ReturnValue = 7;
+            //Logger.Trace("X");
+            //args.Invoke(args.Arguments);
+            //Logger.Trace("Z");
         }
 
         #endregion

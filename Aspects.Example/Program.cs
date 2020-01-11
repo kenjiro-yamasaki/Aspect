@@ -27,8 +27,10 @@ namespace SoftCube.Aspects
         [LoggerAspect]
         private int TryCatchFinally()
         {
-            Logger.Trace("Z");
-            return 3;
+            Logger.Trace("1");
+            Logger.Trace("2");
+            Logger.Trace("3");
+            return 7;
         }
     }
 

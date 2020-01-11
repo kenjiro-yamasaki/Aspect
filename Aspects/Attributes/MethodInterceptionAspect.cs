@@ -38,48 +38,7 @@ namespace SoftCube.Aspects
             /// 
             var (derivedMethodInterceptionArgs, overridenInvokeMethod) = InjectDerivedMethodInterceptionArgs(method);
             var movedMethod = InjectInvokeHandler(method, derivedMethodInterceptionArgs);
-
-            ///
-            var module    = method.Module;
-            var processor = overridenInvokeMethod.Body.GetILProcessor();
-
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
-
-            for (int parameterIndex = 0; parameterIndex < movedMethod.Parameters.Count; parameterIndex++)
-            {
-                var parameter = movedMethod.Parameters[parameterIndex];
-
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetSetMethod()));
-
-                processor.Emit(OpCodes.Ldind_I4, parameterIndex);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
-                if (parameter.ParameterType.IsValueType)
-                {
-                    processor.Emit(OpCodes.Box, parameter.ParameterType);
-                }
-                else
-                {
-                    processor.Emit(OpCodes.Castclass, parameter.ParameterType);
-                }
-            }
-
-            processor.Emit(OpCodes.Callvirt, movedMethod);
-            if (movedMethod.ReturnType.IsValueType)
-            {
-                processor.Emit(OpCodes.Box, movedMethod.ReturnType);
-            }
-            else
-            {
-                processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
-            }
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
-
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetGetMethod()));
-            processor.Emit(OpCodes.Ret);
+            InjectOverriddenInvokeMethod(overridenInvokeMethod, movedMethod);
 
             /// IL コードを最適化します。
             method.OptimizeIL();
@@ -151,7 +110,17 @@ namespace SoftCube.Aspects
 
             /// 新たなメソッド (Method?) を作成し、元々のメソッド (Method) の内容を移動します。
             var movedMethod = new MethodDefinition(method.Name + "?", attributes, returnType);
-            movedMethod.Body = method.Body;
+            movedMethod.Body             = method.Body;
+
+            ////////////////////////////////////////////////////////////////////////////////////////
+            /// TODO : デバッグ情報を書き換えます。
+            //var debugInformation = new MethodDebugInformation(movedMethod);
+
+            //movedMethod.DebugInformation = method.DebugInformation;
+            //movedMethod.DebugInformation.StateMachineKickOffMethod = movedMethod;
+            //method.DebugInformation = null;
+            ////////////////////////////////////////////////////////////////////////////////////////
+
             declaringType.Methods.Add(movedMethod);
 
             /// 元々のメソッド (Method) の内容を、新たなメソッド (Method?) を呼び出すコードに書き換えます。
@@ -162,6 +131,9 @@ namespace SoftCube.Aspects
             var instructions = method.Body.Instructions;                                            /// 命令コレクション。
             var module       = method.DeclaringType.Module.Assembly.MainModule;                     /// モジュール。
             var variables    = method.Body.Variables;                                               /// ローカル変数コレクション。
+
+            instructions.Clear();
+            variables.Clear();
 
             /// ローカル変数にアスペクトとイベントデータを追加します。
             var aspectIndex = variables.Count();                                                    /// アスペクトの変数インデックス。
@@ -177,7 +149,6 @@ namespace SoftCube.Aspects
             /// イベントデータを生成し、ローカル変数にストアします。
             processor.Append(processor.Create(OpCodes.Ldarg_0));
             processor.Append(processor.Create(OpCodes.Newobj, derivedMethodInterceptionArgsType.Methods.Single(m => m.Name == ".ctor")));
-            //processor.Append(processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new Type[] { typeof(object) }))));
             processor.Append(processor.Create(OpCodes.Stloc, eventArgsIndex));
 
             /// メソッド情報をイベントデータに設定します。
@@ -230,6 +201,55 @@ namespace SoftCube.Aspects
             }
 
             return movedMethod;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="overridenInvokeMethod"></param>
+        /// <param name="movedMethod"></param>
+        private void InjectOverriddenInvokeMethod(MethodDefinition overridenInvokeMethod, MethodDefinition movedMethod)
+        {
+            var module    = overridenInvokeMethod.Module;
+            var processor = overridenInvokeMethod.Body.GetILProcessor();
+
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+
+            for (int parameterIndex = 0; parameterIndex < movedMethod.Parameters.Count; parameterIndex++)
+            {
+                var parameter = movedMethod.Parameters[parameterIndex];
+
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetSetMethod()));
+
+                processor.Emit(OpCodes.Ldind_I4, parameterIndex);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                if (parameter.ParameterType.IsValueType)
+                {
+                    processor.Emit(OpCodes.Box, parameter.ParameterType);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Castclass, parameter.ParameterType);
+                }
+            }
+
+            processor.Emit(OpCodes.Callvirt, movedMethod);
+            if (movedMethod.ReturnType.IsValueType)
+            {
+                processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+            }
+            else
+            {
+                processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
+            }
+            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
+
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetGetMethod()));
+            processor.Emit(OpCodes.Ret);
         }
 
         #endregion
