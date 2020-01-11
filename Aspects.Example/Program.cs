@@ -1,7 +1,5 @@
 ﻿using SoftCube.Logging;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 
 namespace SoftCube.Aspects
 {
@@ -16,66 +14,45 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
+            //var @class = new Class();
+            //@class.Instance = new Instance();
+            //var result = @class.Func("1");
+
+
             var result = new Program().TryCatchFinally();
-
             Logger.Trace(result.ToString());
-
             Console.Read();
         }
-
 
         [LoggerAspect]
         private int TryCatchFinally()
         {
-
-            return 0;
-
-
-
-
-            //try
-            //{
-            //    System.Diagnostics.Trace.WriteLine("A");
-            //}
-            //catch (Exception ex)
-            //{
-            //    System.Diagnostics.Trace.WriteLine("B");
-            //    throw;
-            //}
-            //finally
-            //{
-            //    System.Diagnostics.Trace.WriteLine("C");
-            //}
+            Logger.Trace("Z");
+            return 3;
         }
-
-        //public enum Enum
-        //{
-        //    A,
-        //    B,
-        //    C,
-        //}
-
-        //[LoggerAspect]
-        //private Enum Return(Enum condition)
-        //{
-        //    switch (condition)
-        //    {
-        //        case Enum.A:
-        //            Logger.Trace("A");
-        //            return condition;
-
-        //        case Enum.B:
-        //            Logger.Trace("B");
-        //            return condition;
-
-        //        case Enum.C:
-        //            Logger.Trace("C");
-        //            return condition;
-
-        //        default:
-        //            Logger.Trace("D");
-        //            return condition;
-        //    }
-        //}
     }
+
+    //public class Instance
+    //{
+    //    public int Func(string value)
+    //    {
+    //        return int.Parse(value);
+    //    }
+    //}
+
+    //public class Class
+    //{
+    //    public Instance Instance { get; set; }
+
+    //    public object ReturnValue { get; set; }
+
+    //    public Arguments Arguments { get; set; }
+
+    //    [LoggerAspect]
+    //    public object Func(string value)
+    //    {
+    //        ReturnValue = Instance.Func((string)Arguments[0]);
+    //        return ReturnValue;
+    //    }
+    //}
 }

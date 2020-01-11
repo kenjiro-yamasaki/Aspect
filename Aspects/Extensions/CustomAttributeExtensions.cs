@@ -26,17 +26,17 @@ namespace SoftCube.Aspects
             var assembly             = AppDomain.CurrentDomain.GetAssemblies().Single(a => a.FullName == aspectTypeDefinition.Module.Assembly.FullName);
             var aspectType           = assembly.GetType(aspectTypeDefinition.FullName);
 
-            // アスペクトのコンストラクター引数を取得します。
+            /// アスペクトのコンストラクター引数を取得します。
             object[] arguments = null;
             if (customAttribute.HasConstructorArguments)
             {
                 arguments = customAttribute.ConstructorArguments.Select(a => a.Value).ToArray();
             }
 
-            // アスペクトのインスタンスを生成します。
+            /// アスペクトのインスタンスを生成します。
             var aspect = Activator.CreateInstance(aspectType, arguments) as TAspect;
 
-            // アスペクトのプロパティを設定します。
+            /// アスペクトのプロパティを設定します。
             if (customAttribute.HasProperties)
             {
                 foreach (var attributeProperty in customAttribute.Properties)

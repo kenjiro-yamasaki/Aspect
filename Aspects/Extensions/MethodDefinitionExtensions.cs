@@ -35,7 +35,7 @@ namespace SoftCube.Aspects
         /// </returns>
         public static Instruction ReturnInstruction(this MethodDefinition method)
         {
-            var instructions = method.Body.Instructions;                                            // 命令コレクション。
+            var instructions = method.Body.Instructions;                                            /// 命令コレクション。
             if (method.HasReturnValue())
             {
                 return instructions.Last().Previous;
