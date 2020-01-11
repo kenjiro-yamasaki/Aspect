@@ -110,16 +110,12 @@ namespace SoftCube.Aspects
 
             /// 新たなメソッド (Method?) を作成し、元々のメソッド (Method) の内容を移動します。
             var movedMethod = new MethodDefinition(method.Name + "?", attributes, returnType);
-            movedMethod.Body             = method.Body;
+            movedMethod.Body = method.Body;
 
-            ////////////////////////////////////////////////////////////////////////////////////////
-            /// TODO : デバッグ情報を書き換えます。
-            //var debugInformation = new MethodDebugInformation(movedMethod);
-
-            //movedMethod.DebugInformation = method.DebugInformation;
-            //movedMethod.DebugInformation.StateMachineKickOffMethod = movedMethod;
-            //method.DebugInformation = null;
-            ////////////////////////////////////////////////////////////////////////////////////////
+            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
+            {
+                movedMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
 
             declaringType.Methods.Add(movedMethod);
 
