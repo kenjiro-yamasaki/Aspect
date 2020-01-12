@@ -218,7 +218,7 @@ namespace SoftCube.Aspects
             parameterType.Name = "arguments";
 
             var invokeMethod = methodInterceptionArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Invoke));
-            var overridenInvokeMethod = new MethodDefinition(invokeMethod.Name, (invokeMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~Mono.Cecil.MethodAttributes.NewSlot, invokeMethod.ReturnType);
+            var overridenInvokeMethod = new MethodDefinition(invokeMethod.Name, (invokeMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), invokeMethod.ReturnType);
             overridenInvokeMethod.Parameters.Add(parameterType);
 
             derivedMethodInterceptionArgsType.Methods.Add(overridenInvokeMethod);
@@ -262,9 +262,9 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// <see cref="MethodInterceptionArgs.Proceed"/> をオーバーライドします。
         /// </summary>
-        /// <param name="method"></param>
+        /// <param name="method">注入対象のメソッド定義。</param>
         private void OverrideProceedMethod(MethodDefinition method)
         {
             var module        = method.Module;
@@ -277,7 +277,7 @@ namespace SoftCube.Aspects
             var derivedMethodInterceptionArgsType   = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
 
             var proceedMethod = methodInterceptionArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Proceed));
-            var overridenProceedMethod = new MethodDefinition(proceedMethod.Name, (proceedMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~Mono.Cecil.MethodAttributes.NewSlot, proceedMethod.ReturnType);
+            var overridenProceedMethod = new MethodDefinition(proceedMethod.Name, (proceedMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), proceedMethod.ReturnType);
 
             derivedMethodInterceptionArgsType.Methods.Add(overridenProceedMethod);
 

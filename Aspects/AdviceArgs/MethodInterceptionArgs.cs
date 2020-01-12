@@ -6,7 +6,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプト引数。
     /// </summary>
-    public class MethodInterceptionArgs : AdviceArgs
+    public abstract class MethodInterceptionArgs : AdviceArgs
     {
         #region プロパティ
 
@@ -52,18 +52,12 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="arguments">引数コレクション。</param>
         /// <returns>戻り値。</returns>
-        public virtual object Invoke(Arguments arguments)
-        {
-            throw new NotImplementedException();
-        }
+        public abstract object Invoke(Arguments arguments);
 
         /// <summary>
         /// 現在の引数を渡し、その戻り値を <see cref="ReturnValue"/> に格納することにより、インターセプトされたメソッドの呼び出します。
         /// </summary>
-        public virtual void Proceed()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract void Proceed();
 
         #endregion
     }
