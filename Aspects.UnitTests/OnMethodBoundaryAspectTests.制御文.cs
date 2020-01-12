@@ -12,7 +12,7 @@ namespace SoftCube.Aspects
         {
             public class If文_戻り値あり
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private bool If(bool condition)
                 {
                     if (condition)
@@ -25,7 +25,7 @@ namespace SoftCube.Aspects
                     return false;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private bool IfElse(bool condition)
                 {
                     if (condition)
@@ -40,7 +40,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private (bool, bool) NestIfElse(bool condition0, bool condition1)
                 {
                     if (condition0)
@@ -121,7 +121,7 @@ namespace SoftCube.Aspects
 
             public class If文_戻り値なし
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void If(bool condition)
                 {
                     if (condition)
@@ -133,7 +133,7 @@ namespace SoftCube.Aspects
                     Logger.Trace("B");
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void IfElse(bool condition)
                 {
                     if (condition)
@@ -148,7 +148,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void NestIfElse(bool condition0, bool condition1)
                 {
                     if (condition0)
@@ -236,7 +236,7 @@ namespace SoftCube.Aspects
                     C,
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void Break(Enum condition)
                 {
                     switch (condition)
@@ -276,7 +276,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void Return(Enum condition)
                 {
                     switch (condition)
@@ -316,7 +316,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void BreakWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -371,7 +371,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void ReturnWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -436,7 +436,7 @@ namespace SoftCube.Aspects
                     C,
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private Enum Break(Enum condition)
                 {
                     switch (condition)
@@ -478,7 +478,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private Enum Return(Enum condition)
                 {
                     switch (condition)
@@ -518,7 +518,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private Enum BreakWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -575,7 +575,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private Enum ReturnWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -633,7 +633,7 @@ namespace SoftCube.Aspects
 
             public class 特殊制御
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void Throw()
                 {
                     throw new Exception("A");
@@ -653,7 +653,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void ThrowIfTrue(bool condition)
                 {
                     if (condition)
@@ -692,7 +692,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void ThrowIfFalse(bool condition)
                 {
                     if (condition)
@@ -731,7 +731,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void TryCatch()
                 {
                     try
@@ -757,7 +757,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void TryCatchRethrow()
                 {
                     try
@@ -785,7 +785,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void TryCatchFinally()
                 {
                     try
@@ -817,7 +817,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void Using()
                 {
                     using (var transaction = Profiler.Start("Temp"))
@@ -839,7 +839,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 private void Lock()
                 {
                     lock (LockObject)

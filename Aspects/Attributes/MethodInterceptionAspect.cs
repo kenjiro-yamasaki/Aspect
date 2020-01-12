@@ -250,13 +250,20 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Callvirt, movedMethod);
 
             ///
-            if (movedMethod.ReturnType.IsValueType)
+            if (movedMethod.HasReturnValue())
             {
-                processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+                if (movedMethod.ReturnType.IsValueType)
+                {
+                    processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
+                }
             }
             else
             {
-                processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
+                processor.Emit(OpCodes.Ldnull);
             }
             processor.Emit(OpCodes.Ret);
         }
@@ -284,7 +291,10 @@ namespace SoftCube.Aspects
             /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"> のパラメーターからメソッド?へのパラメーターをロードします。
             var processor = overridenProceedMethod.Body.GetILProcessor();
 
-            processor.Emit(OpCodes.Ldarg_0);
+            if (movedMethod.HasReturnValue())
+            {
+                processor.Emit(OpCodes.Ldarg_0);
+            }
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
 
@@ -310,15 +320,18 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Callvirt, movedMethod);
 
             /// <see cref="MethodExecutionArgs.ReturnValue"/> へメソッド?の戻り値をストアします。
-            if (movedMethod.ReturnType.IsValueType)
+            if (movedMethod.HasReturnValue())
             {
-                processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+                if (movedMethod.ReturnType.IsValueType)
+                {
+                    processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
+                }
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
             }
-            else
-            {
-                processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
-            }
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
 
             /// リターンします。
             processor.Emit(OpCodes.Ret);

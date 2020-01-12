@@ -28,10 +28,9 @@ namespace SoftCube.Aspects
         {
             Logger.Trace("X");
 
-            //args.Proceed();
+            args.Proceed();
 
-            var result = args.Invoke(args.Arguments);
-            args.ReturnValue = result;
+            //args.ReturnValue = args.Invoke(args.Arguments);
 
             Logger.Trace("Z");
         }

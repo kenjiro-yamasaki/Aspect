@@ -19,19 +19,27 @@ namespace SoftCube.Aspects
             //var result = @class.Func("1");
 
 
-            var result = new Program().TryCatchFinally("7");
-            Logger.Trace(result.ToString());
+            new Program().TryCatchFinally();
+            //Logger.Trace(result.ToString());
             Console.Read();
         }
 
         [LoggerAspect]
-        private int TryCatchFinally(string value)
+        private void TryCatchFinally()
         {
             Logger.Trace("1");
             Logger.Trace("2");
             Logger.Trace("3");
-            return int.Parse(value);
         }
+
+        //[LoggerAspect]
+        //private int TryCatchFinally(string value)
+        //{
+        //    Logger.Trace("1");
+        //    Logger.Trace("2");
+        //    Logger.Trace("3");
+        //    return int.Parse(value);
+        //}
     }
 
     //public class Instance

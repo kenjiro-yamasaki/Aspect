@@ -12,7 +12,7 @@ namespace SoftCube.Aspects
         {
             #region int
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @int(int value)
             {
                 Logger.Trace("A");
@@ -54,7 +54,7 @@ namespace SoftCube.Aspects
 
             #region short
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @short(short value)
             {
                 Logger.Trace("A");
@@ -96,7 +96,7 @@ namespace SoftCube.Aspects
 
             #region long
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @long(long value)
             {
                 Logger.Trace("A");
@@ -138,7 +138,7 @@ namespace SoftCube.Aspects
 
             #region uint
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @uint(uint value)
             {
                 Logger.Trace("A");
@@ -171,7 +171,7 @@ namespace SoftCube.Aspects
 
             #region ushort
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @ushort(ushort value)
             {
                 Logger.Trace("A");
@@ -204,7 +204,7 @@ namespace SoftCube.Aspects
 
             #region ulong
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @ulong(ulong value)
             {
                 Logger.Trace("A");
@@ -237,7 +237,7 @@ namespace SoftCube.Aspects
 
             #region byte
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @byte(byte value)
             {
                 Logger.Trace("A");
@@ -270,7 +270,7 @@ namespace SoftCube.Aspects
 
             #region sbyte
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @sbyte(sbyte value)
             {
                 Logger.Trace("A");
@@ -312,7 +312,7 @@ namespace SoftCube.Aspects
 
             #region bool
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @bool(bool value)
             {
                 Logger.Trace("A");
@@ -337,7 +337,7 @@ namespace SoftCube.Aspects
 
             #region double
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @double(double value)
             {
                 Logger.Trace("A");
@@ -367,7 +367,7 @@ namespace SoftCube.Aspects
 
             #region float
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @float(float value)
             {
                 Logger.Trace("A");
@@ -397,7 +397,7 @@ namespace SoftCube.Aspects
 
             #region decimal
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @decimal(decimal value)
             {
                 Logger.Trace("A");
@@ -427,7 +427,7 @@ namespace SoftCube.Aspects
 
             #region char
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @char(char value)
             {
                 Logger.Trace("A");
@@ -452,7 +452,7 @@ namespace SoftCube.Aspects
 
             #region string
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @string(string value)
             {
                 Logger.Trace("A");
@@ -484,7 +484,7 @@ namespace SoftCube.Aspects
                 public override string ToString() => Property;
             }
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @class(Class value)
             {
                 Logger.Trace("A");
@@ -515,7 +515,7 @@ namespace SoftCube.Aspects
                 public override string ToString() => Property;
             }
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void @struct(Struct value)
             {
                 Logger.Trace("A");
@@ -539,19 +539,19 @@ namespace SoftCube.Aspects
 
             #region Collection
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void IEnumerable(IEnumerable value)
             {
                 Logger.Trace("A");
             }
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void IEnumerableT(IEnumerable<int> value)
             {
                 Logger.Trace("A");
             }
 
-            [LoggerAspect]
+            [OnMethodBoundaryAspectLogger]
             private void ListT(List<int> value)
             {
                 Logger.Trace("A");

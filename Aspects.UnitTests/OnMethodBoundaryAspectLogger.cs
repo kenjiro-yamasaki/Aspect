@@ -4,11 +4,11 @@ using System.Text;
 
 namespace SoftCube.Aspects
 {
-    public class LoggerAspect : OnMethodBoundaryAspect
+    public class OnMethodBoundaryAspectLogger : OnMethodBoundaryAspect
     {
         public override void OnEntry(MethodExecutionArgs args)
         {
-            Logger.Info("OnEntry");
+            Logger.Trace("OnEntry");
 
             foreach (var arg in args.Arguments)
             {

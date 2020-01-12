@@ -25,147 +25,147 @@ namespace SoftCube.Aspects
         {
             public class @int
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public int m10()
                 {
                     Logger.Trace("A");
@@ -448,147 +448,147 @@ namespace SoftCube.Aspects
 
             public class @short
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short n2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public short m10()
                 {
                     Logger.Trace("A");
@@ -871,147 +871,147 @@ namespace SoftCube.Aspects
 
             public class @long
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long n2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public long m10()
                 {
                     Logger.Trace("A");
@@ -1294,77 +1294,77 @@ namespace SoftCube.Aspects
 
             public class @uint
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public uint p10()
                 {
                     Logger.Trace("A");
@@ -1517,77 +1517,77 @@ namespace SoftCube.Aspects
 
             public class @ushort
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ushort p10()
                 {
                     Logger.Trace("A");
@@ -1740,77 +1740,77 @@ namespace SoftCube.Aspects
 
             public class @ulong
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public ulong p10()
                 {
                     Logger.Trace("A");
@@ -1963,77 +1963,77 @@ namespace SoftCube.Aspects
 
             public class @byte
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public byte p10()
                 {
                     Logger.Trace("A");
@@ -2186,147 +2186,147 @@ namespace SoftCube.Aspects
 
             public class @sbyte
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p0()
                 {
                     Logger.Trace("A");
                     return 0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p1()
                 {
                     Logger.Trace("A");
                     return 1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p2()
                 {
                     Logger.Trace("A");
                     return 2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p3()
                 {
                     Logger.Trace("A");
                     return 3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p4()
                 {
                     Logger.Trace("A");
                     return 4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p5()
                 {
                     Logger.Trace("A");
                     return 5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p6()
                 {
                     Logger.Trace("A");
                     return 6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p7()
                 {
                     Logger.Trace("A");
                     return 7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p8()
                 {
                     Logger.Trace("A");
                     return 8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p9()
                 {
                     Logger.Trace("A");
                     return 9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte p10()
                 {
                     Logger.Trace("A");
                     return 10;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m1()
                 {
                     Logger.Trace("A");
                     return -1;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m2()
                 {
                     Logger.Trace("A");
                     return -2;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m3()
                 {
                     Logger.Trace("A");
                     return -3;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m4()
                 {
                     Logger.Trace("A");
                     return -4;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m5()
                 {
                     Logger.Trace("A");
                     return -5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m6()
                 {
                     Logger.Trace("A");
                     return -6;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m7()
                 {
                     Logger.Trace("A");
                     return -7;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m8()
                 {
                     Logger.Trace("A");
                     return -8;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m9()
                 {
                     Logger.Trace("A");
                     return -9;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public sbyte m10()
                 {
                     Logger.Trace("A");
@@ -2609,14 +2609,14 @@ namespace SoftCube.Aspects
 
             public class @bool
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public bool @true()
                 {
                     Logger.Trace("A");
                     return true;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public bool @false()
                 {
                     Logger.Trace("A");
@@ -2652,56 +2652,56 @@ namespace SoftCube.Aspects
 
             public class @double
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double p0()
                 {
                     Logger.Trace("A");
                     return 0.0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double p05()
                 {
                     Logger.Trace("A");
                     return 0.5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double p1()
                 {
                     Logger.Trace("A");
                     return 1.0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double p100()
                 {
                     Logger.Trace("A");
                     return 100.0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double m0()
                 {
                     Logger.Trace("A");
                     return -0.0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double m05()
                 {
                     Logger.Trace("A");
                     return -0.5;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double m1()
                 {
                     Logger.Trace("A");
                     return -1.0;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public double m100()
                 {
                     Logger.Trace("A");
@@ -2815,56 +2815,56 @@ namespace SoftCube.Aspects
 
             public class @float
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float p0()
                 {
                     Logger.Trace("A");
                     return 0.0f;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float p05()
                 {
                     Logger.Trace("A");
                     return 0.5f;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float p1()
                 {
                     Logger.Trace("A");
                     return 1.0f;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float p100()
                 {
                     Logger.Trace("A");
                     return 100.0f;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float m0()
                 {
                     Logger.Trace("A");
                     return -0.0f;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float m05()
                 {
                     Logger.Trace("A");
                     return -0.5f;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float m1()
                 {
                     Logger.Trace("A");
                     return -1.0f;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public float m100()
                 {
                     Logger.Trace("A");
@@ -2978,56 +2978,56 @@ namespace SoftCube.Aspects
 
             public class @decimal
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal p0()
                 {
                     Logger.Trace("A");
                     return 0.0m;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal p05()
                 {
                     Logger.Trace("A");
                     return 0.5m;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal p1()
                 {
                     Logger.Trace("A");
                     return 1.0m;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal p100()
                 {
                     Logger.Trace("A");
                     return 100.0m;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal m0()
                 {
                     Logger.Trace("A");
                     return -0.0m;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal m05()
                 {
                     Logger.Trace("A");
                     return -0.5m;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal m1()
                 {
                     Logger.Trace("A");
                     return -1.0m;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public decimal m100()
                 {
                     Logger.Trace("A");
@@ -3141,14 +3141,14 @@ namespace SoftCube.Aspects
 
             public class @char
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public char a()
                 {
                     Logger.Trace("A");
                     return 'a';
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public char あ()
                 {
                     Logger.Trace("A");
@@ -3184,14 +3184,14 @@ namespace SoftCube.Aspects
 
             public class @string
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public string a()
                 {
                     Logger.Trace("A");
                     return "a";
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public string あ()
                 {
                     Logger.Trace("A");
@@ -3234,7 +3234,7 @@ namespace SoftCube.Aspects
                     public override string ToString() => Property;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public Class a()
                 {
                     Logger.Trace("A");
@@ -3264,7 +3264,7 @@ namespace SoftCube.Aspects
                     public override string ToString() => Property;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public Struct a()
                 {
                     Logger.Trace("A");
@@ -3287,7 +3287,7 @@ namespace SoftCube.Aspects
 
             public class Collection
             {
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public IEnumerable IEnumerable()
                 {
                     Logger.Trace("A");
@@ -3297,7 +3297,7 @@ namespace SoftCube.Aspects
                     return result;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public IEnumerable<int> IEnumerableT()
                 {
                     Logger.Trace("A");
@@ -3307,7 +3307,7 @@ namespace SoftCube.Aspects
                     return result;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public List<int> ListT()
                 {
                     Logger.Trace("A");
@@ -3317,7 +3317,7 @@ namespace SoftCube.Aspects
                     return result;
                 }
 
-                [LoggerAspect]
+                [OnMethodBoundaryAspectLogger]
                 public IEnumerable<int> 遅延評価()
                 {
                     Logger.Trace("A");
