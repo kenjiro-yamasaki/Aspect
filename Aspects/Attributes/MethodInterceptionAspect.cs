@@ -39,6 +39,7 @@ namespace SoftCube.Aspects
             CreateDerivedMethodInterceptionArgs(method);
             ReplaceMethod(method);
             OverrideInvokeMethod(method);
+            OverrideProceedMethod(method);
 
             /// IL コードを最適化します。
             method.OptimizeIL();
@@ -226,6 +227,64 @@ namespace SoftCube.Aspects
             var processor = overridenInvokeMethod.Body.GetILProcessor();
 
             processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+
+            for (int parameterIndex = 0; parameterIndex < movedMethod.Parameters.Count; parameterIndex++)
+            {
+                var parameter = movedMethod.Parameters[parameterIndex];
+
+                processor.Emit(OpCodes.Ldarg_1);
+                processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                if (parameter.ParameterType.IsValueType)
+                {
+                    processor.Emit(OpCodes.Box, parameter.ParameterType);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Castclass, parameter.ParameterType);
+                }
+            }
+
+            /// メソッド?を呼び出します。
+            processor.Emit(OpCodes.Callvirt, movedMethod);
+
+            ///
+            if (movedMethod.ReturnType.IsValueType)
+            {
+                processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+            }
+            else
+            {
+                processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
+            }
+            processor.Emit(OpCodes.Ret);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="method"></param>
+        private void OverrideProceedMethod(MethodDefinition method)
+        {
+            var module        = method.Module;
+            var declaringType = method.DeclaringType;
+            var movedMethod   = declaringType.Methods.Single(m => m.Name == method.Name + "?");
+
+            /// Invoke メソッドをオーバーライドします。
+            var methodInterceptionArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
+            var methodInterceptionArgsType          = methodInterceptionArgsTypeReference.Resolve();
+            var derivedMethodInterceptionArgsType   = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
+
+            var proceedMethod = methodInterceptionArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Proceed));
+            var overridenProceedMethod = new MethodDefinition(proceedMethod.Name, (proceedMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~Mono.Cecil.MethodAttributes.NewSlot, proceedMethod.ReturnType);
+
+            derivedMethodInterceptionArgsType.Methods.Add(overridenProceedMethod);
+
+            /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"> のパラメーターからメソッド?へのパラメーターをロードします。
+            var processor = overridenProceedMethod.Body.GetILProcessor();
+
+            processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
 
@@ -233,9 +292,8 @@ namespace SoftCube.Aspects
             {
                 var parameter = movedMethod.Parameters[parameterIndex];
 
-                //processor.Emit(OpCodes.Ldarg_0);
-                //processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
-                processor.Emit(OpCodes.Ldarg_1);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
                 processor.Emit(OpCodes.Ldc_I4, parameterIndex);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                 if (parameter.ParameterType.IsValueType)
@@ -262,9 +320,7 @@ namespace SoftCube.Aspects
             }
             processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
 
-            /// <see cref="MethodExecutionArgs.ReturnValue"/> をリターンします。
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetGetMethod()));
+            /// リターンします。
             processor.Emit(OpCodes.Ret);
         }
 
