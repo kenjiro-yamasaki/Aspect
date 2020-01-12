@@ -104,6 +104,11 @@ namespace SoftCube.Aspects
 
             /// 新たなメソッド (メソッド?) を生成し、元々のメソッドの内容を移動します。
             var movedMethod = new MethodDefinition(method.Name + "?", attributes, returnType);
+            foreach (var parameter in method.Parameters)
+            {
+                movedMethod.Parameters.Add(parameter);
+            }
+
             movedMethod.Body = method.Body;
 
             foreach (var sequencePoint in method.DebugInformation.SequencePoints)
@@ -209,7 +214,7 @@ namespace SoftCube.Aspects
 
             var argumentsTypeReferernce = module.ImportReference(typeof(Arguments));
             var parameterType = new ParameterDefinition(argumentsTypeReferernce);
-            parameterType.Name = "argument";
+            parameterType.Name = "arguments";
 
             var invokeMethod = methodInterceptionArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Invoke));
             var overridenInvokeMethod = new MethodDefinition(invokeMethod.Name, (invokeMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~Mono.Cecil.MethodAttributes.NewSlot, invokeMethod.ReturnType);
@@ -231,7 +236,7 @@ namespace SoftCube.Aspects
                 //processor.Emit(OpCodes.Ldarg_0);
                 //processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
                 processor.Emit(OpCodes.Ldarg_1);
-                processor.Emit(OpCodes.Ldind_I4, parameterIndex);
+                processor.Emit(OpCodes.Ldc_I4, parameterIndex);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                 if (parameter.ParameterType.IsValueType)
                 {
