@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -32,7 +31,7 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
-        protected override void OnInject(MethodDefinition method, CustomAttribute aspect)
+        protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
             /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();
@@ -129,47 +128,13 @@ namespace SoftCube.Aspects
             var instructions = method.Body.Instructions;
             var variables    = method.Body.Variables;
 
-            /// ローカル変数にアスペクトとイベントデータを追加します。
+            /// アスペクトをローカル変数にストアします。
+            var aspectIndex = processor.Emit(aspect);
 
+            /// イベントデータを生成し、ローカル変数にストアします。
             var eventArgsIndex = variables.Count();                                                 /// イベントデータの変数インデックス。
             variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodInterceptionArgs))));
 
-            ////////////////////////////////////////////////////////////////////////////////////////
-            ///
-            var aspectIndex = aspect.LoadTo(method);
-           
-            ///// アスペクトをローカル変数にストアします。
-            //var aspectIndex = variables.Count();                                                    /// アスペクトの変数インデックス。
-            //variables.Add(new VariableDefinition(module.ImportReference(GetType())));
-
-            //var aspectTypeDefinition = attribute.AttributeType.Resolve();
-            //var assembly             = AppDomain.CurrentDomain.GetAssemblies().Single(a => a.FullName == aspectTypeDefinition.Module.Assembly.FullName);
-
-            //var argumentTypes = new List<Type>();
-            //foreach (var argument in attribute.ConstructorArguments)
-            //{
-            //    var argumentType = assembly.GetType(argument.Type.FullName);
-
-            //    argumentTypes.Add(argumentType);
-            //    if (argumentType.IsEnum)
-            //    {
-            //        processor.Emit(OpCodes.Ldc_I4, (int)argument.Value);
-            //    }
-            //    else
-            //    {
-            //        //arguments.Add(argument.Value);
-            //    }
-            //}
-
-
-
-
-
-            //processor.Emit(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(argumentTypes.ToArray())));
-            //processor.Emit(OpCodes.Stloc, aspectIndex);
-            ////////////////////////////////////////////////////////////////////////////////////////
-
-            /// イベントデータを生成し、ローカル変数にストアします。
             var derivedMethodInterceptionArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Newobj, derivedMethodInterceptionArgsType.Methods.Single(m => m.Name == ".ctor"));

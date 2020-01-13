@@ -37,25 +37,15 @@ namespace SoftCube.Aspects
             method.Log();
 
             /// 最後の命令が Throw 命令の場合、Return 命令を追加します。
-            var interactions = method.Body.Instructions;                                            /// 命令コレクション。
-            var processor    = method.Body.GetILProcessor();                                        /// IL プロセッサー。
-            if (interactions.Last().OpCode == OpCodes.Throw)
+            var instructions = method.Body.Instructions;
+            var processor    = method.Body.GetILProcessor();
+            if (instructions.Last().OpCode == OpCodes.Throw)
             {
                 processor.Append(processor.Create(OpCodes.Ret));
             }
 
-            /// ローカル変数にアスペクトとイベントデータを追加します。
-            var module    = method.DeclaringType.Module.Assembly.MainModule;                        /// モジュール。
-            var variables = method.Body.Variables;                                                  /// ローカル変数コレクション。
-
-            var aspectIndex = variables.Count();                                                    /// アスペクトの変数インデックス。
-            variables.Add(new VariableDefinition(module.ImportReference(GetType())));
-
-            var eventArgsIndex = variables.Count();                                                 /// イベントデータの変数インデックス。
-            variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodExecutionArgs))));
-
             /// Entry ハンドラーを注入します。
-            var tryStart = InjectEntryHandler(method, aspectIndex, eventArgsIndex);
+            var (tryStart, aspectIndex, eventArgsIndex) = InjectEntryHandler(method, attribute);
 
             /// Return ハンドラーを注入します。
             var tryLast = InjectReturnHandler(method, aspectIndex, eventArgsIndex);
@@ -98,18 +88,21 @@ namespace SoftCube.Aspects
         /// <param name="aspectIndex">アスペクトの変数インデックス。</param>
         /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
         /// <returns>Try の先頭命令。</returns>
-        private Instruction InjectEntryHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
+        private (Instruction, int, int) InjectEntryHandler(MethodDefinition method, CustomAttribute attribute)
         {
             var instructions = method.Body.Instructions;                                            /// 命令コレクション。
             var module       = method.DeclaringType.Module.Assembly.MainModule;                     /// モジュール。
             var processor    = method.Body.GetILProcessor();                                        /// IL プロセッサー。
+            var variables = method.Body.Variables;                                                  /// ローカル変数コレクション。
+            var first = instructions.First();                                                       /// 最初の命令。
 
             /// アスペクトをローカル変数にストアします。
-            var first = instructions.First();                                                       /// 最初の命令。
-            processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(new Type[] { }))));
-            processor.InsertBefore(first, processor.Create(OpCodes.Stloc, aspectIndex));
+            var aspectIndex = processor.InsertBefore(first, attribute);
 
             /// イベントデータを生成し、ローカル変数にストアします。
+            var eventArgsIndex = variables.Count();                                                 /// イベントデータの変数インデックス。
+            variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodExecutionArgs))));
+
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
             processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object) }))));
             processor.InsertBefore(first, processor.Create(OpCodes.Stloc, eventArgsIndex));
@@ -150,7 +143,7 @@ namespace SoftCube.Aspects
             /// Try の先頭命令を挿入します。
             Instruction tryStart;
             processor.InsertBefore(first, tryStart = processor.Create(OpCodes.Nop));
-            return tryStart;
+            return (tryStart, aspectIndex, eventArgsIndex);
         }
 
         /// <summary>

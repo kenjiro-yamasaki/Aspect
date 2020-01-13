@@ -36,7 +36,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 属性名。
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// メソッド仲介タイプ。
@@ -51,9 +51,8 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="type">メソッド仲介タイプ。</param>
-        public MethodInterceptionAspectLogger(string name, MethodInterceptionType type)
+        public MethodInterceptionAspectLogger(MethodInterceptionType type)
         {
-            Name = name;
             Type = type;
         }
 
