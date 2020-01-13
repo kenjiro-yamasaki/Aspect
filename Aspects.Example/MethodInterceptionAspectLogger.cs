@@ -28,15 +28,9 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッド仲介ロガー。
     /// </summary>
-    [Serializable]
     public class MethodInterceptionAspectLogger : MethodInterceptionAspect
     {
         #region プロパティ
-
-        /// <summary>
-        /// 属性名。
-        /// </summary>
-        public string Name { get; set; }
 
         /// <summary>
         /// メソッド仲介タイプ。
@@ -66,32 +60,46 @@ namespace SoftCube.Aspects
         /// <param name="args">メソッド仲介引数。</param>
         public override void OnInvoke(MethodInterceptionArgs args)
         {
-            Logger.Trace("OnInvoke");
-
-            /// 引数をログ出力します。
-            foreach (var argument in args.Arguments)
-            {
-                Logger.Trace(ArgumentFormatter.Format(argument));
-            }
 
             /// メソッドを仲介します。
             switch (Type)
             {
                 case MethodInterceptionType.Proceed:
+                    Logger.Trace("OnInvoke");
+
+                    /// 引数をログ出力します。
+                    foreach (var argument in args.Arguments)
+                    {
+                        Logger.Trace(ArgumentFormatter.Format(argument));
+                    }
+
+                    Logger.Trace("Proceed");
                     args.Proceed();
+
+                    /// 戻り値をログ出力します。
+                    Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
                     break;
 
                 case MethodInterceptionType.Invoke:
+                    Logger.Trace("OnInvoke");
+
+                    /// 引数をログ出力します。
+                    foreach (var argument in args.Arguments)
+                    {
+                        Logger.Trace(ArgumentFormatter.Format(argument));
+                    }
+
+                    Logger.Trace("Invoke");
                     args.ReturnValue = args.Invoke(args.Arguments);
+
+                    /// 戻り値をログ出力します。
+                    Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
                     break;
 
                 case MethodInterceptionType.None:
                 default:
                     break;
             }
-
-            /// 戻り値をログ出力します。
-            Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
         }
 
         #endregion

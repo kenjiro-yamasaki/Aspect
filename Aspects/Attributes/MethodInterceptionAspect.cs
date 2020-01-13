@@ -234,7 +234,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                 if (parameter.ParameterType.IsValueType)
                 {
-                    processor.Emit(OpCodes.Box, parameter.ParameterType);
+                    processor.Emit(OpCodes.Unbox_Any, parameter.ParameterType);
                 }
                 else
                 {
@@ -304,7 +304,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                 if (parameter.ParameterType.IsValueType)
                 {
-                    processor.Emit(OpCodes.Box, parameter.ParameterType);
+                    processor.Emit(OpCodes.Unbox_Any, parameter.ParameterType);
                 }
                 else
                 {

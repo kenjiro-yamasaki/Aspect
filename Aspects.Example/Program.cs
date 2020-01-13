@@ -18,19 +18,20 @@ namespace SoftCube.Aspects
             //@class.Instance = new Instance();
             //var result = @class.Func("1");
 
-
-            new Program().TryCatchFinally();
-            //Logger.Trace(result.ToString());
+            var result = new Program().TryCatchFinally(7);
+            Logger.Trace(result.ToString());
             Console.Read();
         }
 
         //[MethodInterceptionAspectLogger(MethodInterceptionType.Invoke, Name = "テスト")]
-        [OnMethodBoundaryAspectLogger]
-        private void TryCatchFinally()
+        [MethodInterceptionAspectLogger(MethodInterceptionType.Invoke)]
+        private int TryCatchFinally(int value)
         {
             Logger.Trace("1");
             Logger.Trace("2");
             Logger.Trace("3");
+
+            return value;
         }
 
         //[LoggerAspect]
