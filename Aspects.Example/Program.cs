@@ -24,7 +24,8 @@ namespace SoftCube.Aspects
             Console.Read();
         }
 
-        [LoggerAspect]
+        [MethodInterceptionAspectLogger("テスト", MethodInterceptionType.Invoke)]
+        //[MethodInterceptionAspectLogger]
         private void TryCatchFinally()
         {
             Logger.Trace("1");

@@ -6,6 +6,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// パラメーターレベルアスペクト。
     /// </summary>
+    [Serializable]
     public abstract class ParameterLevelAspect : Attribute
     {
         #region コンストラクター

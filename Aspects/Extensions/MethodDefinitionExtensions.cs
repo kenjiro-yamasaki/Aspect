@@ -10,9 +10,7 @@ namespace SoftCube.Aspects
     /// </summary>
     public static class MethodDefinitionExtensions
     {
-        #region メソッド
-
-        #region プロパティに相当する拡張メソッド
+        #region プロパティ (に相当する拡張メソッド)
 
         /// <summary>
         /// 戻り値が存在するかを判断します。
@@ -48,6 +46,8 @@ namespace SoftCube.Aspects
 
         #endregion
 
+        #region メソッド
+
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
@@ -66,7 +66,7 @@ namespace SoftCube.Aspects
                     if (baseAttributeType.FullName == baseFullName && baseAttributeType.Scope.Name == baseScopeName)
                     {
                         var aspect = attribute.Create<MethodLevelAspect>();
-                        aspect.Inject(method);
+                        aspect.Inject(method, attribute);
                         break;
                     }
 

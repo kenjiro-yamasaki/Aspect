@@ -23,7 +23,7 @@ namespace SoftCube.Aspects
         {
             #region void
 
-            [MethodInterceptionAspectLogger]
+            [MethodInterceptionAspectLogger(MethodInterceptionType.Invoke)]
             private void @void()
             {
                 Logger.Trace("A");

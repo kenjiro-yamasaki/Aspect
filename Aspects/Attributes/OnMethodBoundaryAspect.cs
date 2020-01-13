@@ -9,6 +9,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッド境界アスペクト。
     /// </summary>
+    [Serializable]
     public abstract class OnMethodBoundaryAspect : MethodLevelAspect
     {
         #region コンストラクター
@@ -30,7 +31,7 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
-        protected override void OnInject(MethodDefinition method)
+        protected override void OnInject(MethodDefinition method, CustomAttribute attribute)
         {
             /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();

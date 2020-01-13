@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -9,6 +10,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプトアスペクト。
     /// </summary>
+    [Serializable]
     public abstract class MethodInterceptionAspect : MethodLevelAspect
     {
         #region コンストラクター
@@ -30,14 +32,14 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
-        protected override void OnInject(MethodDefinition method)
+        protected override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
             /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();
 
             /// 
             CreateDerivedMethodInterceptionArgs(method);
-            ReplaceMethod(method);
+            ReplaceMethod(method, aspect);
             OverrideInvokeMethod(method);
             OverrideProceedMethod(method);
 
@@ -95,7 +97,7 @@ namespace SoftCube.Aspects
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼び出す前に <see cref="MethodInterceptionArgs"/> の派生クラスを生成してください。
         /// </remarks>
-        private void ReplaceMethod(MethodDefinition method)
+        private void ReplaceMethod(MethodDefinition method, CustomAttribute aspect)
         {
             ///
             var module        = method.DeclaringType.Module.Assembly.MainModule;
@@ -128,15 +130,44 @@ namespace SoftCube.Aspects
             var variables    = method.Body.Variables;
 
             /// ローカル変数にアスペクトとイベントデータを追加します。
-            var aspectIndex = variables.Count();                                                    /// アスペクトの変数インデックス。
-            variables.Add(new VariableDefinition(module.ImportReference(GetType())));
 
             var eventArgsIndex = variables.Count();                                                 /// イベントデータの変数インデックス。
             variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodInterceptionArgs))));
 
-            /// アスペクトをローカル変数にストアします。
-            processor.Emit(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(new Type[] { })));
-            processor.Emit(OpCodes.Stloc, aspectIndex);
+            ////////////////////////////////////////////////////////////////////////////////////////
+            ///
+            var aspectIndex = aspect.LoadTo(method);
+           
+            ///// アスペクトをローカル変数にストアします。
+            //var aspectIndex = variables.Count();                                                    /// アスペクトの変数インデックス。
+            //variables.Add(new VariableDefinition(module.ImportReference(GetType())));
+
+            //var aspectTypeDefinition = attribute.AttributeType.Resolve();
+            //var assembly             = AppDomain.CurrentDomain.GetAssemblies().Single(a => a.FullName == aspectTypeDefinition.Module.Assembly.FullName);
+
+            //var argumentTypes = new List<Type>();
+            //foreach (var argument in attribute.ConstructorArguments)
+            //{
+            //    var argumentType = assembly.GetType(argument.Type.FullName);
+
+            //    argumentTypes.Add(argumentType);
+            //    if (argumentType.IsEnum)
+            //    {
+            //        processor.Emit(OpCodes.Ldc_I4, (int)argument.Value);
+            //    }
+            //    else
+            //    {
+            //        //arguments.Add(argument.Value);
+            //    }
+            //}
+
+
+
+
+
+            //processor.Emit(OpCodes.Newobj, module.ImportReference(GetType().GetConstructor(argumentTypes.ToArray())));
+            //processor.Emit(OpCodes.Stloc, aspectIndex);
+            ////////////////////////////////////////////////////////////////////////////////////////
 
             /// イベントデータを生成し、ローカル変数にストアします。
             var derivedMethodInterceptionArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));

@@ -28,9 +28,15 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッド仲介ロガー。
     /// </summary>
+    [Serializable]
     public class MethodInterceptionAspectLogger : MethodInterceptionAspect
     {
         #region プロパティ
+
+        /// <summary>
+        /// 属性名。
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// メソッド仲介タイプ。
@@ -45,8 +51,9 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="type">メソッド仲介タイプ。</param>
-        public MethodInterceptionAspectLogger(MethodInterceptionType type)
+        public MethodInterceptionAspectLogger(string name, MethodInterceptionType type)
         {
+            Name = name;
             Type = type;
         }
 
