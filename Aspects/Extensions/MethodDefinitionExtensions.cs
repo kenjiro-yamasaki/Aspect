@@ -10,7 +10,7 @@ namespace SoftCube.Aspects
     /// </summary>
     public static class MethodDefinitionExtensions
     {
-        #region プロパティ (に相当する拡張メソッド)
+        #region プロパティ
 
         /// <summary>
         /// 戻り値が存在するかを判断します。
@@ -33,7 +33,7 @@ namespace SoftCube.Aspects
         /// </returns>
         public static Instruction ReturnInstruction(this MethodDefinition method)
         {
-            var instructions = method.Body.Instructions;                                            /// 命令コレクション。
+            var instructions = method.Body.Instructions;
             if (method.HasReturnValue())
             {
                 return instructions.Last().Previous;

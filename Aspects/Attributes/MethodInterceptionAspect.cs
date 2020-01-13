@@ -31,14 +31,15 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
-        protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
+        /// <param name="attribute">属性。</param>
+        protected sealed override void OnInject(MethodDefinition method, CustomAttribute attribute)
         {
             /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();
 
             /// 
             CreateDerivedMethodInterceptionArgs(method);
-            ReplaceMethod(method, aspect);
+            ReplaceMethod(method, attribute);
             OverrideInvokeMethod(method);
             OverrideProceedMethod(method);
 
@@ -91,12 +92,13 @@ namespace SoftCube.Aspects
         /// 注入対象のメソッドを書き換えます。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
+        /// <param name="attribute">属性。</param>
         /// <remarks>
         /// 新たなメソッド (メソッド?) を生成し、元々のメソッドの内容を移動します。
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼び出す前に <see cref="MethodInterceptionArgs"/> の派生クラスを生成してください。
         /// </remarks>
-        private void ReplaceMethod(MethodDefinition method, CustomAttribute aspect)
+        private void ReplaceMethod(MethodDefinition method, CustomAttribute attribute)
         {
             ///
             var module        = method.DeclaringType.Module.Assembly.MainModule;
@@ -123,16 +125,13 @@ namespace SoftCube.Aspects
             /// 元々のメソッドの内容を、新たなメソッド (メソッド?) を呼び出すコードに書き換えます。
             method.Body = new Mono.Cecil.Cil.MethodBody(method);
 
-            /// 
-            var processor    = method.Body.GetILProcessor();
-            var instructions = method.Body.Instructions;
-            var variables    = method.Body.Variables;
-
             /// アスペクトをローカル変数にストアします。
-            var aspectIndex = processor.Emit(aspect);
+            var processor   = method.Body.GetILProcessor();
+            var aspectIndex = processor.Emit(attribute);
 
             /// イベントデータを生成し、ローカル変数にストアします。
-            var eventArgsIndex = variables.Count();                                                 /// イベントデータの変数インデックス。
+            var variables      = method.Body.Variables;
+            var eventArgsIndex = variables.Count();
             variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodInterceptionArgs))));
 
             var derivedMethodInterceptionArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
@@ -149,7 +148,7 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Ldloc, eventArgsIndex);
             {
                 /// パラメーターコレクションを生成し、ロードします。
-                var parameters = method.Parameters;                                                 /// パラメーターコレクション。
+                var parameters = method.Parameters;
                 processor.Emit(OpCodes.Ldc_I4, parameters.Count);
                 processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)

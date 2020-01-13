@@ -31,6 +31,7 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
+        /// <param name="attribute">属性。</param>
         protected override void OnInject(MethodDefinition method, CustomAttribute attribute)
         {
             /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
@@ -90,17 +91,16 @@ namespace SoftCube.Aspects
         /// <returns>Try の先頭命令。</returns>
         private (Instruction, int, int) InjectEntryHandler(MethodDefinition method, CustomAttribute attribute)
         {
-            var instructions = method.Body.Instructions;                                            /// 命令コレクション。
-            var module       = method.DeclaringType.Module.Assembly.MainModule;                     /// モジュール。
-            var processor    = method.Body.GetILProcessor();                                        /// IL プロセッサー。
-            var variables    = method.Body.Variables;                                               /// ローカル変数コレクション。
-            var first        = instructions.First();                                                /// 最初の命令。
-
             /// アスペクトをローカル変数にストアします。
-            var aspectIndex = processor.InsertBefore(first, attribute);
+            var instructions = method.Body.Instructions;
+            var first        = instructions.First();
+            var processor    = method.Body.GetILProcessor();
+            var aspectIndex  = processor.InsertBefore(first, attribute);
 
             /// イベントデータを生成し、ローカル変数にストアします。
-            var eventArgsIndex = variables.Count();                                                 /// イベントデータの変数インデックス。
+            var variables      = method.Body.Variables;
+            var eventArgsIndex = variables.Count();
+            var module         = method.DeclaringType.Module.Assembly.MainModule;
             variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodExecutionArgs))));
 
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
@@ -116,7 +116,7 @@ namespace SoftCube.Aspects
             processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
             {
                 /// パラメーターコレクションを生成し、ロードします。
-                var parameters = method.Parameters;                                                 /// パラメーターコレクション。
+                var parameters = method.Parameters;
                 processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameters.Count));
                 processor.InsertBefore(first, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
@@ -159,16 +159,15 @@ namespace SoftCube.Aspects
         /// </returns>
         private Instruction InjectReturnHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var instructions = method.Body.Instructions;                                            /// 命令コレクション。
-            var module       = method.DeclaringType.Module.Assembly.MainModule;                     /// モジュール。
-            var processor    = method.Body.GetILProcessor();                                        /// IL プロセッサー。
-
-            var returns = instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();               /// Return 命令コレクション。
+            var module       = method.DeclaringType.Module.Assembly.MainModule;
+            var processor    = method.Body.GetILProcessor();
+            var instructions = method.Body.Instructions;
+            var returns      = instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();
 
             if (method.HasReturnValue())
             {
-                var variables   = method.Body.Variables;                                            /// ローカル変数コレクション。
-                var resultIndex = variables.Count();                                                /// 戻り値の変数インデックス。
+                var variables   = method.Body.Variables;
+                var resultIndex = variables.Count();
                 variables.Add(new VariableDefinition(method.ReturnType));
 
                 /// 新たな Return 命令を追加します。
@@ -252,13 +251,12 @@ namespace SoftCube.Aspects
         /// <returns>Catch の最終命令 (Return 命令への Leave 命令)。</returns>
         private Instruction InjectExceptionHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var instructions = method.Body.Instructions;                                            /// 命令コレクション。
-            var module       = method.DeclaringType.Module.Assembly.MainModule;                     /// モジュール。
-            var processor    = method.Body.GetILProcessor();                                        /// IL プロセッサー。
+            var module    = method.DeclaringType.Module.Assembly.MainModule;
+            var processor = method.Body.GetILProcessor();
 
             /// 例外オブジェクトをローカル変数にストアします。
-            var variables      = method.Body.Variables;                                             /// ローカル変数コレクション。
-            var exceptionIndex = variables.Count();                                                 /// 例外オブジェクトの変数インデックス。
+            var variables      = method.Body.Variables;
+            var exceptionIndex = variables.Count();
             processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
             var @return = method.ReturnInstruction();                                               /// Return 命令。
@@ -293,9 +291,8 @@ namespace SoftCube.Aspects
         /// <returns>Finally の最終命令。</returns>
         private Instruction InjectExitHandler(MethodDefinition method, int aspectIndex, int eventArgsIndex)
         {
-            var instructions = method.Body.Instructions;                                            /// 命令コレクション。
-            var module       = method.DeclaringType.Module.Assembly.MainModule;                     /// モジュール。
-            var processor    = method.Body.GetILProcessor();                                        /// IL プロセッサー。
+            var module    = method.DeclaringType.Module.Assembly.MainModule;
+            var processor = method.Body.GetILProcessor();
 
             /// Finally ハンドラーの先頭命令 (Nop) を挿入します。
             var @return = method.ReturnInstruction();
@@ -323,7 +320,7 @@ namespace SoftCube.Aspects
         /// <param name="finallyLast">Finally の最終命令。</param>
         private void AddExceptionHandlers(MethodDefinition method, Instruction tryStart, Instruction tryLast, Instruction catchLast, Instruction finallyLast)
         {
-            var module = method.DeclaringType.Module.Assembly.MainModule;                           /// モジュール。
+            var module = method.DeclaringType.Module.Assembly.MainModule;
 
             /// Catch ハンドラーを追加します。
             var exceptionHandlers = method.Body.ExceptionHandlers;

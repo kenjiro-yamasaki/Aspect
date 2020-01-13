@@ -12,9 +12,9 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// <see cref="Type"/> に変換します。
+        /// 型参照を <see cref="Type"/> に変換します。
         /// </summary>
-        /// <param name="typeReference"><see cref="TypeReference"/>。</param>
+        /// <param name="typeReference">型参照。</param>
         /// <returns><see cref="Type"/>。</returns>
         internal static Type ToSystemType(this TypeReference typeReference)
         {

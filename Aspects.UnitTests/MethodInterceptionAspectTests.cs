@@ -21,49 +21,219 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        public class 引数
+        public class 引数と戻り値
         {
-            #region void
+            #region 引数と戻り値なし
 
             [MethodInterceptionAspectLogger(MethodInterceptionType.Invoke)]
-            private void void_Invoke()
+            private void 引数と戻り値なし_Invoke()
             {
                 Logger.Trace("A");
             }
 
             [MethodInterceptionAspectLogger(MethodInterceptionType.Proceed)]
-            private void void_Proceed()
+            private void 引数と戻り値なし_Proceed()
             {
                 Logger.Trace("A");
             }
 
             [Fact]
-            public void void_Invoke_成功する()
+            public void 引数と戻り値なし_Invoke_成功する()
             {
                 lock (LockObject)
                 {
                     var appender = CreateAppender();
 
-                    void_Invoke();
+                    引数と戻り値なし_Invoke();
 
                     Assert.Equal($"OnInvoke Invoke A null ", appender.ToString());
                 }
             }
 
             [Fact]
-            public void void_Proceed_成功する()
+            public void 引数と戻り値なし_Proceed_成功する()
             {
                 lock (LockObject)
                 {
                     var appender = CreateAppender();
 
-                    void_Proceed();
+                    引数と戻り値なし_Proceed();
 
                     Assert.Equal($"OnInvoke Proceed A null ", appender.ToString());
                 }
             }
 
             #endregion
+
+            #region 引数のみ
+
+            [MethodInterceptionAspectLogger(MethodInterceptionType.Invoke)]
+            private void 引数のみ_Invoke(int value)
+            {
+                Logger.Trace("A");
+            }
+
+            [MethodInterceptionAspectLogger(MethodInterceptionType.Proceed)]
+            private void 引数のみ_Proceed(int value)
+            {
+                Logger.Trace("A");
+            }
+
+            [Theory]
+            [InlineData(0)]
+            [InlineData(1)]
+            [InlineData(2)]
+            [InlineData(3)]
+            [InlineData(4)]
+            [InlineData(5)]
+            [InlineData(6)]
+            [InlineData(7)]
+            [InlineData(8)]
+            [InlineData(10)]
+            [InlineData(-1)]
+            [InlineData(-2)]
+            [InlineData(-3)]
+            [InlineData(-4)]
+            [InlineData(-5)]
+            [InlineData(-6)]
+            [InlineData(-7)]
+            [InlineData(-8)]
+            [InlineData(-10)]
+            public void 引数のみ_Invoke_成功する(int value)
+            {
+                lock (LockObject)
+                {
+                    var appender = CreateAppender();
+
+                    引数のみ_Invoke(value);
+
+                    Assert.Equal($"OnInvoke {value} Invoke A null ", appender.ToString());
+                }
+            }
+
+            [Theory]
+            [InlineData(0)]
+            [InlineData(1)]
+            [InlineData(2)]
+            [InlineData(3)]
+            [InlineData(4)]
+            [InlineData(5)]
+            [InlineData(6)]
+            [InlineData(7)]
+            [InlineData(8)]
+            [InlineData(10)]
+            [InlineData(-1)]
+            [InlineData(-2)]
+            [InlineData(-3)]
+            [InlineData(-4)]
+            [InlineData(-5)]
+            [InlineData(-6)]
+            [InlineData(-7)]
+            [InlineData(-8)]
+            [InlineData(-10)]
+            public void 引数のみ_Proceed_成功する(int value)
+            {
+                lock (LockObject)
+                {
+                    var appender = CreateAppender();
+
+                    引数のみ_Proceed(value);
+
+                    Assert.Equal($"OnInvoke {value} Proceed A null ", appender.ToString());
+                }
+            }
+
+            #endregion
+
+            #region 複数の引数
+
+            [MethodInterceptionAspectLogger(MethodInterceptionType.Invoke)]
+            private void 複数の引数_Invoke(int value, string @string)
+            {
+                Logger.Trace("A");
+            }
+
+            [MethodInterceptionAspectLogger(MethodInterceptionType.Proceed)]
+            private void 複数の引数_Proceed(int value, string @string)
+            {
+                Logger.Trace("A");
+            }
+
+            [Fact]
+            public void 複数の引数_Invoke_成功する()
+            {
+                lock (LockObject)
+                {
+                    var appender = CreateAppender();
+
+                    複数の引数_Invoke(7, "あ");
+
+                    Assert.Equal($"OnInvoke 7 \"あ\" Invoke A null ", appender.ToString());
+                }
+            }
+
+            [Fact]
+            public void 複数の引数_Proceed_成功する()
+            {
+                lock (LockObject)
+                {
+                    var appender = CreateAppender();
+
+                    複数の引数_Proceed(7, "あ");
+
+                    Assert.Equal($"OnInvoke 7 \"あ\" Proceed A null ", appender.ToString());
+                }
+            }
+
+            #endregion
+
+            #region 戻り値のみ
+
+            [MethodInterceptionAspectLogger(MethodInterceptionType.Invoke)]
+            private int 戻り値のみ_Invoke()
+            {
+                Logger.Trace("A");
+                return 7;
+            }
+
+            [MethodInterceptionAspectLogger(MethodInterceptionType.Proceed)]
+            private int 戻り値のみ_Proceed()
+            {
+                Logger.Trace("A");
+                return 7;
+            }
+
+            [Fact]
+            public void 戻り値のみ_Invoke_成功する()
+            {
+                lock (LockObject)
+                {
+                    var appender = CreateAppender();
+
+                    var result = 戻り値のみ_Invoke();
+
+                    Assert.Equal(7, result);
+                    Assert.Equal($"OnInvoke Invoke A {result} ", appender.ToString());
+                }
+            }
+
+            [Fact]
+            public void 戻り値のみ_Proceed_成功する()
+            {
+                lock (LockObject)
+                {
+                    var appender = CreateAppender();
+
+                    var result = 戻り値のみ_Proceed();
+
+                    Assert.Equal(7, result);
+                    Assert.Equal($"OnInvoke Proceed A {result} ", appender.ToString());
+                }
+            }
+
+            #endregion
+
+            #region さまざまな型の引数と戻り値
 
             #region int
 
@@ -1236,6 +1406,8 @@ namespace SoftCube.Aspects
                     Assert.Equal($"OnInvoke [0] Proceed A [0] ", appender.ToString());
                 }
             }
+
+            #endregion
 
             #endregion
         }

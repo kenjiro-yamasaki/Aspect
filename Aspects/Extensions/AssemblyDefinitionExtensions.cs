@@ -12,7 +12,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="assembly">注入対象のアセンブリ定義。</param>
+        /// <param name="assembly">アセンブリ定義。</param>
         public static void Inject(this AssemblyDefinition assembly)
         {
             foreach (var module in assembly.Modules)
