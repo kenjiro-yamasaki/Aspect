@@ -27,7 +27,7 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">属性。</param>
+        /// <param name="attribute">注入対象の属性。</param>
         public void Inject(MethodDefinition method, CustomAttribute attribute)
         {
             if (method == null)
@@ -42,6 +42,7 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
+        /// <param name="attribute">注入対象の属性。</param>
         protected abstract void OnInject(MethodDefinition method, CustomAttribute attribute);
 
         #endregion

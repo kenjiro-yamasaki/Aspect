@@ -31,7 +31,7 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">属性。</param>
+        /// <param name="attribute">注入対象の属性。</param>
         protected sealed override void OnInject(MethodDefinition method, CustomAttribute attribute)
         {
             /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
@@ -92,7 +92,7 @@ namespace SoftCube.Aspects
         /// 注入対象のメソッドを書き換えます。
         /// </summary>
         /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">属性。</param>
+        /// <param name="attribute">注入対象の属性。</param>
         /// <remarks>
         /// 新たなメソッド (メソッド?) を生成し、元々のメソッドの内容を移動します。
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
@@ -125,9 +125,9 @@ namespace SoftCube.Aspects
             /// 元々のメソッドの内容を、新たなメソッド (メソッド?) を呼び出すコードに書き換えます。
             method.Body = new Mono.Cecil.Cil.MethodBody(method);
 
-            /// アスペクトをローカル変数にストアします。
-            var processor   = method.Body.GetILProcessor();
-            var aspectIndex = processor.Emit(attribute);
+            /// 属性をローカル変数にストアします。
+            var processor      = method.Body.GetILProcessor();
+            var attributeIndex = processor.Emit(attribute);
 
             /// イベントデータを生成し、ローカル変数にストアします。
             var variables      = method.Body.Variables;
@@ -168,7 +168,7 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetSetMethod()));
 
             /// OnInvoke を呼び出します。
-            processor.Emit(OpCodes.Ldloc, aspectIndex);
+            processor.Emit(OpCodes.Ldloc, attributeIndex);
             processor.Emit(OpCodes.Ldloc, eventArgsIndex);
             processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnInvoke))));
 
