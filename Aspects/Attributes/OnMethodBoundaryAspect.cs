@@ -93,8 +93,8 @@ namespace SoftCube.Aspects
             var instructions = method.Body.Instructions;                                            /// 命令コレクション。
             var module       = method.DeclaringType.Module.Assembly.MainModule;                     /// モジュール。
             var processor    = method.Body.GetILProcessor();                                        /// IL プロセッサー。
-            var variables = method.Body.Variables;                                                  /// ローカル変数コレクション。
-            var first = instructions.First();                                                       /// 最初の命令。
+            var variables    = method.Body.Variables;                                               /// ローカル変数コレクション。
+            var first        = instructions.First();                                                /// 最初の命令。
 
             /// アスペクトをローカル変数にストアします。
             var aspectIndex = processor.InsertBefore(first, attribute);
