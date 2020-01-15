@@ -38,7 +38,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void 引数と戻り値なし_Invoke_成功する()
+            public void 引数と戻り値なし_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -51,7 +51,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void 引数と戻り値なし_Proceed_成功する()
+            public void 引数と戻り値なし_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -99,7 +99,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void 引数のみ_Invoke_成功する(int value)
+            public void 引数のみ_Invoke_正しくアスペクトが適用される(int value)
             {
                 lock (LockObject)
                 {
@@ -131,7 +131,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void 引数のみ_Proceed_成功する(int value)
+            public void 引数のみ_Proceed_正しくアスペクトが適用される(int value)
             {
                 lock (LockObject)
                 {
@@ -160,7 +160,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void 複数の引数_Invoke_成功する()
+            public void 複数の引数_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -173,7 +173,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void 複数の引数_Proceed_成功する()
+            public void 複数の引数_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -204,7 +204,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void 戻り値のみ_Invoke_成功する()
+            public void 戻り値のみ_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -218,7 +218,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void 戻り値のみ_Proceed_成功する()
+            public void 戻り値のみ_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -271,7 +271,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void int_Invoke_成功する(int value)
+            public void int_Invoke_正しくアスペクトが適用される(int value)
             {
                 lock (LockObject)
                 {
@@ -304,7 +304,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void int_Proceed_成功する(int value)
+            public void int_Proceed_正しくアスペクトが適用される(int value)
             {
                 lock (LockObject)
                 {
@@ -355,7 +355,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void short_Invoke_成功する(short value)
+            public void short_Invoke_正しくアスペクトが適用される(short value)
             {
                 lock (LockObject)
                 {
@@ -364,7 +364,7 @@ namespace SoftCube.Aspects
                     var result = short_Invoke(value);
 
                     Assert.Equal(value, result);
-                    Assert.Equal($"OnInvoke {value} Invoke A {value} ", appender.ToString());
+                    Assert.Equal($"OnInvoke {value} Invoke A {result} ", appender.ToString());
                 }
             }
 
@@ -388,7 +388,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void short_Proceed_成功する(short value)
+            public void short_Proceed_正しくアスペクトが適用される(short value)
             {
                 lock (LockObject)
                 {
@@ -439,7 +439,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void sbyte_Invoke_成功する(sbyte value)
+            public void sbyte_Invoke_正しくアスペクトが適用される(sbyte value)
             {
                 lock (LockObject)
                 {
@@ -472,7 +472,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void sbyte_Proceed_成功する(sbyte value)
+            public void sbyte_Proceed_正しくアスペクトが適用される(sbyte value)
             {
                 lock (LockObject)
                 {
@@ -523,7 +523,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void long_Invoke_成功する(long value)
+            public void long_Invoke_正しくアスペクトが適用される(long value)
             {
                 lock (LockObject)
                 {
@@ -556,7 +556,7 @@ namespace SoftCube.Aspects
             [InlineData(-7)]
             [InlineData(-8)]
             [InlineData(-10)]
-            public void long_Proceed_成功する(long value)
+            public void long_Proceed_正しくアスペクトが適用される(long value)
             {
                 lock (LockObject)
                 {
@@ -598,7 +598,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void uint_Invoke_成功する(uint value)
+            public void uint_Invoke_正しくアスペクトが適用される(uint value)
             {
                 lock (LockObject)
                 {
@@ -622,7 +622,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void uint_Proceed_成功する(uint value)
+            public void uint_Proceed_正しくアスペクトが適用される(uint value)
             {
                 lock (LockObject)
                 {
@@ -664,7 +664,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void ushort_Invoke_成功する(ushort value)
+            public void ushort_Invoke_正しくアスペクトが適用される(ushort value)
             {
                 lock (LockObject)
                 {
@@ -688,7 +688,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void ushort_Proceed_成功する(ushort value)
+            public void ushort_Proceed_正しくアスペクトが適用される(ushort value)
             {
                 lock (LockObject)
                 {
@@ -730,7 +730,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void ulong_Invoke_成功する(ulong value)
+            public void ulong_Invoke_正しくアスペクトが適用される(ulong value)
             {
                 lock (LockObject)
                 {
@@ -754,7 +754,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void ulong_Proceed_成功する(ulong value)
+            public void ulong_Proceed_正しくアスペクトが適用される(ulong value)
             {
                 lock (LockObject)
                 {
@@ -796,7 +796,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void byte_Invoke_成功する(byte value)
+            public void byte_Invoke_正しくアスペクトが適用される(byte value)
             {
                 lock (LockObject)
                 {
@@ -820,7 +820,7 @@ namespace SoftCube.Aspects
             [InlineData(7)]
             [InlineData(8)]
             [InlineData(10)]
-            public void byte_Proceed_成功する(byte value)
+            public void byte_Proceed_正しくアスペクトが適用される(byte value)
             {
                 lock (LockObject)
                 {
@@ -854,7 +854,7 @@ namespace SoftCube.Aspects
             [Theory]
             [InlineData(false)]
             [InlineData(true)]
-            public void bool_Invoke_成功する(bool value)
+            public void bool_Invoke_正しくアスペクトが適用される(bool value)
             {
                 lock (LockObject)
                 {
@@ -870,7 +870,7 @@ namespace SoftCube.Aspects
             [Theory]
             [InlineData(false)]
             [InlineData(true)]
-            public void bool_Proceed_成功する(bool value)
+            public void bool_Proceed_正しくアスペクトが適用される(bool value)
             {
                 lock (LockObject)
                 {
@@ -909,7 +909,7 @@ namespace SoftCube.Aspects
             [InlineData(-0.5)]
             [InlineData(-1.0)]
             [InlineData(-100.0)]
-            public void double_Invoke_成功する(double value)
+            public void double_Invoke_正しくアスペクトが適用される(double value)
             {
                 lock (LockObject)
                 {
@@ -930,7 +930,7 @@ namespace SoftCube.Aspects
             [InlineData(-0.5)]
             [InlineData(-1.0)]
             [InlineData(-100.0)]
-            public void double_Proceed_成功する(double value)
+            public void double_Proceed_正しくアスペクトが適用される(double value)
             {
                 lock (LockObject)
                 {
@@ -969,7 +969,7 @@ namespace SoftCube.Aspects
             [InlineData(-0.5)]
             [InlineData(-1.0)]
             [InlineData(-100.0)]
-            public void float_Invoke_成功する(float value)
+            public void float_Invoke_正しくアスペクトが適用される(float value)
             {
                 lock (LockObject)
                 {
@@ -990,7 +990,7 @@ namespace SoftCube.Aspects
             [InlineData(-0.5)]
             [InlineData(-1.0)]
             [InlineData(-100.0)]
-            public void float_Proceed_成功する(float value)
+            public void float_Proceed_正しくアスペクトが適用される(float value)
             {
                 lock (LockObject)
                 {
@@ -1029,7 +1029,7 @@ namespace SoftCube.Aspects
             [InlineData(-0.5)]
             [InlineData(-1.0)]
             [InlineData(-100.0)]
-            public void decimal_Invoke_成功する(decimal value)
+            public void decimal_Invoke_正しくアスペクトが適用される(decimal value)
             {
                 lock (LockObject)
                 {
@@ -1050,7 +1050,7 @@ namespace SoftCube.Aspects
             [InlineData(-0.5)]
             [InlineData(-1.0)]
             [InlineData(-100.0)]
-            public void decimal_Proceed_成功する(decimal value)
+            public void decimal_Proceed_正しくアスペクトが適用される(decimal value)
             {
                 lock (LockObject)
                 {
@@ -1084,7 +1084,7 @@ namespace SoftCube.Aspects
             [Theory]
             [InlineData('a')]
             [InlineData('あ')]
-            public void char_Invoke_成功する(char value)
+            public void char_Invoke_正しくアスペクトが適用される(char value)
             {
                 lock (LockObject)
                 {
@@ -1100,7 +1100,7 @@ namespace SoftCube.Aspects
             [Theory]
             [InlineData('a')]
             [InlineData('あ')]
-            public void char_Proceed_成功する(char value)
+            public void char_Proceed_正しくアスペクトが適用される(char value)
             {
                 lock (LockObject)
                 {
@@ -1134,7 +1134,7 @@ namespace SoftCube.Aspects
             [Theory]
             [InlineData("a")]
             [InlineData("あ")]
-            public void string_Invoke_成功する(string value)
+            public void string_Invoke_正しくアスペクトが適用される(string value)
             {
                 lock (LockObject)
                 {
@@ -1150,7 +1150,7 @@ namespace SoftCube.Aspects
             [Theory]
             [InlineData("a")]
             [InlineData("あ")]
-            public void string_Proceed_成功する(string value)
+            public void string_Proceed_正しくアスペクトが適用される(string value)
             {
                 lock (LockObject)
                 {
@@ -1189,7 +1189,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void class_Invoke_成功する()
+            public void class_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1204,7 +1204,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void class_Proceed_成功する()
+            public void class_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1244,7 +1244,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void struct_Invoke_成功する()
+            public void struct_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1258,7 +1258,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void struct_Proceed_成功する()
+            public void struct_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1318,7 +1318,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void IEnumerable_Invoke_成功する()
+            public void IEnumerable_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1333,7 +1333,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void IEnumerable_Proceed_成功する()
+            public void IEnumerable_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1348,7 +1348,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void IEnumerableT_Invoke_成功する()
+            public void IEnumerableT_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1363,7 +1363,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void IEnumerableT_Proceed_成功する()
+            public void IEnumerableT_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1378,7 +1378,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void ListT_Invoke_成功する()
+            public void ListT_Invoke_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {
@@ -1393,7 +1393,7 @@ namespace SoftCube.Aspects
             }
 
             [Fact]
-            public void ListT_Proceed_成功する()
+            public void ListT_Proceed_正しくアスペクトが適用される()
             {
                 lock (LockObject)
                 {

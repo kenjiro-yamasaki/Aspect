@@ -1,4 +1,5 @@
-﻿using SoftCube.Logging;
+﻿using SoftCube.Asserts;
+using SoftCube.Logging;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,9 +11,10 @@ namespace SoftCube.Aspects
         {
             Logger.Trace("OnEntry");
 
-            foreach (var arg in args.Arguments)
+            /// 引数をログ出力します。
+            foreach (var argument in args.Arguments)
             {
-                Logger.Trace(arg.ToString());
+                Logger.Trace(ArgumentFormatter.Format(argument));
             }
         }
 
@@ -20,36 +22,8 @@ namespace SoftCube.Aspects
         {
             Logger.Trace("OnSuccess");
 
-            if (args.ReturnValue == null)
-            {
-                Logger.Trace("null");
-                return;
-            }
-            switch (args.ReturnValue)
-            {
-                case IReadOnlyList<int> list:
-                    var builder = new StringBuilder();
-                    builder.Append("[");
-
-                    for (int i = 0; i < list.Count; i++)
-                    {
-                        var item = list[i];
-                        builder.Append(item.ToString());
-
-                        if (i != list.Count - 1)
-                        {
-                            builder.Append(",");
-                        }
-                    }
-
-                    builder.Append("]");
-                    Logger.Trace(builder.ToString());
-                    break;
-
-                default:
-                    Logger.Trace(args.ReturnValue.ToString());
-                    break;
-            }
+            /// 戻り値をログ出力します。
+            Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
         }
 
         public override void OnException(MethodExecutionArgs args)

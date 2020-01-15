@@ -5,7 +5,7 @@ using System;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// メソッド仲介タイプ。
+    /// メソッドインターセプションタイプ。
     /// </summary>
     public enum MethodInterceptionType
     {
@@ -26,7 +26,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// メソッド仲介ロガー。
+    /// メソッドインターセプションロガー。
     /// </summary>
     public class MethodInterceptionAspectLogger : MethodInterceptionAspect
     {
