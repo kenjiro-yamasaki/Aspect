@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -357,6 +358,32 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="args">メソッド実行引数。</param>
         public virtual void OnEntry(MethodExecutionArgs args)
+        {
+        }
+
+        /// <summary>
+        /// <c>yield return</c> または <c>await</c> ステートメントの結果として、ステートマシンが結果を出力するときに呼びだされます。
+        /// </summary>
+        /// <param name="args">メソッド実行引数。</param>
+        /// <remarks>
+        /// イテレーターメソッドでは、アドバイスは <c>yield return</c> ステートメントで呼びだされます。
+        /// 非同期メソッドでは、<c>await</c> ステートメントの結果としてステートマシンが待機を開始した直後にアドバイスが呼びだされます。
+        /// <c>await</c> ステートメントのオペランドが同期的に完了した操作である場合、ステートマシンは結果を出力せず、<see cref="OnYield(MethodExecutionArgs)"/> アドバイスは呼び出されません。
+        /// </remarks>
+        public virtual void OnYield(MethodExecutionArgs args)
+        {
+        }
+
+        /// <summary>
+        /// <c>yield return</c> または <c>await</c> ステートメントの後にステートマシンが実行を再開するときに呼びだされます。
+        /// </summary>
+        /// <param name="args">メソッド実行引数。</param>
+        /// <remarks>
+        /// イテレーターメソッドの場合、このアドバイスは MoveNext() メソッドの前に呼びだされます。
+        /// ただし、MoveNext() の最初の呼び出しは <see cref="OnEntry(MethodExecutionArgs)"/> にマップされます。
+        /// 非同期メソッドでは、<c>await</c> ステートメントの結果として待機した後、ステートマシンが実行を再開した直後にアドバイスが呼びだされます。
+        /// </remarks>
+        public virtual void OnResume(MethodExecutionArgs args)
         {
         }
 

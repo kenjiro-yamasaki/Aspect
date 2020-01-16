@@ -18,6 +18,19 @@ namespace SoftCube.Aspects
             }
         }
 
+        public override void OnYield(MethodExecutionArgs args)
+        {
+            Logger.Trace("OnYield");
+
+            /// 戻り値をログ出力します。
+            Logger.Trace(ArgumentFormatter.Format(args.YieldValue));
+        }
+
+        public override void OnResume(MethodExecutionArgs args)
+        {
+            Logger.Trace("OnResume");
+        }
+
         public override void OnSuccess(MethodExecutionArgs args)
         {
             Logger.Trace("OnSuccess");
