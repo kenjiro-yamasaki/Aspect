@@ -1621,13 +1621,8 @@ namespace SoftCube.Aspects
             [OnMethodBoundaryAspectLogger]
             private IEnumerable<int> IEnumerableInt()
             {
-                //Logger.Trace("A");
                 yield return 0;
-
-                //Logger.Trace("B");
                 yield return 1;
-
-                //Logger.Trace("C");
                 yield return 2;
             }
 

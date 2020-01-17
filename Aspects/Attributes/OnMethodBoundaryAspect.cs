@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -38,6 +39,208 @@ namespace SoftCube.Aspects
             /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();
 
+            var iteratorStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
+            if (iteratorStateMachineAttribute != null)
+            {
+                var type = (TypeDefinition)iteratorStateMachineAttribute.ConstructorArguments[0].Value;
+                InjectToIteratorMethod(type, attribute);
+            }
+            else
+            {
+                InjectToNormalMethod(method, attribute);
+            }
+
+            /// 書き換え後の IL コードをログ出力します (デバッグ用、削除可)。
+            method.Log();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="attribute"></param>
+        private void InjectToIteratorMethod(TypeDefinition type, CustomAttribute attribute)
+        {
+            //
+            var module = type.Module;
+
+            var isDisposingField = new FieldDefinition("isDisposing", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
+            var resumeFlagField  = new FieldDefinition("resumeFlag",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+            var exitFlagField    = new FieldDefinition("exitFlag",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+            var aspectArgsField  = new FieldDefinition("aspectArgs",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
+            var argsField        = new FieldDefinition("args",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+
+            type.Fields.Add(isDisposingField);
+            type.Fields.Add(resumeFlagField);
+            type.Fields.Add(exitFlagField);
+            type.Fields.Add(aspectArgsField);
+            type.Fields.Add(argsField);
+
+            //
+            ReplaceDisposeMethod(type, isDisposingField);
+        }
+
+        private void ReplaceDisposeMethod(TypeDefinition type, FieldDefinition isDisposingField)
+        {
+            ///
+            var module        = type.Module;
+            var method        = type.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
+            var attributes    = method.Attributes;
+            var declaringType = method.DeclaringType;
+            var returnType    = method.ReturnType;
+
+
+            /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
+            var originalMethod = new MethodDefinition(method.Name + "<Original>", attributes, returnType);
+            foreach (var parameter in method.Parameters)
+            {
+                originalMethod.Parameters.Add(parameter);
+            }
+
+            originalMethod.Body = method.Body;
+
+            declaringType.Methods.Add(originalMethod);
+
+            /// 元々のメソッドの内容を、書き換えます。
+            method.Body = new Mono.Cecil.Cil.MethodBody(method);
+
+            var processor = method.Body.GetILProcessor();
+
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldfld, isDisposingField);
+
+            Instruction branch;
+            processor.Append(branch = processor.Create(OpCodes.Nop));
+            processor.Emit(OpCodes.Ret);
+
+            Instruction branchTarget;
+            processor.Append(branchTarget = processor.Create(OpCodes.Ldarg_0));
+            processor.Emit(OpCodes.Ldc_I4_1);
+            processor.Emit(OpCodes.Stfld, isDisposingField);
+
+            Instruction tryStart;
+            processor.Append(tryStart = processor.Create(OpCodes.Ldarg_0));
+            processor.Emit(OpCodes.Call, originalMethod);
+
+            Instruction leave;
+            processor.Append(leave = processor.Create(OpCodes.Nop));
+
+            Instruction tryEnd;
+            processor.Append(tryEnd = processor.Create(OpCodes.Ldarg_0));
+            processor.Emit(OpCodes.Ldc_I4_2);
+            processor.Emit(OpCodes.Stfld, isDisposingField);
+
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Callvirt, type.Methods.Single(m => m.Name == "MoveNext"));
+
+            processor.Emit(OpCodes.Pop);
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldc_I4_0);
+            processor.Emit(OpCodes.Stfld, isDisposingField);
+            processor.Emit(OpCodes.Endfinally);
+
+            Instruction handlerEnd;
+            Instruction leaveTarget;
+            processor.Append(leaveTarget = handlerEnd = processor.Create(OpCodes.Ret));
+
+            ///
+            branch.OpCode  = OpCodes.Brfalse_S;
+            branch.Operand = branchTarget;
+
+            leave.OpCode  = OpCodes.Leave_S;
+            leave.Operand = leaveTarget;
+
+            /// Finally ハンドラーを追加します。
+            var exceptionHandlers = method.Body.ExceptionHandlers;
+            var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
+            {
+                TryStart     = tryStart,
+                TryEnd       = tryEnd,
+                HandlerStart = tryEnd,
+                HandlerEnd   = handlerEnd,
+            };
+            exceptionHandlers.Add(handler);
+
+
+
+
+
+            ///// 属性をローカル変数にストアします。
+            //var processor      = method.Body.GetILProcessor();
+            //var attributeIndex = processor.Emit(attribute);
+
+            ///// イベントデータを生成し、ローカル変数にストアします。
+            //var variables      = method.Body.Variables;
+            //var eventArgsIndex = variables.Count();
+            //variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodInterceptionArgs))));
+
+            //var derivedMethodInterceptionArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
+            //processor.Emit(OpCodes.Ldarg_0);
+            //processor.Emit(OpCodes.Newobj, derivedMethodInterceptionArgsType.Methods.Single(m => m.Name == ".ctor"));
+            //processor.Emit(OpCodes.Stloc, eventArgsIndex);
+
+            ///// メソッド情報をイベントデータに設定します。
+            //processor.Emit(OpCodes.Ldloc, eventArgsIndex);
+            //processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
+            //processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Method)).GetSetMethod()));
+
+            ///// パラメーター情報をイベントデータに設定します。
+            //processor.Emit(OpCodes.Ldloc, eventArgsIndex);
+            //{
+            //    /// パラメーターコレクションを生成し、ロードします。
+            //    var parameters = method.Parameters;
+            //    processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+            //    processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
+            //    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+            //    {
+            //        var parameter = parameters[parameterIndex];
+            //        processor.Emit(OpCodes.Dup);
+            //        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+            //        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+            //        if (parameter.ParameterType.IsValueType)
+            //        {
+            //            processor.Emit(OpCodes.Box, parameter.ParameterType);
+            //        }
+            //        processor.Emit(OpCodes.Stelem_Ref);
+            //    }
+            //    processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) })));
+            //}
+            //processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetSetMethod()));
+
+            ///// OnInvoke を呼び出します。
+            //processor.Emit(OpCodes.Ldloc, attributeIndex);
+            //processor.Emit(OpCodes.Ldloc, eventArgsIndex);
+            //processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnInvoke))));
+
+            ///// 戻り値を戻します。
+            //if (method.HasReturnValue())
+            //{
+            //    processor.Emit(OpCodes.Ldloc, eventArgsIndex);
+            //    processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetGetMethod()));
+            //    if (returnType.IsValueType)
+            //    {
+            //        processor.Emit(OpCodes.Unbox_Any, returnType);
+            //    }
+            //    processor.Emit(OpCodes.Ret);
+            //}
+            //else
+            //{
+            //    processor.Emit(OpCodes.Ret);
+            //}
+        }
+
+
+
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="method">注入対象のメソッド定義。</param>
+        /// <param name="attribute">注入対象の属性。</param>
+        private void InjectToNormalMethod(MethodDefinition method, CustomAttribute attribute)
+        {
             /// 最後の命令が Throw 命令の場合、Return 命令を追加します。
             var instructions = method.Body.Instructions;
             var processor    = method.Body.GetILProcessor();
@@ -78,9 +281,6 @@ namespace SoftCube.Aspects
 
             /// IL コードを最適化します。
             method.OptimizeIL();
-
-            /// 書き換え後の IL コードをログ出力します (デバッグ用、削除可)。
-            method.Log();
         }
 
         /// <summary>

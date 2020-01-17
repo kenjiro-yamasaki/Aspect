@@ -1,5 +1,6 @@
 ﻿using SoftCube.Logging;
 using System;
+using System.Collections.Generic;
 
 namespace SoftCube.Aspects
 {
@@ -18,20 +19,23 @@ namespace SoftCube.Aspects
             //@class.Instance = new Instance();
             //var result = @class.Func("1");
 
-            var result = new Program().TryCatchFinally(7);
+            var result = new Program().IEnumerableInt();
             Logger.Trace(result.ToString());
             Console.Read();
         }
 
-        //[MethodInterceptionAspectLogger(MethodInterceptionType.Invoke, Name = "テスト")]
-        [MethodInterceptionAspectLogger(MethodInterceptionType.Invoke)]
-        private int TryCatchFinally(int value)
+        [OnMethodBoundaryAspectLogger]
+        private IEnumerable<int> IEnumerableInt()
         {
-            Logger.Trace("1");
-            Logger.Trace("2");
-            Logger.Trace("3");
+            //return new int[] {0,1,2};
 
-            return value;
+            Logger.Trace("A");
+            yield return 0;
+            Logger.Trace("B");
+            yield return 1;
+            Logger.Trace("C");
+            yield return 2;
+            Logger.Trace("D");
         }
 
         //[LoggerAspect]
