@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using System.Linq;
 
 namespace SoftCube.Aspects
 {
@@ -15,7 +16,7 @@ namespace SoftCube.Aspects
         /// <param name="module">モジュール定義。</param>
         internal static void Inject(this ModuleDefinition module)
         {
-            foreach (var type in module.Types)
+            foreach (var type in module.Types.ToList())
             {
                 type.Inject();
             }

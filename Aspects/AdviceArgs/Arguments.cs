@@ -9,7 +9,12 @@ namespace SoftCube.Aspects
     /// </summary>
     public class Arguments : IEnumerable<object>, IEnumerable, IReadOnlyList<object>
     {
-        #region フィールド
+        #region プロパティ
+
+        /// <summary>
+        /// 空の引数コレクション。
+        /// </summary>
+        public static readonly Arguments Empty = new Arguments();
 
         /// <summary>
         /// インデクサー。
