@@ -20,7 +20,12 @@ namespace SoftCube.Aspects
             //var result = @class.Func("1");
 
             var result = new Program().IEnumerableInt();
-            Logger.Trace(result.ToString());
+
+            foreach (var item in result)
+            {
+                Logger.Trace(item.ToString());
+            }
+
             Console.Read();
         }
 

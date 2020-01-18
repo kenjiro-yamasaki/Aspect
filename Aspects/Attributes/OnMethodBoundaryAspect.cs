@@ -116,7 +116,7 @@ namespace SoftCube.Aspects
 
             var aspectIndex = processor.Emit(aspect);
             processor.Emit(OpCodes.Ldloc, aspectIndex);
-            processor.Emit(OpCodes.Stfld, aspectField);
+            processor.Emit(OpCodes.Stsfld, aspectField);
             processor.Emit(OpCodes.Ret);
 
             return aspectField;
@@ -186,7 +186,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
                 processor.Emit(OpCodes.Stfld, aspectArgsField);
 
-                processor.Emit(OpCodes.Ldfld, aspectField);
+                processor.Emit(OpCodes.Ldsfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
