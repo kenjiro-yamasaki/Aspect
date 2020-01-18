@@ -214,41 +214,39 @@ namespace SoftCube.Aspects
                 Instruction branchTarget4;
                 processor.Append(branchTarget0 = branchTarget1 = branchTarget4 = processor.Create(OpCodes.Nop));
 
-                ////////////////////////////////////////////////////////////////////////////////////////
                 // Branch 命令を修正します。
                 branch0.OpCode = OpCodes.Brtrue_S;
-                branch0.Operand = branchTarget0;
-
                 branch1.OpCode = OpCodes.Brtrue_S;
-                branch1.Operand = branchTarget1;
-
                 branch2.OpCode = OpCodes.Brtrue_S;
-                branch2.Operand = branchTarget2;
-
                 branch3.OpCode = OpCodes.Brtrue_S;
-                branch3.Operand = branchTarget3;
-
                 branch4.OpCode = OpCodes.Br_S;
+
+                branch0.Operand = branchTarget0;
+                branch1.Operand = branchTarget1;
+                branch2.Operand = branchTarget2;
+                branch3.Operand = branchTarget3;
                 branch4.Operand = branchTarget4;
-                ////////////////////////////////////////////////////////////////////////////////////////
             }
 
-            Instruction leave;
+            /// try {
+            Instruction tryStart;
+
+            var leave = new Instruction[2];
+            var leaveTarget = new Instruction[2];
+
+            int exitFlagIndex = variables.Count;
+            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
+
             {
-                //var beq          = new Instruction[2];
-                //var beqTarget    = new Instruction[2];
                 var branch       = new Instruction[8];
                 var branchTarget = new Instruction[8];
-
-                int numberIndex = variables.Count;
-                variables.Add(new VariableDefinition(module.TypeSystem.Int32));
 
                 int resultIndex = variables.Count;
                 variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
                 //
-                processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stloc, numberIndex);
+                processor.Append(tryStart = processor.Create(OpCodes.Ldc_I4_1));
+                processor.Emit(OpCodes.Stloc, exitFlagIndex);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, isDisposingField);
@@ -267,13 +265,13 @@ namespace SoftCube.Aspects
                 processor.Append(branch[2] = processor.Create(OpCodes.Nop));
 
                 processor.Emit(OpCodes.Ldc_I4_0);
-                processor.Emit(OpCodes.Stloc, numberIndex);
+                processor.Emit(OpCodes.Stloc, exitFlagIndex);
                 processor.Append(branch[3] = processor.Create(OpCodes.Nop));
 
-                processor.Append(branchTarget[1] = branchTarget[2] = processor.Create(OpCodes.Ldc_I4_1));       // IL_017a★
-                processor.Emit(OpCodes.Stloc, numberIndex);
+                processor.Append(branchTarget[1] = branchTarget[2] = processor.Create(OpCodes.Ldc_I4_1));
+                processor.Emit(OpCodes.Stloc, exitFlagIndex);
 
-                processor.Append(branchTarget[3] = processor.Create(OpCodes.Ldarg_0));                          // IL_017c★
+                processor.Append(branchTarget[3] = processor.Create(OpCodes.Ldarg_0));
                 processor.Emit(OpCodes.Ldfld, exitFlagField);
                 processor.Append(branch[4] = processor.Create(OpCodes.Nop));
 
@@ -281,8 +279,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, resumeFlagField);
                 processor.Append(branch[5] = processor.Create(OpCodes.Nop));
 
-                processor.Emit(OpCodes.Ldloc, numberIndex);
-                processor.Emit(OpCodes.Ldc_I4_0);
+                processor.Emit(OpCodes.Ldloc, exitFlagIndex);
                 processor.Append(branch[6] = processor.Create(OpCodes.Nop));
 
                 processor.Emit(OpCodes.Ldsfld, aspectField);
@@ -291,7 +288,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
                 processor.Append(branch[7] = processor.Create(OpCodes.Nop));
 
-                processor.Append(branchTarget[6] = processor.Create(OpCodes.Ldarg_0));                          // IL_01a3★
+                processor.Append(branchTarget[6] = processor.Create(OpCodes.Ldarg_0));
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, type.Fields.Single(f => f.Name == "<>2__current"));
@@ -303,7 +300,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
 
-                processor.Append(branchTarget[4] = branchTarget[5] = branchTarget[7] = leave = processor.Create(OpCodes.Nop)); // IL_01c9★
+                processor.Append(branchTarget[4] = branchTarget[5] = branchTarget[7] = leave[0] = processor.Create(OpCodes.Nop));
 
                 // Branch 命令を書き換える。
                 branch[0].OpCode = OpCodes.Beq_S;
@@ -312,7 +309,7 @@ namespace SoftCube.Aspects
                 branch[3].OpCode = OpCodes.Br_S;
                 branch[4].OpCode = OpCodes.Brtrue_S;
                 branch[5].OpCode = OpCodes.Brfalse_S;
-                branch[6].OpCode = OpCodes.Beq_S;
+                branch[6].OpCode = OpCodes.Brfalse_S;
                 branch[7].OpCode = OpCodes.Br_S;
 
                 branch[0].Operand = branchTarget[0];
@@ -323,193 +320,114 @@ namespace SoftCube.Aspects
                 branch[5].Operand = branchTarget[5];
                 branch[6].Operand = branchTarget[6];
                 branch[7].Operand = branchTarget[7];
-
-
-
-
-
-
-            //     IL_017d:  ldfld      bool SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__exitFlag'
-            //     IL_0182:  brtrue.s   IL_01c9
-            //     IL_0184:  ldarg.0
-            //     IL_0185:  ldfld      bool SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__resumeFlag'
-            //     IL_018a:  brfalse.s  IL_01c9
-            //     IL_018c:  ldloc.1
-            //     IL_018d:  ldc.i4.0
-            //     IL_018e:  beq.s      IL_01a3
-            //     IL_0190:  nop
-            //     IL_0191:  ldsfld     class SoftCube.Aspects.OnMethodBoundaryAspectLogger PostSharp.ImplementationDetails._69b83ded.'<>z__a_1'::a0
-            //     IL_0196:  ldarg.0
-            //     IL_0197:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_019c:  callvirt   instance void SoftCube.Aspects.OnMethodBoundaryAspectLogger::OnSuccess(class [PostSharp]PostSharp.Aspects.MethodExecutionArgs)
-            //     IL_01a1:  br.s       IL_01c9
-            //     IL_01a3:  ldarg.0
-            //     IL_01a4:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_01a9:  ldarg.0
-            //     IL_01aa:  ldfld      int32 SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>2__current'
-            //     IL_01af:  box        [mscorlib]System.Int32
-            //     IL_01b4:  call       instance void [PostSharp]PostSharp.Aspects.MethodExecutionArgs::set_YieldValue(object)
-            //     IL_01b9:  ldsfld     class SoftCube.Aspects.OnMethodBoundaryAspectLogger PostSharp.ImplementationDetails._69b83ded.'<>z__a_1'::a0
-            //     IL_01be:  ldarg.0
-            //     IL_01bf:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_01c4:  callvirt   instance void SoftCube.Aspects.OnMethodBoundaryAspectLogger::OnYield(class [PostSharp]PostSharp.Aspects.MethodExecutionArgs)
-            //     IL_01c9:  leave      IL_021c
             }
 
+            /// } catch (Exception exception) {
+            Instruction catchStart;
+            {
+                int exceptionIndex = variables.Count;
+                variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
+                processor.Append(catchStart = processor.Create(OpCodes.Stloc, exceptionIndex));
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Ldloc, exceptionIndex);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod()));
 
+                processor.Emit(OpCodes.Ldsfld, aspectField);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException))));
+                processor.Emit(OpCodes.Rethrow);
 
+                processor.Append(leave[1] = processor.Create(OpCodes.Nop));                         // IL_01ed:  leave.s    IL_021c
+            }
 
+            /// } finally {
+            Instruction catchEnd;
+            Instruction finallyStart;
+            {
+                var branch       = new Instruction[3];
+                var branchTarget = new Instruction[3];
 
+                processor.Append(catchEnd = finallyStart = processor.Create(OpCodes.Ldarg_0));
+                processor.Emit(OpCodes.Ldfld, exitFlagField);
+                processor.Append(branch[0] = processor.Create(OpCodes.Nop));        //   IL_01f5:  brtrue.s   IL_021b
 
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, resumeFlagField);
+                processor.Append(branch[1] = processor.Create(OpCodes.Nop));        //   IL_01fd:  brfalse.s  IL_021b
 
-            processor.Emit(OpCodes.Ldc_I4_0);
-            processor.Emit(OpCodes.Ret);
+                processor.Emit(OpCodes.Ldloc, exitFlagIndex);
+                processor.Append(branch[2] = processor.Create(OpCodes.Nop));        //   IL_0201:  brfalse.s  IL_021b
 
-            // .try
-            // {
-            //   .try
-            //   {
-            //     IL_016b:  ldarg.0
-            //     IL_016c:  ldfld      int32 SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__isDisposing'
-            //     IL_0171:  brtrue.s   IL_017a
-            //     IL_0173:  ldloc.2
-            //     IL_0174:  brfalse.s  IL_017a
-            //     IL_0176:  ldc.i4.0
-            //     IL_0177:  stloc.1
-            //     IL_0178:  leave.s    IL_017c
-            //     IL_017a:  ldc.i4.1
-            //     IL_017b:  stloc.1
-            //     IL_017c:  ldarg.0
-            //     IL_017d:  ldfld      bool SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__exitFlag'
-            //     IL_0182:  brtrue.s   IL_01c9
-            //     IL_0184:  ldarg.0
-            //     IL_0185:  ldfld      bool SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__resumeFlag'
-            //     IL_018a:  brfalse.s  IL_01c9
-            //     IL_018c:  ldloc.1
-            //     IL_018d:  ldc.i4.0
-            //     IL_018e:  beq.s      IL_01a3
-            //     IL_0190:  nop
-            //     IL_0191:  ldsfld     class SoftCube.Aspects.OnMethodBoundaryAspectLogger PostSharp.ImplementationDetails._69b83ded.'<>z__a_1'::a0
-            //     IL_0196:  ldarg.0
-            //     IL_0197:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_019c:  callvirt   instance void SoftCube.Aspects.OnMethodBoundaryAspectLogger::OnSuccess(class [PostSharp]PostSharp.Aspects.MethodExecutionArgs)
-            //     IL_01a1:  br.s       IL_01c9
-            //     IL_01a3:  ldarg.0
-            //     IL_01a4:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_01a9:  ldarg.0
-            //     IL_01aa:  ldfld      int32 SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>2__current'
-            //     IL_01af:  box        [mscorlib]System.Int32
-            //     IL_01b4:  call       instance void [PostSharp]PostSharp.Aspects.MethodExecutionArgs::set_YieldValue(object)
-            //     IL_01b9:  ldsfld     class SoftCube.Aspects.OnMethodBoundaryAspectLogger PostSharp.ImplementationDetails._69b83ded.'<>z__a_1'::a0
-            //     IL_01be:  ldarg.0
-            //     IL_01bf:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_01c4:  callvirt   instance void SoftCube.Aspects.OnMethodBoundaryAspectLogger::OnYield(class [PostSharp]PostSharp.Aspects.MethodExecutionArgs)
-            //     IL_01c9:  leave      IL_021c
-            //   }  // end .try
-            //   catch [mscorlib]System.Exception 
-            //   {
-            //     IL_01ce:  stloc.3
-            //     IL_01cf:  ldarg.0
-            //     IL_01d0:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_01d5:  ldloc.3
-            //     IL_01d6:  call       instance void [PostSharp]PostSharp.Aspects.MethodExecutionArgs::set_Exception(class [mscorlib]System.Exception)
-            //     IL_01db:  ldsfld     class SoftCube.Aspects.OnMethodBoundaryAspectLogger PostSharp.ImplementationDetails._69b83ded.'<>z__a_1'::a0
-            //     IL_01e0:  ldarg.0
-            //     IL_01e1:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //     IL_01e6:  callvirt   instance void SoftCube.Aspects.OnMethodBoundaryAspectLogger::OnException(class [PostSharp]PostSharp.Aspects.MethodExecutionArgs)
-            //     IL_01eb:  rethrow
-            //     IL_01ed:  leave.s    IL_021c
-            //   }  // end handler
-            // }  // end .try
-            // finally
-            // {
-            //   IL_01ef:  ldarg.0
-            //   IL_01f0:  ldfld      bool SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__exitFlag'
-            //   IL_01f5:  brtrue.s   IL_021b
-            //   IL_01f7:  ldarg.0
-            //   IL_01f8:  ldfld      bool SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__resumeFlag'
-            //   IL_01fd:  brfalse.s  IL_021b
-            //   IL_01ff:  ldloc.1
-            //   IL_0200:  ldc.i4.0
-            //   IL_0201:  beq.s      IL_021b
-            //   IL_0203:  ldarg.0
-            //   IL_0204:  ldc.i4.1
-            //   IL_0205:  stfld      bool SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__exitFlag'
-            //   IL_020a:  nop
-            //   IL_020b:  ldsfld     class SoftCube.Aspects.OnMethodBoundaryAspectLogger PostSharp.ImplementationDetails._69b83ded.'<>z__a_1'::a0
-            //   IL_0210:  ldarg.0
-            //   IL_0211:  ldfld      class [PostSharp]PostSharp.Aspects.MethodExecutionArgs SoftCube.Aspects.Program/'<IEnumerableInt>d__1'::'<>z__aspectArgs'
-            //   IL_0216:  callvirt   instance void SoftCube.Aspects.OnMethodBoundaryAspectLogger::OnExit(class [PostSharp]PostSharp.Aspects.MethodExecutionArgs)
-            //   IL_021b:  endfinally
-            // }  // end handler
-            // IL_021c:  ldloc.1
-            // IL_021d:  ldc.i4.0
-            // IL_021e:  ceq
-            // IL_0220:  stloc.2
-            // IL_0221:  ldloc.2
-            // IL_0222:  ret
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldc_I4_1);
+                processor.Emit(OpCodes.Stfld, exitFlagField);
 
+                processor.Emit(OpCodes.Ldsfld, aspectField);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
 
+                processor.Append(branchTarget[0] = branchTarget[1] = branchTarget[2] = processor.Create(OpCodes.Endfinally));
 
+                // Branch 命令を書き換える。
+                branch[0].OpCode = OpCodes.Brtrue_S;
+                branch[1].OpCode = OpCodes.Brfalse_S;
+                branch[2].OpCode = OpCodes.Brfalse_S;
 
+                branch[0].Operand = branchTarget[0];
+                branch[1].Operand = branchTarget[1];
+                branch[2].Operand = branchTarget[2];
+            }
 
+            ///
+            Instruction finallyEnd;
+            {
+                int resultIndex = variables.Count;
+                variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
+                processor.Append(finallyEnd = leaveTarget[0] = leaveTarget[1] = processor.Create(OpCodes.Ldloc, exitFlagIndex));
+                processor.Emit(OpCodes.Ldc_I4_0);
+                processor.Emit(OpCodes.Ceq);
+                processor.Emit(OpCodes.Stloc, resultIndex);
+                processor.Emit(OpCodes.Ldloc, resultIndex);
+                processor.Emit(OpCodes.Ret);
 
-            //processor.Emit(OpCodes.Ldarg_0);
-            //processor.Emit(OpCodes.Ldfld, isDisposingField);
+                // Leave 命令を書き換える。
+                leave[0].OpCode = OpCodes.Leave;
+                leave[1].OpCode = OpCodes.Leave_S;
 
-            //Instruction branch;
-            //processor.Append(branch = processor.Create(OpCodes.Nop));
-            //processor.Emit(OpCodes.Ret);
+                leave[0].Operand = leaveTarget[0];
+                leave[1].Operand = leaveTarget[1];
+            }
 
-            //Instruction branchTarget;
-            //processor.Append(branchTarget = processor.Create(OpCodes.Ldarg_0));
-            //processor.Emit(OpCodes.Ldc_I4_1);
-            //processor.Emit(OpCodes.Stfld, isDisposingField);
+            /// Catch ハンドラーを追加します。
+            var exceptionHandlers = method.Body.ExceptionHandlers;
+            {
+                var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
+                {
+                    CatchType    = module.ImportReference(typeof(Exception)),
+                    TryStart     = tryStart,
+                    TryEnd       = catchStart,
+                    HandlerStart = catchStart,
+                    HandlerEnd   = catchEnd,
+                };
+                exceptionHandlers.Add(handler);
+            }
 
-            //Instruction tryStart;
-            //processor.Append(tryStart = processor.Create(OpCodes.Ldarg_0));
-            //processor.Emit(OpCodes.Call, originalMethod);
-
-            //Instruction leave;
-            //processor.Append(leave = processor.Create(OpCodes.Nop));
-
-            //Instruction tryEnd;
-            //processor.Append(tryEnd = processor.Create(OpCodes.Ldarg_0));
-            //processor.Emit(OpCodes.Ldc_I4_2);
-            //processor.Emit(OpCodes.Stfld, isDisposingField);
-
-            //processor.Emit(OpCodes.Ldarg_0);
-            //processor.Emit(OpCodes.Callvirt, type.Methods.Single(m => m.Name == "MoveNext"));
-
-            //processor.Emit(OpCodes.Pop);
-            //processor.Emit(OpCodes.Ldarg_0);
-            //processor.Emit(OpCodes.Ldc_I4_0);
-            //processor.Emit(OpCodes.Stfld, isDisposingField);
-            //processor.Emit(OpCodes.Endfinally);
-
-            //Instruction handlerEnd;
-            //Instruction leaveTarget;
-            //processor.Append(leaveTarget = handlerEnd = processor.Create(OpCodes.Ret));
-
-            /////
-            //branch.OpCode  = OpCodes.Brfalse_S;
-            //branch.Operand = branchTarget;
-
-            //leave.OpCode  = OpCodes.Leave_S;
-            //leave.Operand = leaveTarget;
-
-            ///// Finally ハンドラーを追加します。
-            //var exceptionHandlers = method.Body.ExceptionHandlers;
-            //var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
-            //{
-            //    TryStart     = tryStart,
-            //    TryEnd       = tryEnd,
-            //    HandlerStart = tryEnd,
-            //    HandlerEnd   = handlerEnd,
-            //};
-            //exceptionHandlers.Add(handler);
+            /// Finally ハンドラーを追加します。
+            {
+                var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
+                {
+                    TryStart     = tryStart,
+                    TryEnd       = finallyStart,
+                    HandlerStart = finallyStart,
+                    HandlerEnd   = finallyEnd,
+                };
+                exceptionHandlers.Add(handler);
+            }
         }
 
         private void ReplaceDispose(TypeDefinition type, FieldDefinition isDisposingField)
