@@ -13,13 +13,6 @@ namespace SoftCube.Aspects
     [Serializable]
     public abstract class OnMethodBoundaryAspect : MethodLevelAspect
     {
-        #region プロパティ
-
-        private static int InstanceCount { get; set; }
-
-        #endregion
-
-
         #region コンストラクター
 
         /// <summary>
@@ -107,7 +100,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IEnumerator.MoveNext"/> を書き換えます。
         /// </summary>
-        /// <param name="enumeratorType">列挙子の型。</param>
+        /// <param name="enumeratorType">反復子の型。</param>
         /// <param name="isDisposingField"><c>isDisposing</c> のフィールド。</param>
         /// <param name="resumeFlagField"><c>resumeFlagField</c> のフィールド。</param>
         /// <param name="exitFlagField"><c>exitFlagField</c> のフィールド。</param>
@@ -142,9 +135,20 @@ namespace SoftCube.Aspects
             /// 元々のメソッドを書き換えます。
             method.Body = new Mono.Cecil.Cil.MethodBody(method);
 
-            var processor = method.Body.GetILProcessor();
+            /// ローカル変数を追加します。
             var variables = method.Body.Variables;
 
+            int exitFlagVariable = variables.Count;
+            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
+
+            int resultVariable = variables.Count;
+            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
+
+            int exceptionVariable = variables.Count;
+            variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
+
+            ///
+            var processor = method.Body.GetILProcessor();
             {
                 var branch = new Instruction[5];
 
@@ -197,16 +201,9 @@ namespace SoftCube.Aspects
 
             /// try {
             Instruction tryStart;
-            var leave = new Instruction[2];
-
-            int exitFlagVariable = variables.Count;
-            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
-
+            Instruction leave;
             {
                 var branch = new Instruction[8];
-
-                int resultVariable = variables.Count;
-                variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
                 //
                 tryStart = processor.EmitAndReturn(OpCodes.Ldc_I4_1);
@@ -266,15 +263,12 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
 
-                branch[4].Operand = branch[5].Operand = branch[7].Operand = leave[0] = processor.EmitAndReturn(OpCodes.Leave);
+                branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitAndReturn(OpCodes.Leave);
             }
 
             /// } catch (Exception exception) {
             Instruction catchStart;
             {
-                int exceptionVariable = variables.Count;
-                variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
-
                 catchStart = processor.EmitAndReturn(OpCodes.Stloc, exceptionVariable);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
@@ -287,8 +281,6 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException))));
                 processor.Emit(OpCodes.Rethrow);
-
-                leave[1] = processor.EmitAndReturn(OpCodes.Leave_S);
             }
 
             /// } finally {
@@ -327,7 +319,7 @@ namespace SoftCube.Aspects
                 int resultIndex = variables.Count;
                 variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
-                leave[0].Operand = leave[1].Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, exitFlagVariable);
+                leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, exitFlagVariable);
                 processor.Emit(OpCodes.Ldc_I4_0);
                 processor.Emit(OpCodes.Ceq);
                 processor.Emit(OpCodes.Stloc, resultIndex);
@@ -365,7 +357,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IDisposable.Dispose"/> を書き換えます。
         /// </summary>
-        /// <param name="enumeratorType">列挙子の型。</param>
+        /// <param name="enumeratorType">反復子の型。</param>
         /// <param name="isDisposingField"><c>isDisposing</c> のフィールド。</param>
         private void ReplaceDispose(TypeDefinition enumeratorType, FieldDefinition isDisposingField)
         {
@@ -397,49 +389,48 @@ namespace SoftCube.Aspects
 
             var processor = method.Body.GetILProcessor();
 
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldfld, isDisposingField);
+            {
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, isDisposingField);
+                var branch = processor.EmitAndReturn(OpCodes.Brfalse_S);
+                processor.Emit(OpCodes.Ret);
 
-            Instruction branch;
-            processor.Append(branch = processor.Create(OpCodes.Nop));
-            processor.Emit(OpCodes.Ret);
+                branch.Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldc_I4_1);
+                processor.Emit(OpCodes.Stfld, isDisposingField);
+            }
 
-            Instruction branchTarget;
-            processor.Append(branchTarget = processor.Create(OpCodes.Ldarg_0));
-            processor.Emit(OpCodes.Ldc_I4_1);
-            processor.Emit(OpCodes.Stfld, isDisposingField);
-
+            /// try {
             Instruction tryStart;
-            processor.Append(tryStart = processor.Create(OpCodes.Ldarg_0));
-            processor.Emit(OpCodes.Call, originalMethod);
-
             Instruction leave;
-            processor.Append(leave = processor.Create(OpCodes.Nop));
+            {
+                tryStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Call, originalMethod);
+                leave = processor.EmitAndReturn(OpCodes.Leave_S);
+            }
 
+            /// } finally {
             Instruction tryEnd;
-            processor.Append(tryEnd = processor.Create(OpCodes.Ldarg_0));
-            processor.Emit(OpCodes.Ldc_I4_2);
-            processor.Emit(OpCodes.Stfld, isDisposingField);
+            Instruction finallyStart;
+            {
+                finallyStart = tryEnd = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldc_I4_2);
+                processor.Emit(OpCodes.Stfld, isDisposingField);
 
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Callvirt, enumeratorType.Methods.Single(m => m.Name == "MoveNext"));
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Callvirt, enumeratorType.Methods.Single(m => m.Name == "MoveNext"));
 
-            processor.Emit(OpCodes.Pop);
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldc_I4_0);
-            processor.Emit(OpCodes.Stfld, isDisposingField);
-            processor.Emit(OpCodes.Endfinally);
+                processor.Emit(OpCodes.Pop);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldc_I4_0);
+                processor.Emit(OpCodes.Stfld, isDisposingField);
+                processor.Emit(OpCodes.Endfinally);
+            }
 
-            Instruction handlerEnd;
-            Instruction leaveTarget;
-            processor.Append(leaveTarget = handlerEnd = processor.Create(OpCodes.Ret));
-
-            ///
-            branch.OpCode  = OpCodes.Brfalse_S;
-            branch.Operand = branchTarget;
-
-            leave.OpCode  = OpCodes.Leave_S;
-            leave.Operand = leaveTarget;
+            Instruction finallyEnd;
+            {
+                leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ret);
+            }
 
             /// Finally ハンドラーを追加します。
             var exceptionHandlers = method.Body.ExceptionHandlers;
@@ -447,8 +438,8 @@ namespace SoftCube.Aspects
             {
                 TryStart     = tryStart,
                 TryEnd       = tryEnd,
-                HandlerStart = tryEnd,
-                HandlerEnd   = handlerEnd,
+                HandlerStart = finallyStart,
+                HandlerEnd   = finallyEnd,
             };
             exceptionHandlers.Add(handler);
         }
