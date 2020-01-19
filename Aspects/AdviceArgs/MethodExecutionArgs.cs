@@ -39,14 +39,14 @@ namespace SoftCube.Aspects
 
         #region コンストラクター
 
-        /// <summary>
-        /// コンストラクター。
-        /// </summary>
-        /// <param name="instance">メソッドが実行されたインスタンス (静的メッソドが実行された場合、null)。</param>
-        public MethodExecutionArgs(object instance)
-            : base(instance)
-        {
-        }
+        ///// <summary>
+        ///// コンストラクター。
+        ///// </summary>
+        ///// <param name="instance">メソッドが実行されたインスタンス (静的メッソドが実行された場合、null)。</param>
+        //public MethodExecutionArgs(object instance)
+        //    : base(instance)
+        //{
+        //}
 
         /// <summary>
         /// コンストラクター。

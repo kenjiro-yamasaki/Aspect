@@ -33,7 +33,7 @@ namespace SoftCube.Aspects
 
         #region メソッド
 
-        #region アスペクト (カスタムコード) の注入
+        #region アスペクトの注入
 
         /// <summary>
         /// アスペクトをメソッドに注入します。
@@ -49,51 +49,43 @@ namespace SoftCube.Aspects
             if (iteratorStateMachineAttribute != null)
             {
                 var enumeratorType = (TypeDefinition)iteratorStateMachineAttribute.ConstructorArguments[0].Value;
-                InjectToEnumeratorType(enumeratorType, aspect);
+                var module = enumeratorType.Module;
+
+                /// フィールドを追加します。
+                var aspectField      = new FieldDefinition("aspect",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
+                var isDisposingField = new FieldDefinition("isDisposing", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
+                var resumeFlagField  = new FieldDefinition("resumeFlag",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+                var exitFlagField    = new FieldDefinition("exitFlag",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+                var aspectArgsField  = new FieldDefinition("aspectArgs",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
+                var argsField        = new FieldDefinition("args",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+
+                enumeratorType.Fields.Add(isDisposingField);
+                enumeratorType.Fields.Add(resumeFlagField);
+                enumeratorType.Fields.Add(exitFlagField);
+                enumeratorType.Fields.Add(aspectField);
+                enumeratorType.Fields.Add(aspectArgsField);
+                enumeratorType.Fields.Add(argsField);
+
+                /// 各メソッドを書き換えます。
+                CreateAspectField(enumeratorType, aspect, aspectField);
+                ReplaceMoveNextMethod(enumeratorType, isDisposingField, resumeFlagField, exitFlagField, aspectField, aspectArgsField, argsField);
+                ReplaceDispose(enumeratorType, isDisposingField);
             }
             else
             {
-                InjectToNormalMethod(method, aspect);
+                ReplaceMethod(method, aspect);
             }
 
             /// 書き換え後の IL コードをログ出力します (デバッグ用、削除可)。
             method.Log();
         }
 
-        /// <summary>
-        /// アスペクトを Enumerator に注入します。
-        /// </summary>
-        /// <param name="enumeratorType">列挙子の型。</param>
-        /// <param name="aspect">アスペクト。</param>
-        private void InjectToEnumeratorType(TypeDefinition enumeratorType, CustomAttribute aspect)
-        {
-            var module = enumeratorType.Module;
-
-            /// フィールドを追加します。
-            var aspectField      = new FieldDefinition("aspect",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
-            var isDisposingField = new FieldDefinition("isDisposing", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
-            var resumeFlagField  = new FieldDefinition("resumeFlag",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-            var exitFlagField    = new FieldDefinition("exitFlag",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-            var aspectArgsField  = new FieldDefinition("aspectArgs",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
-            var argsField        = new FieldDefinition("args",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
-
-            enumeratorType.Fields.Add(isDisposingField);
-            enumeratorType.Fields.Add(resumeFlagField);
-            enumeratorType.Fields.Add(exitFlagField);
-            enumeratorType.Fields.Add(aspectField);
-            enumeratorType.Fields.Add(aspectArgsField);
-            enumeratorType.Fields.Add(argsField);
-
-            /// 各メソッドを書き換えます。
-            CreateAspectField(enumeratorType, aspect, aspectField);
-            ReplaceMoveNextMethod(enumeratorType, isDisposingField, resumeFlagField, exitFlagField, aspectField, aspectArgsField, argsField);
-            ReplaceDispose(enumeratorType, isDisposingField);
-        }
+        #region イテレーターメソッド
 
         /// <summary>
         /// アスペクトフィールドのインスタンスを生成します。
         /// </summary>
-        /// <param name="enumeratorType">列挙子の型。</param>
+        /// <param name="enumeratorType">反復子の型。</param>
         /// <param name="aspect">アスペクト。</param>
         /// <param name="aspectField">アスペクトのフィールド。</param>
         private void CreateAspectField(TypeDefinition enumeratorType, CustomAttribute aspect, FieldDefinition aspectField)
@@ -104,11 +96,11 @@ namespace SoftCube.Aspects
             var first        = instructions.First();
 
             /// アスペクトのインスタンスを生成し、ローカル変数にストアします。
-            var aspectIndex = processor.InsertBefore(first, aspect);
+            var aspectVariable = processor.InsertBefore(first, aspect);
 
             /// アスペクトのインスタンスをフィールドにストアします。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectIndex));
+            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectVariable));
             processor.InsertBefore(first, processor.Create(OpCodes.Stfld, aspectField));
         }
 
@@ -154,20 +146,19 @@ namespace SoftCube.Aspects
             var variables = method.Body.Variables;
 
             {
+                var branch = new Instruction[5];
+
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, exitFlagField);
-                Instruction branch0;
-                processor.Append(branch0 = processor.Create(OpCodes.Nop));
+                branch[0] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, isDisposingField);
-                Instruction branch1;
-                processor.Append(branch1 = processor.Create(OpCodes.Nop));
+                branch[1] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, resumeFlagField);
-                Instruction branch2;
-                processor.Append(branch2 = processor.Create(OpCodes.Nop));
+                branch[2] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldnull);
@@ -188,58 +179,38 @@ namespace SoftCube.Aspects
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, resumeFlagField);
-                Instruction branch3;
-                processor.Append(branch3 = processor.Create(OpCodes.Nop));
+                branch[3] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
                 processor.Emit(OpCodes.Stfld, resumeFlagField);
-                Instruction branch4;
-                processor.Append(branch4 = processor.Create(OpCodes.Nop));
+                branch[4] = processor.EmitAndReturn(OpCodes.Br_S);
 
-                Instruction branchTarget2;
-                Instruction branchTarget3;
-                processor.Append(branchTarget2 = branchTarget3 = processor.Create(OpCodes.Ldarg_0));
+                branch[2].Operand = branch[3].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume))));
 
-                Instruction branchTarget0;
-                Instruction branchTarget1;
-                Instruction branchTarget4;
-                processor.Append(branchTarget0 = branchTarget1 = branchTarget4 = processor.Create(OpCodes.Nop));
-
-                // Branch 命令を修正します。
-                branch0.OpCode = OpCodes.Brtrue_S;
-                branch1.OpCode = OpCodes.Brtrue_S;
-                branch2.OpCode = OpCodes.Brtrue_S;
-                branch3.OpCode = OpCodes.Brtrue_S;
-                branch4.OpCode = OpCodes.Br_S;
-
-                branch0.Operand = branchTarget0;
-                branch1.Operand = branchTarget1;
-                branch2.Operand = branchTarget2;
-                branch3.Operand = branchTarget3;
-                branch4.Operand = branchTarget4;
+                branch[0].Operand = branch[1].Operand = branch[4].Operand = processor.EmitAndReturn(OpCodes.Nop);
             }
 
             /// try {
             Instruction tryStart;
             var leave = new Instruction[2];
 
-            int exitFlagIndex = variables.Count;
+            int exitFlagVariable = variables.Count;
             variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
             {
                 var branch = new Instruction[8];
 
-                int resultIndex = variables.Count;
+                int resultVariable = variables.Count;
                 variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
                 //
-                processor.Append(tryStart = processor.Create(OpCodes.Ldc_I4_1));
-                processor.Emit(OpCodes.Stloc, exitFlagIndex);
+                tryStart = processor.EmitAndReturn(OpCodes.Ldc_I4_1);
+                processor.Emit(OpCodes.Stloc, exitFlagVariable);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, isDisposingField);
@@ -248,21 +219,21 @@ namespace SoftCube.Aspects
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Call, originalMoveNext);
-                processor.Emit(OpCodes.Stloc, resultIndex);
+                processor.Emit(OpCodes.Stloc, resultVariable);
 
                 branch[0].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, isDisposingField);
 
                 branch[1] = processor.EmitAndReturn(OpCodes.Brtrue_S);
-                processor.Emit(OpCodes.Ldloc, resultIndex);
+                processor.Emit(OpCodes.Ldloc, resultVariable);
                 branch[2] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldc_I4_0);
-                processor.Emit(OpCodes.Stloc, exitFlagIndex);
+                processor.Emit(OpCodes.Stloc, exitFlagVariable);
                 branch[3] = processor.EmitAndReturn(OpCodes.Br_S);
 
                 branch[1].Operand = branch[2].Operand = processor.EmitAndReturn(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stloc, exitFlagIndex);
+                processor.Emit(OpCodes.Stloc, exitFlagVariable);
 
                 branch[3].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, exitFlagField);
@@ -272,7 +243,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, resumeFlagField);
                 branch[5] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
-                processor.Emit(OpCodes.Ldloc, exitFlagIndex);
+                processor.Emit(OpCodes.Ldloc, exitFlagVariable);
                 branch[6] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
@@ -301,13 +272,13 @@ namespace SoftCube.Aspects
             /// } catch (Exception exception) {
             Instruction catchStart;
             {
-                int exceptionIndex = variables.Count;
+                int exceptionVariable = variables.Count;
                 variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
-                processor.Append(catchStart = processor.Create(OpCodes.Stloc, exceptionIndex));
+                catchStart = processor.EmitAndReturn(OpCodes.Stloc, exceptionVariable);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
-                processor.Emit(OpCodes.Ldloc, exceptionIndex);
+                processor.Emit(OpCodes.Ldloc, exceptionVariable);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod()));
 
                 processor.Emit(OpCodes.Ldarg_0);
@@ -326,7 +297,7 @@ namespace SoftCube.Aspects
             {
                 var branch = new Instruction[3];
 
-                processor.Append(catchEnd = finallyStart = processor.Create(OpCodes.Ldarg_0));
+                catchEnd = finallyStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, exitFlagField);
                 branch[0] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
@@ -334,7 +305,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, resumeFlagField);
                 branch[1] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
-                processor.Emit(OpCodes.Ldloc, exitFlagIndex);
+                processor.Emit(OpCodes.Ldloc, exitFlagVariable);
                 branch[2] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
@@ -356,7 +327,7 @@ namespace SoftCube.Aspects
                 int resultIndex = variables.Count;
                 variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
-                leave[0].Operand = leave[1].Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, exitFlagIndex);
+                leave[0].Operand = leave[1].Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, exitFlagVariable);
                 processor.Emit(OpCodes.Ldc_I4_0);
                 processor.Emit(OpCodes.Ceq);
                 processor.Emit(OpCodes.Stloc, resultIndex);
@@ -369,11 +340,11 @@ namespace SoftCube.Aspects
             {
                 var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
-                    CatchType = module.ImportReference(typeof(Exception)),
-                    TryStart = tryStart,
-                    TryEnd = catchStart,
+                    CatchType    = module.ImportReference(typeof(Exception)),
+                    TryStart     = tryStart,
+                    TryEnd       = catchStart,
                     HandlerStart = catchStart,
-                    HandlerEnd = catchEnd,
+                    HandlerEnd   = catchEnd,
                 };
                 exceptionHandlers.Add(handler);
             }
@@ -382,10 +353,10 @@ namespace SoftCube.Aspects
             {
                 var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
                 {
-                    TryStart = tryStart,
-                    TryEnd = finallyStart,
+                    TryStart     = tryStart,
+                    TryEnd       = finallyStart,
                     HandlerStart = finallyStart,
-                    HandlerEnd = finallyEnd,
+                    HandlerEnd   = finallyEnd,
                 };
                 exceptionHandlers.Add(handler);
             }
@@ -482,298 +453,168 @@ namespace SoftCube.Aspects
             exceptionHandlers.Add(handler);
         }
 
+        #endregion
 
-
-
-
+        #region 一般的なメソッド
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">注入対象の属性。</param>
-        private void InjectToNormalMethod(MethodDefinition method, CustomAttribute attribute)
+        /// <param name="method">メソッド。</param>
+        /// <param name="aspect">アスペクト。</param>
+        private void ReplaceMethod(MethodDefinition method, CustomAttribute aspect)
         {
-            /// 最後の命令が Throw 命令の場合、Return 命令を追加します。
-            var instructions = method.Body.Instructions;
-            var processor    = method.Body.GetILProcessor();
-            if (instructions.Last().OpCode == OpCodes.Throw)
+            ///
+            var module        = method.Module;
+            var attributes    = method.Attributes;
+            var declaringType = method.DeclaringType;
+            var returnType    = method.ReturnType;
+
+            /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
+            var originalMethod = new MethodDefinition(method.Name + "<Original>", attributes, returnType);
+            foreach (var parameter in method.Parameters)
             {
-                processor.Append(processor.Create(OpCodes.Ret));
+                originalMethod.Parameters.Add(parameter);
             }
 
-            /// Entry ハンドラーを注入します。
-            var (tryStart, attributeIndex, eventArgsIndex) = InjectEntryHandler(method, attribute);
+            originalMethod.Body = method.Body;
 
-            /// Return ハンドラーを注入します。
-            var tryLast = InjectReturnHandler(method, attributeIndex, eventArgsIndex);
-
-            /// Excetpion ハンドラーを注入します。
-            var catchLast = InjectExceptionHandler(method, attributeIndex, eventArgsIndex);
-
-            /// Exit ハンドラーを注入します。
-            var finallyLast = InjectExitHandler(method, attributeIndex, eventArgsIndex);
-
-            /// 書き換えによって、不正な状態になった IL コードを修正します。
+            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
             {
-                /// Try の最終命令を Catch の最終命令への Leave 命令に修正します。
-                /// InjectReturnHandler の <returns> コメントを参照してください。
-                tryLast.OpCode  = OpCodes.Leave_S;
-                tryLast.Operand = catchLast;
-
-                /// 元々の例外ハンドラーの終了位置が明示されていない場合、終了位置を Leave 命令 に変更します。
-                var exceptionHandlers = method.Body.ExceptionHandlers;
-                foreach (var handler in exceptionHandlers.Where(eh => eh.HandlerEnd == null))
-                {
-                    handler.HandlerEnd = tryLast;
-                }
+                originalMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            /// 例外ハンドラーを追加します。
-            AddExceptionHandlers(method, tryStart, tryLast, catchLast, finallyLast);
+            declaringType.Methods.Add(originalMethod);
 
-            /// IL コードを最適化します。
-            method.OptimizeIL();
-        }
+            /// 元々のメソッドを書き換えます。
+            method.Body = new Mono.Cecil.Cil.MethodBody(method);
 
-        /// <summary>
-        /// Entry ハンドラーを注入します。
-        /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">注入対象の属性。</param>
-        /// <returns>Try の先頭命令。</returns>
-        private (Instruction, int, int) InjectEntryHandler(MethodDefinition method, CustomAttribute attribute)
-        {
-            /// 属性をローカル変数にストアします。
-            var instructions    = method.Body.Instructions;
-            var first           = instructions.First();
-            var processor       = method.Body.GetILProcessor();
-            var attributeIndex  = processor.InsertBefore(first, attribute);
+            var processor = method.Body.GetILProcessor();
+            var variables = method.Body.Variables;
 
-            /// イベントデータを生成し、ローカル変数にストアします。
-            var variables      = method.Body.Variables;
-            var eventArgsIndex = variables.Count();
-            var module         = method.DeclaringType.Module.Assembly.MainModule;
+            var aspectArgsVariable = variables.Count();
             variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodExecutionArgs))));
 
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object) }))));
-            processor.InsertBefore(first, processor.Create(OpCodes.Stloc, eventArgsIndex));
-
-            /// メソッド情報をイベントデータに設定します。
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(first, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { }))));
-            processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod())));
-
-            /// パラメーター情報をイベントデータに設定します。
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            {
-                /// パラメーターコレクションを生成し、ロードします。
-                var parameters = method.Parameters;
-                processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameters.Count));
-                processor.InsertBefore(first, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-                    processor.InsertBefore(first, processor.Create(OpCodes.Dup));
-                    processor.InsertBefore(first, processor.Create(OpCodes.Ldc_I4, parameterIndex));
-                    processor.InsertBefore(first, processor.Create(OpCodes.Ldarg, parameterIndex + 1));
-                    if (parameter.ParameterType.IsValueType)
-                    {
-                        processor.InsertBefore(first, processor.Create(OpCodes.Box, parameter.ParameterType));
-                    }
-                    processor.InsertBefore(first, processor.Create(OpCodes.Stelem_Ref));
-                }
-                processor.InsertBefore(first, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) }))));
-            }
-            processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Arguments)).GetSetMethod())));
-
-            /// OnEntry を呼び出します。
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, attributeIndex));
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(first, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry)))));
-
-            /// Try の先頭命令を挿入します。
-            Instruction tryStart;
-            processor.InsertBefore(first, tryStart = processor.Create(OpCodes.Nop));
-            return (tryStart, attributeIndex, eventArgsIndex);
-        }
-
-        /// <summary>
-        /// Return ハンドラーを注入します。
-        /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attributeIndex">属性の変数インデックス。</param>
-        /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
-        /// <returns>
-        /// Try の最終命令 (Catch の最終命令への Leave 命令)。
-        /// 転送先の命令が不明であるため、Nop 命令をプレースフォルダとして追加しています。
-        /// 正しい Leave 命令に書き換える必要があります。
-        /// </returns>
-        private Instruction InjectReturnHandler(MethodDefinition method, int attributeIndex, int eventArgsIndex)
-        {
-            var module       = method.DeclaringType.Module.Assembly.MainModule;
-            var processor    = method.Body.GetILProcessor();
-            var instructions = method.Body.Instructions;
-            var returns      = instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();
-
+            int resultVariable = -1;
             if (method.HasReturnValue())
             {
-                var variables   = method.Body.Variables;
-                var resultIndex = variables.Count();
+                resultVariable = variables.Count();
                 variables.Add(new VariableDefinition(method.ReturnType));
+            }
 
-                /// 新たな Return 命令を追加します。
-                Instruction newReturn;                                                              /// 新たな Return 命令。
-                processor.Append(newReturn = processor.Create(OpCodes.Ldloc, resultIndex));
-                processor.Append(processor.Create(OpCodes.Ret));
+            int exceptionVariable = variables.Count;
+            variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
-                /// Catch の最終命令への Leave 命令を挿入します。
-                /// 転送先の命令が不明であるため、Nop 命令をプレースフォルダとして挿入しています。
-                /// 後処理にて、正しい Leave 命令に書き換えます。
-                Instruction leave;                                                                  /// Leave 命令。
-                processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Nop));
-
-                foreach (var @return in returns)
+            var aspectVariable  = processor.Emit(aspect);
+            {
+                processor.Emit(OpCodes.Ldarg_0);
                 {
-                    /// Return 命令を書き換えて、戻り値をローカル変数にストアします。
-                    @return.OpCode  = OpCodes.Stloc;
-                    @return.Operand = variables[resultIndex];
+                    /// パラメーターコレクションを生成し、ロードします。
+                    var parameters = method.Parameters;
+                    processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+                    processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
+                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                    {
+                        var parameter = parameters[parameterIndex];
+                        processor.Emit(OpCodes.Dup);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        if (parameter.ParameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, parameter.ParameterType);
+                        }
+                        processor.Emit(OpCodes.Stelem_Ref);
+                    }
+                    processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) })));
+                }
+                processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+                processor.Emit(OpCodes.Stloc, aspectArgsVariable);
 
-                    /// Leave 命令への Branch 命令を挿入します。
-                    /// 以降は Branch 命令の前にコードを挿入します。
-                    Instruction branch;                                                             /// Branch 命令。
-                    processor.InsertAfter(@return, branch = processor.Create(OpCodes.Br_S, leave));
+                /// メソッド情報をイベントデータに設定します。
+                processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod()));
 
-                    /// 戻り値をイベントデータに設定します。
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, resultIndex));
+                /// OnEntry を呼び出します。
+                processor.Emit(OpCodes.Ldloc, aspectVariable);
+                processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
+                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
+            }
+
+            /// try {
+            Instruction tryStart;
+            var leave = new Instruction[1];
+
+            {
+                tryStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
+
+                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                }
+
+                /// 元々のメソッドを呼び出します。
+                processor.Emit(OpCodes.Callvirt, originalMethod);
+                if (method.HasReturnValue())
+                {
+                    processor.Emit(OpCodes.Stloc, resultVariable);
+
+                    processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
+                    processor.Emit(OpCodes.Ldloc, resultVariable);
                     if (method.ReturnType.IsValueType)
                     {
-                        processor.InsertBefore(branch, processor.Create(OpCodes.Box, method.ReturnType));
+                        processor.Emit(OpCodes.Box, method.ReturnType);
                     }
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod())));
-
-                    /// OnSuccess を呼び出します。
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, attributeIndex));
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
                 }
 
-                return leave;
+                /// OnSuccess を呼び出します。
+                processor.Emit(OpCodes.Ldloc, aspectVariable);
+                processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
+                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
+
+                leave[0] = processor.EmitAndReturn(OpCodes.Leave);
             }
-            else
+
+            /// } catch (Exception exception) {
+            Instruction catchStart;
             {
-                /// 新たな Return 命令を追加します。
-                Instruction newReturn;                                                              /// 新たな Return 命令。
-                processor.Append(newReturn = processor.Create(OpCodes.Ret));
+                catchStart = processor.EmitAndReturn(OpCodes.Stloc, exceptionVariable);
 
-                /// Catch の最終命令への Leave 命令を挿入します。
-                /// 転送先の命令が不明であるため、Nop 命令をプレースフォルダとして挿入しています。
-                /// 後処理にて、正しい Leave 命令に書き換えます。
-                Instruction leave;                                                                  /// Leave 命令。
-                processor.InsertBefore(newReturn, leave = processor.Create(OpCodes.Nop));
+                processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
+                processor.Emit(OpCodes.Ldloc, exceptionVariable);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod()));
 
-                foreach (var @return in returns)
-                {
-                    /// Return 命令を Nop に書き換えます。
-                    @return.OpCode  = OpCodes.Nop;
-                    @return.Operand = null;
-
-                    /// Leave 命令への Branch 命令を挿入します。
-                    /// 以降は Branch 命令の前にコードを挿入します。
-                    Instruction branch;                                                             /// Branch 命令。
-                    processor.InsertAfter(@return, branch = processor.Create(OpCodes.Br_S, leave));
-
-                    /// OnSuccess を呼び出します。
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, attributeIndex));
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-                    processor.InsertBefore(branch, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
-                }
-
-                return leave;
+                processor.Emit(OpCodes.Ldloc, aspectVariable);
+                processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
+                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException))));
+                processor.Emit(OpCodes.Rethrow);
             }
-        }
 
-        /// <summary>
-        /// Exception ハンドラーを注入します。
-        /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attributeIndex">属性の変数インデックス。</param>
-        /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
-        /// <returns>Catch の最終命令 (Return 命令への Leave 命令)。</returns>
-        private Instruction InjectExceptionHandler(MethodDefinition method, int attributeIndex, int eventArgsIndex)
-        {
-            var module    = method.DeclaringType.Module.Assembly.MainModule;
-            var processor = method.Body.GetILProcessor();
+            /// } finally {
+            Instruction catchEnd;
+            Instruction finallyStart;
+            {
+                catchEnd = finallyStart = processor.EmitAndReturn(OpCodes.Ldloc, aspectVariable);
+                processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
+                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
 
-            /// 例外オブジェクトをローカル変数にストアします。
-            var variables      = method.Body.Variables;
-            var exceptionIndex = variables.Count();
-            processor.Body.Variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
+                processor.Emit(OpCodes.Endfinally);
+            }
 
-            var @return = method.ReturnInstruction();                                               /// Return 命令。
-            processor.InsertBefore(@return, processor.Create(OpCodes.Stloc, exceptionIndex));
-
-            /// 例外オブジェクトをイベントデータに設定します。
-            processor.InsertBefore(@return, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(@return, processor.Create(OpCodes.Ldloc, exceptionIndex));
-            processor.InsertBefore(@return, processor.Create(OpCodes.Callvirt, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod())));
-
-            /// OnException を呼び出します。
-            processor.InsertBefore(@return, processor.Create(OpCodes.Ldloc, attributeIndex));
-            processor.InsertBefore(@return, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(@return, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException)))));
-
-            /// 例外を再スローします。
-            processor.InsertBefore(@return, processor.Create(OpCodes.Rethrow));
-
-            /// Return 命令への Leave 命令を挿入します。
-            Instruction leave;                                                                      /// Leave 命令。
-            processor.InsertBefore(@return, leave = processor.Create(OpCodes.Leave_S, @return));
-
-            return leave;
-        }
-
-        /// <summary>
-        /// Exit ハンドラーを注入します。
-        /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attributeIndex">属性の変数インデックス。</param>
-        /// <param name="eventArgsIndex">イベントデータの変数インデックス。</param>
-        /// <returns>Finally の最終命令。</returns>
-        private Instruction InjectExitHandler(MethodDefinition method, int attributeIndex, int eventArgsIndex)
-        {
-            var module    = method.DeclaringType.Module.Assembly.MainModule;
-            var processor = method.Body.GetILProcessor();
-
-            /// Finally ハンドラーの先頭命令 (Nop) を挿入します。
-            var @return = method.ReturnInstruction();
-            processor.InsertBefore(@return, processor.Create(OpCodes.Nop));
-
-            /// OnExit を呼び出します。
-            processor.InsertBefore(@return, processor.Create(OpCodes.Ldloc, attributeIndex));
-            processor.InsertBefore(@return, processor.Create(OpCodes.Ldloc, eventArgsIndex));
-            processor.InsertBefore(@return, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
-
-            /// EndFinally 命令を挿入します。
-            Instruction endFinally;
-            processor.InsertBefore(@return, endFinally = processor.Create(OpCodes.Endfinally));
-
-            return endFinally;
-        }
-
-        /// <summary>
-        /// 例外ハンドラー (Catch ハンドラーと Finally ハンドラー) を追加します。
-        /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="tryStart">Try の先頭命令。</param>
-        /// <param name="tryLast">Try の最終命令。</param>
-        /// <param name="catchLast">Catch の最終命令。</param>
-        /// <param name="finallyLast">Finally の最終命令。</param>
-        private void AddExceptionHandlers(MethodDefinition method, Instruction tryStart, Instruction tryLast, Instruction catchLast, Instruction finallyLast)
-        {
-            var module = method.DeclaringType.Module.Assembly.MainModule;
+            ///
+            Instruction finallyEnd;
+            {
+                if (method.HasReturnValue())
+                {
+                    leave[0].Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, resultVariable);
+                    processor.Emit(OpCodes.Ret);
+                }
+                else
+                {
+                    leave[0].Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ret);
+                }
+            }
 
             /// Catch ハンドラーを追加します。
             var exceptionHandlers = method.Body.ExceptionHandlers;
@@ -782,9 +623,9 @@ namespace SoftCube.Aspects
                 {
                     CatchType    = module.ImportReference(typeof(Exception)),
                     TryStart     = tryStart,
-                    TryEnd       = tryLast.Next,
-                    HandlerStart = tryLast.Next,
-                    HandlerEnd   = catchLast,
+                    TryEnd       = catchStart,
+                    HandlerStart = catchStart,
+                    HandlerEnd   = catchEnd,
                 };
                 exceptionHandlers.Add(handler);
             }
@@ -794,13 +635,17 @@ namespace SoftCube.Aspects
                 var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
                 {
                     TryStart     = tryStart,
-                    TryEnd       = catchLast.Next,
-                    HandlerStart = catchLast.Next,
-                    HandlerEnd   = finallyLast.Next,
+                    TryEnd       = finallyStart,
+                    HandlerStart = finallyStart,
+                    HandlerEnd   = finallyEnd,
                 };
                 exceptionHandlers.Add(handler);
             }
+
+            method.OptimizeIL();
         }
+
+        #endregion
 
         #endregion
 

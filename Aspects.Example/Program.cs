@@ -15,9 +15,8 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            //var @class = new Class();
-            //@class.Instance = new Instance();
-            //var result = @class.Func("1");
+            //new Program().Test(true);
+            //Logger.Trace(result.ToString());
 
             var result = new Program().IEnumerableInt();
 
@@ -32,8 +31,6 @@ namespace SoftCube.Aspects
         [OnMethodBoundaryAspectLogger]
         private IEnumerable<int> IEnumerableInt()
         {
-            //return new int[] {0,1,2};
-
             Logger.Trace("A");
             yield return 0;
             Logger.Trace("B");
@@ -43,8 +40,33 @@ namespace SoftCube.Aspects
             Logger.Trace("D");
         }
 
-        //[LoggerAspect]
-        //private int TryCatchFinally(string value)
+        //[OnMethodBoundaryAspectLogger]
+        //private void Test(bool condition)
+        //{
+        //    if (condition)
+        //    {
+        //        Logger.Trace("A");
+        //        return;
+        //    }
+
+        //    Logger.Trace("B");
+        //}
+        //[OnMethodBoundaryAspectLogger]
+        //private bool Test(bool condition)
+        //{
+        //    if (condition)
+        //    {
+        //        Logger.Trace("A");
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        Logger.Trace("B");
+        //        return false;
+        //    }
+        //}
+        //[OnMethodBoundaryAspectLogger]
+        //private int Test(string value)
         //{
         //    Logger.Trace("1");
         //    Logger.Trace("2");
@@ -52,28 +74,4 @@ namespace SoftCube.Aspects
         //    return int.Parse(value);
         //}
     }
-
-    //public class Instance
-    //{
-    //    public int Func(string value)
-    //    {
-    //        return int.Parse(value);
-    //    }
-    //}
-
-    //public class Class
-    //{
-    //    public Instance Instance { get; set; }
-
-    //    public object ReturnValue { get; set; }
-
-    //    public Arguments Arguments { get; set; }
-
-    //    [LoggerAspect]
-    //    public object Func(string value)
-    //    {
-    //        ReturnValue = Instance.Func((string)Arguments[0]);
-    //        return ReturnValue;
-    //    }
-    //}
 }
