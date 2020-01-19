@@ -68,9 +68,10 @@ namespace SoftCube.Aspects
         /// <param name="aspect"></param>
         private void InjectToIteratorMethod(TypeDefinition type, CustomAttribute aspect)
         {
-            //
             var module = type.Module;
 
+            /// フィールドを追加します。
+            var aspectField      = new FieldDefinition("aspect",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
             var isDisposingField = new FieldDefinition("isDisposing", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
             var resumeFlagField  = new FieldDefinition("resumeFlag",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
             var exitFlagField    = new FieldDefinition("exitFlag",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
@@ -80,55 +81,36 @@ namespace SoftCube.Aspects
             type.Fields.Add(isDisposingField);
             type.Fields.Add(resumeFlagField);
             type.Fields.Add(exitFlagField);
+            type.Fields.Add(aspectField);
             type.Fields.Add(aspectArgsField);
             type.Fields.Add(argsField);
 
-            //
-            var aspectField = CreateAspectField(aspect, type);
+            /// 各メソッドを書き換えます。
+            CreateAspectField(aspect, type, aspectField);
             ReplaceMoveNext(type, isDisposingField, resumeFlagField, exitFlagField, aspectField, aspectArgsField, argsField);
             ReplaceDispose(type, isDisposingField);
         }
 
-
-
-        private FieldDefinition CreateAspectField(CustomAttribute aspect, TypeDefinition type)
+        /// <summary>
+        /// アスペクトフィールドのインスタンスを生成します。
+        /// </summary>
+        /// <param name="aspect"></param>
+        /// <param name="type"></param>
+        /// <param name="aspectField"></param>
+        private void CreateAspectField(CustomAttribute aspect, TypeDefinition type, FieldDefinition aspectField)
         {
-            var module = type.Module;
+            var constructor = type.Methods.Single(m => m.Name == ".ctor");
+            var processor    = constructor.Body.GetILProcessor();
+            var instructions = constructor.Body.Instructions;
+            var first        = instructions.First();
 
-            var @namespace = "SoftCube.Aspects.ImplementationDetails";
-            var typeName = $"OnMethodBoundaryAspect<{InstanceCount++}>";
-            var typeAttributes = Mono.Cecil.TypeAttributes.NotPublic | Mono.Cecil.TypeAttributes.Sealed;
-            var declaringType = new TypeDefinition(@namespace, typeName, typeAttributes);
-
-            var fieldName = "Aspect";
-            var fieldAttributes = Mono.Cecil.FieldAttributes.Static | Mono.Cecil.FieldAttributes.InitOnly | Mono.Cecil.FieldAttributes.Assembly;
-            var aspectField = new FieldDefinition(fieldName, fieldAttributes, module.ImportReference(GetType()));
-            declaringType.Fields.Add(aspectField);
-
-            var constructorName = ".ctor";
-            var constructorAttributes = Mono.Cecil.MethodAttributes.Static | Mono.Cecil.MethodAttributes.SpecialName;
-            var constructor = new MethodDefinition(constructorName, constructorAttributes, module.TypeSystem.Void);
-
-            declaringType.Methods.Add(constructor);
-            module.Types.Add(declaringType);
-
-            var processor = constructor.Body.GetILProcessor();
-
-            var aspectIndex = processor.Emit(aspect);
-            processor.Emit(OpCodes.Ldloc, aspectIndex);
-            processor.Emit(OpCodes.Stsfld, aspectField);
-            processor.Emit(OpCodes.Ret);
-
-            return aspectField;
+            var aspectIndex = processor.InsertBefore(first, aspect);
+            processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
+            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectIndex));
+            processor.InsertBefore(first, processor.Create(OpCodes.Stfld, aspectField));
         }
 
-        private void ReplaceMoveNext(TypeDefinition type,
-                                     FieldDefinition isDisposingField,
-                                     FieldDefinition resumeFlagField,
-                                     FieldDefinition exitFlagField,
-                                     FieldDefinition aspectField,
-                                     FieldDefinition aspectArgsField,
-                                     FieldDefinition argsField)
+        private void ReplaceMoveNext(TypeDefinition type, FieldDefinition isDisposingField, FieldDefinition resumeFlagField, FieldDefinition exitFlagField, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField)
         {
             ///
             var module        = type.Module;
@@ -186,7 +168,8 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
                 processor.Emit(OpCodes.Stfld, aspectArgsField);
 
-                processor.Emit(OpCodes.Ldsfld, aspectField);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
@@ -204,7 +187,8 @@ namespace SoftCube.Aspects
 
                 Instruction branchTarget2;
                 Instruction branchTarget3;
-                processor.Append(branchTarget2 = branchTarget3 = processor.Create(OpCodes.Ldsfld, argsField));
+                processor.Append(branchTarget2 = branchTarget3 = processor.Create(OpCodes.Ldarg_0));
+                processor.Emit(OpCodes.Ldfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume))));
@@ -238,7 +222,7 @@ namespace SoftCube.Aspects
             variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
             {
-                var branch       = new Instruction[8];
+                var branch = new Instruction[8];
                 var branchTarget = new Instruction[8];
 
                 int resultIndex = variables.Count;
@@ -282,7 +266,8 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldloc, exitFlagIndex);
                 processor.Append(branch[6] = processor.Create(OpCodes.Nop));
 
-                processor.Emit(OpCodes.Ldsfld, aspectField);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
@@ -295,7 +280,8 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Box, module.TypeSystem.Int32);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
 
-                processor.Emit(OpCodes.Ldsfld, aspectField);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
@@ -334,7 +320,8 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldloc, exceptionIndex);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod()));
 
-                processor.Emit(OpCodes.Ldsfld, aspectField);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException))));
@@ -347,7 +334,7 @@ namespace SoftCube.Aspects
             Instruction catchEnd;
             Instruction finallyStart;
             {
-                var branch       = new Instruction[3];
+                var branch = new Instruction[3];
                 var branchTarget = new Instruction[3];
 
                 processor.Append(catchEnd = finallyStart = processor.Create(OpCodes.Ldarg_0));
@@ -365,7 +352,8 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldc_I4_1);
                 processor.Emit(OpCodes.Stfld, exitFlagField);
 
-                processor.Emit(OpCodes.Ldsfld, aspectField);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, aspectField);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, aspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
@@ -408,11 +396,11 @@ namespace SoftCube.Aspects
             {
                 var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
-                    CatchType    = module.ImportReference(typeof(Exception)),
-                    TryStart     = tryStart,
-                    TryEnd       = catchStart,
+                    CatchType = module.ImportReference(typeof(Exception)),
+                    TryStart = tryStart,
+                    TryEnd = catchStart,
                     HandlerStart = catchStart,
-                    HandlerEnd   = catchEnd,
+                    HandlerEnd = catchEnd,
                 };
                 exceptionHandlers.Add(handler);
             }
@@ -421,10 +409,10 @@ namespace SoftCube.Aspects
             {
                 var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
                 {
-                    TryStart     = tryStart,
-                    TryEnd       = finallyStart,
+                    TryStart = tryStart,
+                    TryEnd = finallyStart,
                     HandlerStart = finallyStart,
-                    HandlerEnd   = finallyEnd,
+                    HandlerEnd = finallyEnd,
                 };
                 exceptionHandlers.Add(handler);
             }
