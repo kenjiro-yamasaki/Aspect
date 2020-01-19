@@ -151,6 +151,42 @@ namespace SoftCube.Aspects
             return attributeIndex;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="opcode"></param>
+        /// <returns></returns>
+        internal static Instruction EmitAndReturn(this ILProcessor processor, OpCode opcode)
+        {
+            if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S || opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
+            {
+                var instruction = processor.Create(OpCodes.Nop);
+                processor.Append(instruction);
+                instruction.OpCode = opcode;
+                return instruction;
+            }
+            else
+            {
+                var instruction = processor.Create(opcode);
+                processor.Append(instruction);
+                return instruction;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="opcode"></param>
+        /// <returns></returns>
+        internal static Instruction EmitAndReturn(this ILProcessor processor, OpCode opcode, int operand)
+        {
+            var instruction = processor.Create(opcode, operand);
+            processor.Append(instruction);
+            return instruction;
+        }
+
         #endregion
     }
 }

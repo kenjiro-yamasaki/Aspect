@@ -1616,32 +1616,32 @@ namespace SoftCube.Aspects
             #endregion
         }
 
-        public class 遅延評価
-        {
-            [OnMethodBoundaryAspectLogger]
-            private IEnumerable<int> IEnumerableInt()
-            {
-                yield return 0;
-                yield return 1;
-                yield return 2;
-            }
+        //public class 遅延評価
+        //{
+        //    [OnMethodBoundaryAspectLogger]
+        //    private IEnumerable<int> IEnumerableInt()
+        //    {
+        //        yield return 0;
+        //        yield return 1;
+        //        yield return 2;
+        //    }
 
-            [Fact]
-            public void IEnumerableInt_正しくアスペクトが適用される()
-            {
-                lock (LockObject)
-                {
-                    var appender = CreateAppender();
+        //    [Fact]
+        //    public void IEnumerableInt_正しくアスペクトが適用される()
+        //    {
+        //        lock (LockObject)
+        //        {
+        //            var appender = CreateAppender();
 
-                    var values = IEnumerableInt();
-                    //foreach (var @int in IEnumerableInt())
-                    //{
-                    //    //Logger.Trace(@int.ToString());
-                    //}
+        //            var values = IEnumerableInt();
+        //            //foreach (var @int in IEnumerableInt())
+        //            //{
+        //            //    //Logger.Trace(@int.ToString());
+        //            //}
 
-                    Assert.Equal($"OnEntry [0] A OnSuccess [0] OnExit ", appender.ToString());
-                }
-            }
-        }
+        //            Assert.Equal($"OnEntry [0] A OnSuccess [0] OnExit ", appender.ToString());
+        //        }
+        //    }
+        //}
     }
 }
