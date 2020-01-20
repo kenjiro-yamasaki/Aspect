@@ -61,8 +61,8 @@ namespace SoftCube.Aspects
 
                 /// 各メソッドを書き換えます。
                 CreateAspectField(enumeratorType, aspect, aspectField);
-                ReplaceMoveNextMethod(enumeratorType, isDisposingField, resumeFlagField, exitFlagField, aspectField, aspectArgsField, argsField);
-                ReplaceDispose(enumeratorType, isDisposingField);
+                ReplaceMoveNextMethod(method, enumeratorType, isDisposingField, resumeFlagField, exitFlagField, aspectField, aspectArgsField, argsField);
+                ReplaceDisposeMethod(enumeratorType, isDisposingField);
             }
             else
             {
@@ -100,6 +100,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IEnumerator.MoveNext"/> を書き換えます。
         /// </summary>
+        /// <param name="method">メソッド。</param>
         /// <param name="enumeratorType">反復子の型。</param>
         /// <param name="isDisposingField"><c>isDisposing</c> のフィールド。</param>
         /// <param name="resumeFlagField"><c>resumeFlagField</c> のフィールド。</param>
@@ -107,25 +108,25 @@ namespace SoftCube.Aspects
         /// <param name="aspectField"><c>aspectField</c >のフィールド。</param>
         /// <param name="aspectArgsField"><c>aspectArgsField</c> のフィールド。</param>
         /// <param name="argsField"><c>argsField</c> のフィールド。</param>
-        private void ReplaceMoveNextMethod(TypeDefinition enumeratorType, FieldDefinition isDisposingField, FieldDefinition resumeFlagField, FieldDefinition exitFlagField, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField)
+        private void ReplaceMoveNextMethod(MethodDefinition method, TypeDefinition enumeratorType, FieldDefinition isDisposingField, FieldDefinition resumeFlagField, FieldDefinition exitFlagField, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField)
         {
             ///
-            var module        = enumeratorType.Module;
-            var method        = enumeratorType.Methods.Single(m => m.Name == "MoveNext");
-            var attributes    = method.Attributes;
-            var declaringType = method.DeclaringType;
-            var returnType    = method.ReturnType;
+            var module         = enumeratorType.Module;
+            var moveNextMethod = enumeratorType.Methods.Single(m => m.Name == "MoveNext");
+            var attributes     = moveNextMethod.Attributes;
+            var declaringType  = moveNextMethod.DeclaringType;
+            var returnType     = moveNextMethod.ReturnType;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-            var originalMoveNext = new MethodDefinition(method.Name + "<Original>", attributes, returnType);
-            foreach (var parameter in method.Parameters)
+            var originalMoveNext = new MethodDefinition(moveNextMethod.Name + "<Original>", attributes, returnType);
+            foreach (var parameter in moveNextMethod.Parameters)
             {
                 originalMoveNext.Parameters.Add(parameter);
             }
 
-            originalMoveNext.Body = method.Body;
+            originalMoveNext.Body = moveNextMethod.Body;
 
-            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
+            foreach (var sequencePoint in moveNextMethod.DebugInformation.SequencePoints)
             {
                 originalMoveNext.DebugInformation.SequencePoints.Add(sequencePoint);
             }
@@ -133,10 +134,10 @@ namespace SoftCube.Aspects
             declaringType.Methods.Add(originalMoveNext);
 
             /// 元々のメソッドを書き換えます。
-            method.Body = new Mono.Cecil.Cil.MethodBody(method);
+            moveNextMethod.Body = new Mono.Cecil.Cil.MethodBody(moveNextMethod);
 
             /// ローカル変数を追加します。
-            var variables = method.Body.Variables;
+            var variables = moveNextMethod.Body.Variables;
 
             int exitFlagVariable = variables.Count;
             variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
@@ -148,7 +149,7 @@ namespace SoftCube.Aspects
             variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
             ///
-            var processor = method.Body.GetILProcessor();
+            var processor = moveNextMethod.Body.GetILProcessor();
             {
                 var branch = new Instruction[5];
 
@@ -164,11 +165,39 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, resumeFlagField);
                 branch[2] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
+                ////////////////////////////////////////////////////////////////////////////////////
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldnull);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldsfld, module.ImportReference(typeof(Arguments).GetField(nameof(Arguments.Empty))));
+                {
+                    /// パラメーターコレクションを生成し、ロードします。
+                    var parameters = method.Parameters;
+                    processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+                    processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
+
+                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                    {
+                        var parameter = parameters[parameterIndex];
+                        processor.Emit(OpCodes.Dup);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Ldarg_0);
+                        processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == parameter.Name));
+                        if (parameter.ParameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, parameter.ParameterType);
+                        }
+                        processor.Emit(OpCodes.Stelem_Ref);
+                    }
+                    processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(ArgumentsArray).GetConstructor(new Type[] { typeof(object[]) })));
+                }
                 processor.Emit(OpCodes.Stfld, argsField);
+
+                //processor.Emit(OpCodes.Ldarg_0);
+                //processor.Emit(OpCodes.Ldnull);
+                //processor.Emit(OpCodes.Ldarg_0);
+                //processor.Emit(OpCodes.Ldsfld, module.ImportReference(typeof(Arguments).GetField(nameof(Arguments.Empty))));
+                //processor.Emit(OpCodes.Stfld, argsField);
+                ////////////////////////////////////////////////////////////////////////////////////
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, argsField);
@@ -328,7 +357,7 @@ namespace SoftCube.Aspects
             }
 
             /// Catch ハンドラーを追加します。
-            var exceptionHandlers = method.Body.ExceptionHandlers;
+            var exceptionHandlers = moveNextMethod.Body.ExceptionHandlers;
             {
                 var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
@@ -352,6 +381,9 @@ namespace SoftCube.Aspects
                 };
                 exceptionHandlers.Add(handler);
             }
+
+            /// IL コードを最適化します。
+            moveNextMethod.OptimizeIL();
         }
 
         /// <summary>
@@ -359,25 +391,25 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="enumeratorType">反復子の型。</param>
         /// <param name="isDisposingField"><c>isDisposing</c> のフィールド。</param>
-        private void ReplaceDispose(TypeDefinition enumeratorType, FieldDefinition isDisposingField)
+        private void ReplaceDisposeMethod(TypeDefinition enumeratorType, FieldDefinition isDisposingField)
         {
             ///
             var module        = enumeratorType.Module;
-            var method        = enumeratorType.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
-            var attributes    = method.Attributes;
-            var declaringType = method.DeclaringType;
-            var returnType    = method.ReturnType;
+            var disposeMethod = enumeratorType.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
+            var attributes    = disposeMethod.Attributes;
+            var declaringType = disposeMethod.DeclaringType;
+            var returnType    = disposeMethod.ReturnType;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-            var originalMethod = new MethodDefinition(method.Name + "<Original>", attributes, returnType);
-            foreach (var parameter in method.Parameters)
+            var originalMethod = new MethodDefinition(disposeMethod.Name + "<Original>", attributes, returnType);
+            foreach (var parameter in disposeMethod.Parameters)
             {
                 originalMethod.Parameters.Add(parameter);
             }
 
-            originalMethod.Body = method.Body;
+            originalMethod.Body = disposeMethod.Body;
 
-            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
+            foreach (var sequencePoint in disposeMethod.DebugInformation.SequencePoints)
             {
                 originalMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
@@ -385,9 +417,9 @@ namespace SoftCube.Aspects
             declaringType.Methods.Add(originalMethod);
 
             /// 元々のメソッドを書き換えます。
-            method.Body = new Mono.Cecil.Cil.MethodBody(method);
+            disposeMethod.Body = new Mono.Cecil.Cil.MethodBody(disposeMethod);
 
-            var processor = method.Body.GetILProcessor();
+            var processor = disposeMethod.Body.GetILProcessor();
 
             {
                 processor.Emit(OpCodes.Ldarg_0);
@@ -432,7 +464,7 @@ namespace SoftCube.Aspects
             }
 
             /// Finally ハンドラーを追加します。
-            var exceptionHandlers = method.Body.ExceptionHandlers;
+            var exceptionHandlers = disposeMethod.Body.ExceptionHandlers;
             var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
             {
                 TryStart     = tryStart,
