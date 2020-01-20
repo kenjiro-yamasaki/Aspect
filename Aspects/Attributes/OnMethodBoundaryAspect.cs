@@ -516,7 +516,7 @@ namespace SoftCube.Aspects
                         }
                         processor.Emit(OpCodes.Stelem_Ref);
                     }
-                    processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) })));
+                    processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(ArgumentsArray).GetConstructor(new Type[] { typeof(object[]) })));
                 }
                 processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
                 processor.Emit(OpCodes.Stloc, aspectArgsVariable);

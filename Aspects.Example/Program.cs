@@ -18,7 +18,7 @@ namespace SoftCube.Aspects
             //new Program().Test(true);
             //Logger.Trace(result.ToString());
 
-            var result = new Program().IEnumerableInt();
+            var result = new Program().IEnumerableInt(0, 1, 2);
 
             foreach (var item in result)
             {
@@ -29,15 +29,15 @@ namespace SoftCube.Aspects
         }
 
         [OnMethodBoundaryAspectLogger]
-        private IEnumerable<int> IEnumerableInt()
+        private IEnumerable<int> IEnumerableInt(int a0, int value1, int value2)
         {
-            Logger.Trace("A");
-            yield return 0;
-            Logger.Trace("B");
-            yield return 1;
-            Logger.Trace("C");
-            yield return 2;
-            Logger.Trace("D");
+            Logger.Trace("a");
+            yield return a0;
+            Logger.Trace("b");
+            yield return value1;
+            Logger.Trace("c");
+            yield return value2;
+            Logger.Trace("d");
         }
 
         //[OnMethodBoundaryAspectLogger]
