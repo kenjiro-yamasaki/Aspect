@@ -410,10 +410,9 @@ namespace SoftCube.Aspects
             }
 
             /// } finally {
-            Instruction tryEnd;
             Instruction finallyStart;
             {
-                finallyStart = tryEnd = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                finallyStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_2);
                 processor.Emit(OpCodes.Stfld, isDisposingField);
 
@@ -437,7 +436,7 @@ namespace SoftCube.Aspects
             var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
             {
                 TryStart     = tryStart,
-                TryEnd       = tryEnd,
+                TryEnd       = finallyStart,
                 HandlerStart = finallyStart,
                 HandlerEnd   = finallyEnd,
             };
@@ -534,8 +533,7 @@ namespace SoftCube.Aspects
 
             /// try {
             Instruction tryStart;
-            var leave = new Instruction[1];
-
+            Instruction leave;
             {
                 tryStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
 
@@ -564,7 +562,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
 
-                leave[0] = processor.EmitAndReturn(OpCodes.Leave);
+                leave = processor.EmitAndReturn(OpCodes.Leave);
             }
 
             /// } catch (Exception exception) {
@@ -598,12 +596,12 @@ namespace SoftCube.Aspects
             {
                 if (method.HasReturnValue())
                 {
-                    leave[0].Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, resultVariable);
+                    leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, resultVariable);
                     processor.Emit(OpCodes.Ret);
                 }
                 else
                 {
-                    leave[0].Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ret);
+                    leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ret);
                 }
             }
 
