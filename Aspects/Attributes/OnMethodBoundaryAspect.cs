@@ -167,7 +167,12 @@ namespace SoftCube.Aspects
 
                 // 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldnull);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == "<>4__this"));
+                if (method.DeclaringType.IsValueType)
+                {
+                    processor.Emit(OpCodes.Box, method.DeclaringType);
+                }
                 processor.Emit(OpCodes.Ldarg_0);
                 {
                     var parameters     = method.Parameters;
