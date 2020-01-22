@@ -26,11 +26,11 @@ namespace SoftCube.Aspects
 
         public class 通常のメソッド
         {
-            public class 引数と戻り値
+            public class 署名
             {
                 #region 引数と戻り値なし
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数と戻り値なし()
                 {
                     Logger.Trace("A");
@@ -53,7 +53,7 @@ namespace SoftCube.Aspects
 
                 #region 引数のみ
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数のみ(int value)
                 {
                     Logger.Trace("A");
@@ -95,20 +95,20 @@ namespace SoftCube.Aspects
 
                 #region 引数の個数
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が1つ(string value0)
                 {
                     Logger.Trace(value0);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が2つ(string value0, string value1)
                 {
                     Logger.Trace(value0);
                     Logger.Trace(value1);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が3つ(string value0, string value1, string value2)
                 {
                     Logger.Trace(value0);
@@ -116,7 +116,7 @@ namespace SoftCube.Aspects
                     Logger.Trace(value2);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が4つ(string value0, string value1, string value2, string value3)
                 {
                     Logger.Trace(value0);
@@ -125,7 +125,7 @@ namespace SoftCube.Aspects
                     Logger.Trace(value3);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が5つ(string value0, string value1, string value2, string value3, string value4)
                 {
                     Logger.Trace(value0);
@@ -135,7 +135,7 @@ namespace SoftCube.Aspects
                     Logger.Trace(value4);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が6つ(string value0, string value1, string value2, string value3, string value4, string value5)
                 {
                     Logger.Trace(value0);
@@ -146,7 +146,7 @@ namespace SoftCube.Aspects
                     Logger.Trace(value5);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が7つ(string value0, string value1, string value2, string value3, string value4, string value5, string value6)
                 {
                     Logger.Trace(value0);
@@ -158,7 +158,7 @@ namespace SoftCube.Aspects
                     Logger.Trace(value6);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が8つ(string value0, string value1, string value2, string value3, string value4, string value5, string value6, string value7)
                 {
                     Logger.Trace(value0);
@@ -171,7 +171,7 @@ namespace SoftCube.Aspects
                     Logger.Trace(value7);
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void 引数が9つ(string value0, string value1, string value2, string value3, string value4, string value5, string value6, string value7, string value8)
                 {
                     Logger.Trace(value0);
@@ -306,7 +306,7 @@ namespace SoftCube.Aspects
 
                 #region 戻り値のみ
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private int 戻り値のみ()
                 {
                     Logger.Trace("A");
@@ -333,7 +333,7 @@ namespace SoftCube.Aspects
 
                 #region int
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private int @int(int value)
                 {
                     Logger.Trace("A");
@@ -377,7 +377,7 @@ namespace SoftCube.Aspects
 
                 #region short
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private short @short(short value)
                 {
                     Logger.Trace("A");
@@ -421,7 +421,7 @@ namespace SoftCube.Aspects
 
                 #region long
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private long @long(long value)
                 {
                     Logger.Trace("A");
@@ -465,7 +465,7 @@ namespace SoftCube.Aspects
 
                 #region uint
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private uint @uint(uint value)
                 {
                     Logger.Trace("A");
@@ -500,7 +500,7 @@ namespace SoftCube.Aspects
 
                 #region ushort
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private ushort @ushort(ushort value)
                 {
                     Logger.Trace("A");
@@ -535,7 +535,7 @@ namespace SoftCube.Aspects
 
                 #region ulong
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private ulong @ulong(ulong value)
                 {
                     Logger.Trace("A");
@@ -570,7 +570,7 @@ namespace SoftCube.Aspects
 
                 #region byte
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private byte @byte(byte value)
                 {
                     Logger.Trace("A");
@@ -605,7 +605,7 @@ namespace SoftCube.Aspects
 
                 #region sbyte
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private sbyte @sbyte(sbyte value)
                 {
                     Logger.Trace("A");
@@ -649,7 +649,7 @@ namespace SoftCube.Aspects
 
                 #region bool
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private bool @bool(bool value)
                 {
                     Logger.Trace("A");
@@ -676,7 +676,7 @@ namespace SoftCube.Aspects
 
                 #region double
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private double @double(double value)
                 {
                     Logger.Trace("A");
@@ -708,7 +708,7 @@ namespace SoftCube.Aspects
 
                 #region float
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private float @float(float value)
                 {
                     Logger.Trace("A");
@@ -740,7 +740,7 @@ namespace SoftCube.Aspects
 
                 #region decimal
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private decimal @decimal(decimal value)
                 {
                     Logger.Trace("A");
@@ -772,7 +772,7 @@ namespace SoftCube.Aspects
 
                 #region char
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private char @char(char value)
                 {
                     Logger.Trace("A");
@@ -799,7 +799,7 @@ namespace SoftCube.Aspects
 
                 #region string
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private string @string(string value)
                 {
                     Logger.Trace("A");
@@ -833,7 +833,7 @@ namespace SoftCube.Aspects
                     public override string ToString() => Property;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private Class @class(Class value)
                 {
                     Logger.Trace("A");
@@ -866,7 +866,7 @@ namespace SoftCube.Aspects
                     public override string ToString() => Property;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private Struct @struct(Struct value)
                 {
                     Logger.Trace("A");
@@ -891,21 +891,21 @@ namespace SoftCube.Aspects
 
                 #region Collection
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private IEnumerable IEnumerable(IEnumerable value)
                 {
                     Logger.Trace("A");
                     return value;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private IEnumerable<int> IEnumerableT(IEnumerable<int> value)
                 {
                     Logger.Trace("A");
                     return value;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private List<int> ListT(List<int> value)
                 {
                     Logger.Trace("A");
@@ -966,7 +966,7 @@ namespace SoftCube.Aspects
             {
                 #region if文
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private bool If戻り値あり(bool condition)
                 {
                     if (condition)
@@ -979,7 +979,7 @@ namespace SoftCube.Aspects
                     return false;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private bool If戻り値あり_Else(bool condition)
                 {
                     if (condition)
@@ -994,7 +994,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private (bool, bool) If戻り値あり_Nest(bool condition0, bool condition1)
                 {
                     if (condition0)
@@ -1025,7 +1025,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void If戻り値なし(bool condition)
                 {
                     if (condition)
@@ -1037,7 +1037,7 @@ namespace SoftCube.Aspects
                     Logger.Trace("B");
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void If戻り値なし_Else(bool condition)
                 {
                     if (condition)
@@ -1052,7 +1052,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void If戻り値なし_Nest(bool condition0, bool condition1)
                 {
                     if (condition0)
@@ -1188,7 +1188,7 @@ namespace SoftCube.Aspects
                     C,
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void Switch戻り値なし_Break(Enum condition)
                 {
                     switch (condition)
@@ -1228,7 +1228,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void Switch戻り値なし_Return(Enum condition)
                 {
                     switch (condition)
@@ -1268,7 +1268,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void Switch戻り値なし_BreakWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -1323,7 +1323,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void Switch戻り値なし_ReturnWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -1378,7 +1378,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private Enum Switch戻り値あり_Break(Enum condition)
                 {
                     switch (condition)
@@ -1420,7 +1420,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private Enum Switch戻り値あり_Return(Enum condition)
                 {
                     switch (condition)
@@ -1460,7 +1460,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private Enum Switch戻り値あり_BreakWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -1517,7 +1517,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private Enum Switch戻り値あり_ReturnWithDefaultThrow(Enum condition)
                 {
                     switch (condition)
@@ -1576,7 +1576,7 @@ namespace SoftCube.Aspects
 
                 #region 特殊制御
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void Throw()
                 {
                     throw new Exception("A");
@@ -1596,7 +1596,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void ThrowIfTrue(bool condition)
                 {
                     if (condition)
@@ -1635,7 +1635,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void ThrowIfFalse(bool condition)
                 {
                     if (condition)
@@ -1674,7 +1674,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void TryCatch()
                 {
                     try
@@ -1700,7 +1700,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void TryCatchRethrow()
                 {
                     try
@@ -1728,7 +1728,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void TryCatchFinally()
                 {
                     try
@@ -1760,7 +1760,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void Using()
                 {
                     using (var transaction = Profiler.Start("Temp"))
@@ -1782,7 +1782,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
                 private void Lock()
                 {
                     lock (LockObject)
@@ -1810,30 +1810,30 @@ namespace SoftCube.Aspects
 
         public class イテレーターメソッド
         {
-            public class 引数
+            public class 署名
             {
                 #region 引数の個数
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数なし()
                 {
                     yield break;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が1つ(string value0)
                 {
                     yield return value0;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が2つ(string value0, string value1)
                 {
                     yield return value0;
                     yield return value1;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が3つ(string value0, string value1, string value2)
                 {
                     yield return value0;
@@ -1841,7 +1841,7 @@ namespace SoftCube.Aspects
                     yield return value2;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が4つ(string value0, string value1, string value2, string value3)
                 {
                     yield return value0;
@@ -1850,7 +1850,7 @@ namespace SoftCube.Aspects
                     yield return value3;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が5つ(string value0, string value1, string value2, string value3, string value4)
                 {
                     yield return value0;
@@ -1860,7 +1860,7 @@ namespace SoftCube.Aspects
                     yield return value4;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が6つ(string value0, string value1, string value2, string value3, string value4, string value5)
                 {
                     yield return value0;
@@ -1871,7 +1871,7 @@ namespace SoftCube.Aspects
                     yield return value5;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が7つ(string value0, string value1, string value2, string value3, string value4, string value5, string value6)
                 {
                     yield return value0;
@@ -1883,7 +1883,7 @@ namespace SoftCube.Aspects
                     yield return value6;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が8つ(string value0, string value1, string value2, string value3, string value4, string value5, string value6, string value7)
                 {
                     yield return value0;
@@ -1896,7 +1896,7 @@ namespace SoftCube.Aspects
                     yield return value7;
                 }
 
-                [OnMethodBoundaryAspectLogger]
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
                 private IEnumerable<string> 引数が9つ(string value0, string value1, string value2, string value3, string value4, string value5, string value6, string value7, string value8)
                 {
                     yield return value0;
@@ -1922,7 +1922,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -1938,7 +1938,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" OnYield \"a\" a OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" OnYield \"a\" a OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -1954,7 +1954,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -1970,7 +1970,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -1986,7 +1986,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -2002,7 +2002,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -2018,7 +2018,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -2034,7 +2034,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -2050,7 +2050,7 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnYield \"h\" h OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnYield \"h\" h OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
@@ -2066,17 +2066,681 @@ namespace SoftCube.Aspects
                             Logger.Trace(@int.ToString());
                         }
 
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" \"i\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnYield \"h\" h OnResume OnYield \"i\" i OnResume OnSuccess null OnExit ", appender.ToString());
+                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" \"i\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnYield \"h\" h OnResume OnYield \"i\" i OnResume OnSuccess OnExit ", appender.ToString());
                     }
                 }
 
                 #endregion
+
+                #region 引数と戻り値の型
+
+                #region int
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<int> @int(int value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void int_正しくアスペクトが適用される(int value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @int(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region short
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<short> @short(short value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void short_正しくアスペクトが適用される(short value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @short(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region long
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<long> @long(long value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void long_正しくアスペクトが適用される(long value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @long(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region sbyte
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<sbyte> @sbyte(sbyte value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void sbyte_正しくアスペクトが適用される(sbyte value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @sbyte(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region uint
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<uint> @uint(uint value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void uint_正しくアスペクトが適用される(uint value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @uint(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region ushort
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<ushort> @ushort(ushort value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void ushort_正しくアスペクトが適用される(ushort value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @ushort(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region ulong
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<ulong> @ulong(ulong value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void ulong_正しくアスペクトが適用される(ulong value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @ulong(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region byte
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<byte> @byte(byte value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void byte_正しくアスペクトが適用される(byte value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @byte(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region bool
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<bool> @bool(bool value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(true)]
+                [InlineData(false)]
+                public void bool_正しくアスペクトが適用される(bool value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @bool(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region double
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<double> @double(double value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0.0)]
+                [InlineData(0.5)]
+                [InlineData(1.0)]
+                [InlineData(100.0)]
+                [InlineData(-0.5)]
+                [InlineData(-1.0)]
+                [InlineData(-100.0)]
+                public void double_正しくアスペクトが適用される(double value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @double(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region float
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<float> @float(float value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0.0)]
+                [InlineData(0.5)]
+                [InlineData(1.0)]
+                [InlineData(100.0)]
+                [InlineData(-0.5)]
+                [InlineData(-1.0)]
+                [InlineData(-100.0)]
+                public void float_正しくアスペクトが適用される(float value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @float(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region decimal
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<decimal> @decimal(decimal value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData(0.0)]
+                [InlineData(0.5)]
+                [InlineData(1.0)]
+                [InlineData(100.0)]
+                [InlineData(-0.5)]
+                [InlineData(-1.0)]
+                [InlineData(-100.0)]
+                public void decimal_正しくアスペクトが適用される(decimal value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @decimal(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region char
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<char> @char(char value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData('a')]
+                [InlineData('あ')]
+                public void char_正しくアスペクトが適用される(char value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @char(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry '{value}' OnYield '{value}' {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region string
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<string> @string(string value)
+                {
+                    yield return value;
+                }
+
+                [Theory]
+                [InlineData("a")]
+                [InlineData("あ")]
+                public void string_正しくアスペクトが適用される(string value)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        foreach (var result in @string(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry \"{value}\" OnYield \"{value}\" {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region class
+
+                public class Class
+                {
+                    public string Property { get; set; }
+
+                    public override string ToString() => Property;
+                }
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<Class> @class(Class value)
+                {
+                    yield return value;
+                }
+
+                [Fact]
+                public void class_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        var value = new Class() { Property = "a" };
+
+                        foreach (var result in @class(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region struct
+
+                public struct Struct
+                {
+                    public string Property { get; set; }
+
+                    public override string ToString() => Property;
+                }
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<Struct> @struct(Struct value)
+                {
+                    yield return value;
+                }
+
+                [Fact]
+                public void struct_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        var value = new Struct() { Property = "a" };
+
+                        foreach (var result in @struct(value))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry {value} OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region IEnumerable
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable IEnumerable(IEnumerable collection)
+                {
+                    foreach (var item in collection)
+                    {
+                        yield return item;
+                    }
+                }
+
+                [Fact]
+                public void IEnumerable_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        int value    = 7;
+
+                        foreach (var result in IEnumerable(new List<int>() { value }))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry [{value}] OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region IEnumerableT
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<int> IEnumerableT(IEnumerable<int> collection)
+                {
+                    foreach (var item in collection)
+                    {
+                        yield return item;
+                    }
+                }
+
+                [Fact]
+                public void IEnumerableT_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        int value    = 7;
+
+                        foreach (var result in IEnumerableT(new List<int>() { value }))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry [{value}] OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region ListT
+
+                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
+                private IEnumerable<int> ListT(List<int> collection)
+                {
+                    foreach (var item in collection)
+                    {
+                        yield return item;
+                    }
+                }
+
+                [Fact]
+                public void ListT_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        int value    = 7;
+
+                        foreach (var result in ListT(new List<int>() { value }))
+                        {
+                            Logger.Trace(result.ToString());
+                        }
+
+                        Assert.Equal($"OnEntry [{value}] OnYield {value} {value} OnResume OnSuccess OnExit ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #endregion
             }
-
-
-
-
-
         }
     }
 }

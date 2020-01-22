@@ -1,12 +1,55 @@
 ﻿using SoftCube.Asserts;
 using SoftCube.Logging;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SoftCube.Aspects
 {
+    /// <summary>
+    /// メソッドタイプ。
+    /// </summary>
+    public enum MethodType
+    {
+        /// <summary>
+        /// 通常のメソッド。
+        /// </summary>
+        NormalMethod = 0,
+
+        /// <summary>
+        /// イテレーターメソッド。
+        /// </summary>
+        IteratorMethod = 1,
+
+        /// <summary>
+        /// 非同期メソッド。
+        /// </summary>
+        AsyncMethod = 2,
+    }
+
     public class OnMethodBoundaryAspectLogger : OnMethodBoundaryAspect
     {
+        #region プロパティ
+
+        /// <summary>
+        /// メソッドタイプ。
+        /// </summary>
+        public MethodType MethodType { get; }
+
+        #endregion
+
+        #region コンストラクター
+
+        /// <summary>
+        /// コンストラクター。
+        /// </summary>
+        /// <param name="methodType">メソッドタイプ。</param>
+        public OnMethodBoundaryAspectLogger(MethodType methodType)
+        {
+            MethodType = methodType;
+        }
+
+        #endregion
+
+        #region メソッド
+
         public override void OnEntry(MethodExecutionArgs args)
         {
             Logger.Trace("OnEntry");
@@ -23,7 +66,10 @@ namespace SoftCube.Aspects
             Logger.Trace("OnYield");
 
             /// 戻り値をログ出力します。
-            Logger.Trace(ArgumentFormatter.Format(args.YieldValue));
+            if (MethodType == MethodType.IteratorMethod || MethodType == MethodType.AsyncMethod)
+            {
+                Logger.Trace(ArgumentFormatter.Format(args.YieldValue));
+            }
         }
 
         public override void OnResume(MethodExecutionArgs args)
@@ -36,7 +82,10 @@ namespace SoftCube.Aspects
             Logger.Trace("OnSuccess");
 
             /// 戻り値をログ出力します。
-            Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
+            if (MethodType == MethodType.NormalMethod)
+            {
+                Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
+            }
         }
 
         public override void OnException(MethodExecutionArgs args)
@@ -50,5 +99,7 @@ namespace SoftCube.Aspects
         {
             Logger.Trace("OnExit");
         }
+
+        #endregion
     }
 }
