@@ -20,23 +20,21 @@ namespace SoftCube.Aspects
             //new Program().Test(true);
             //Logger.Trace(result.ToString());
 
-            var result = new Program().IEnumerableInt(new int[] { 1, 2, 3, });
+            new Program().引数が1つ("a");
             //var result = new Program().IEnumerableInt(0, 1, 2);
 
-            foreach (var item in result)
-            {
-                Logger.Trace(item.ToString());
-            }
+            //foreach (var item in result)
+            //{
+            //    Logger.Trace(item.ToString());
+            //}
 
             Console.Read();
         }
 
         [OnMethodBoundaryAspectLogger]
-        private IEnumerable<int> IEnumerableInt(IEnumerable<int> values)
+        private IEnumerable<string> 引数が1つ(string value0)
         {
-            yield return 0;
-            yield return 1;
-            yield return 2;
+            yield return value0;
         }
 
         //[OnMethodBoundaryAspectLogger]
