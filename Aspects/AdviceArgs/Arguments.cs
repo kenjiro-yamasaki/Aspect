@@ -12,15 +12,9 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// 空の引数コレクション。
-        /// </summary>
-        public static readonly Arguments Empty = new Arguments();
-
-        /// <summary>
         /// 要素数。
         /// </summary>
-        public int Count => count;
-        private readonly int count;
+        public int Count { get; }
 
         /// <summary>
         /// インデクサー。
@@ -36,7 +30,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        private Arguments()
+        public Arguments()
         {
         }
 
@@ -46,7 +40,7 @@ namespace SoftCube.Aspects
         /// <param name="count">要素数。</param>
         internal Arguments(int count)
         {
-            this.count = count;
+            Count = count;
         }
 
         #endregion
@@ -59,7 +53,7 @@ namespace SoftCube.Aspects
         /// <returns>反復子。</returns>
         public IEnumerator<object> GetEnumerator()
         {
-            for (int index = 0; index < count; index++)
+            for (int index = 0; index < Count; index++)
             {
                 yield return GetArgument(index);
             }

@@ -15,10 +15,13 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
+            //var type = typeof(OnMethodBoundaryAspectTests.引数と戻り値.Class).FullName;
+
             //new Program().Test(true);
             //Logger.Trace(result.ToString());
 
-            var result = new Program().IEnumerableInt(0, 1, 2);
+            var result = new Program().IEnumerableInt(new int[] { 1, 2, 3, });
+            //var result = new Program().IEnumerableInt(0, 1, 2);
 
             foreach (var item in result)
             {
@@ -29,16 +32,24 @@ namespace SoftCube.Aspects
         }
 
         [OnMethodBoundaryAspectLogger]
-        private IEnumerable<int> IEnumerableInt(int a0, int value1, int value2)
+        private IEnumerable<int> IEnumerableInt(IEnumerable<int> values)
         {
-            Logger.Trace("a");
-            yield return a0;
-            Logger.Trace("b");
-            yield return value1;
-            Logger.Trace("c");
-            yield return value2;
-            Logger.Trace("d");
+            yield return 0;
+            yield return 1;
+            yield return 2;
         }
+
+        //[OnMethodBoundaryAspectLogger]
+        //private IEnumerable<int> IEnumerableInt(int a0, int value1, int value2)
+        //{
+        //    Logger.Trace("a");
+        //    yield return a0;
+        //    Logger.Trace("b");
+        //    yield return value1;
+        //    Logger.Trace("c");
+        //    yield return value2;
+        //    Logger.Trace("d");
+        //}
 
         //[OnMethodBoundaryAspectLogger]
         //private void Test(bool condition)
@@ -75,3 +86,22 @@ namespace SoftCube.Aspects
         //}
     }
 }
+
+
+namespace SoftCube.Aspects
+{
+    public partial class OnMethodBoundaryAspectTests
+    {
+        public class 引数と戻り値
+        {
+            public class Class
+            {
+                public string Property { get; set; }
+
+                public override string ToString() => Property;
+            }
+        }
+    }
+}
+
+

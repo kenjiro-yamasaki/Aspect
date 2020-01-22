@@ -165,39 +165,56 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldfld, resumeFlagField);
                 branch[2] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
-                ////////////////////////////////////////////////////////////////////////////////////
+                // 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldnull);
                 processor.Emit(OpCodes.Ldarg_0);
                 {
-                    /// パラメーターコレクションを生成し、ロードします。
-                    var parameters = method.Parameters;
-                    processor.Emit(OpCodes.Ldc_I4, parameters.Count);
-                    processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
+                    var parameters     = method.Parameters;
+                    var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
 
-                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                    var argumentsType = parameters.Count switch
                     {
-                        var parameter = parameters[parameterIndex];
-                        processor.Emit(OpCodes.Dup);
-                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Ldarg_0);
-                        processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == parameter.Name));
-                        if (parameter.ParameterType.IsValueType)
+                        0 => typeof(Arguments),
+                        1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                        2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                        3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                        4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                        5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                        6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                        7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                        8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                        _ => typeof(ArgumentsArray)
+                    };
+
+                    if (parameters.Count <= 8)
+                    {
+                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                         {
-                            processor.Emit(OpCodes.Box, parameter.ParameterType);
+                            var parameter = parameters[parameterIndex];
+                            processor.Emit(OpCodes.Ldarg_0);
+                            processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == parameter.Name));
                         }
-                        processor.Emit(OpCodes.Stelem_Ref);
                     }
-                    processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(ArgumentsArray).GetConstructor(new Type[] { typeof(object[]) })));
+                    else
+                    {
+                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                        {
+                            var parameter = parameters[parameterIndex];
+                            processor.Emit(OpCodes.Dup);
+                            processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                            processor.Emit(OpCodes.Ldarg_0);
+                            processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == parameter.Name));
+                            if (parameter.ParameterType.IsValueType)
+                            {
+                                processor.Emit(OpCodes.Box, parameter.ParameterType);
+                            }
+                            processor.Emit(OpCodes.Stelem_Ref);
+                        }
+                    }
+                    processor.Emit(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
                 }
                 processor.Emit(OpCodes.Stfld, argsField);
-
-                //processor.Emit(OpCodes.Ldarg_0);
-                //processor.Emit(OpCodes.Ldnull);
-                //processor.Emit(OpCodes.Ldarg_0);
-                //processor.Emit(OpCodes.Ldsfld, module.ImportReference(typeof(Arguments).GetField(nameof(Arguments.Empty))));
-                //processor.Emit(OpCodes.Stfld, argsField);
-                ////////////////////////////////////////////////////////////////////////////////////
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, argsField);
@@ -531,23 +548,47 @@ namespace SoftCube.Aspects
             {
                 processor.Emit(OpCodes.Ldarg_0);
                 {
-                    /// パラメーターコレクションを生成し、ロードします。
-                    var parameters = method.Parameters;
-                    processor.Emit(OpCodes.Ldc_I4, parameters.Count);
-                    processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
-                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                    var parameters     = method.Parameters;
+                    var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+
+                    var argumentsType = parameters.Count switch
                     {
-                        var parameter = parameters[parameterIndex];
-                        processor.Emit(OpCodes.Dup);
-                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                        if (parameter.ParameterType.IsValueType)
+                        0 => typeof(Arguments),
+                        1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                        2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                        3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                        4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                        5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                        6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                        7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                        8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                        _ => typeof(ArgumentsArray)
+                    };
+
+                    if (parameters.Count <= 8)
+                    {
+                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                         {
-                            processor.Emit(OpCodes.Box, parameter.ParameterType);
+                            var parameter = parameters[parameterIndex];
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         }
-                        processor.Emit(OpCodes.Stelem_Ref);
                     }
-                    processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(ArgumentsArray).GetConstructor(new Type[] { typeof(object[]) })));
+                    else
+                    {
+                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                        {
+                            var parameter = parameters[parameterIndex];
+                            processor.Emit(OpCodes.Dup);
+                            processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                            if (parameter.ParameterType.IsValueType)
+                            {
+                                processor.Emit(OpCodes.Box, parameter.ParameterType);
+                            }
+                            processor.Emit(OpCodes.Stelem_Ref);
+                        }
+                    }
+                    processor.Emit(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
                 }
                 processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
                 processor.Emit(OpCodes.Stloc, aspectArgsVariable);

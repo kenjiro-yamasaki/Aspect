@@ -18,23 +18,34 @@ namespace SoftCube.Aspects
         /// <returns><see cref="Type"/>。</returns>
         internal static Type ToSystemType(this TypeReference typeReference)
         {
+            if (typeReference is GenericInstanceType genericInstanceType)
             {
-                if (Type.GetType(typeReference.FullName) is Type result)
+                var elementType   = genericInstanceType.ElementType.ToSystemType();
+                var typeArguments = genericInstanceType.GenericArguments.Select(ga => ga.ToSystemType()).ToArray();
+
+                return  elementType.MakeGenericType(typeArguments);
+            }
+            else
+            {
+                var typeFullName = typeReference.FullName.Replace("/", "+");
                 {
-                    return result;
+                    if (Type.GetType(typeFullName) is Type result)
+                    {
+                        return result;
+                    }
+                }
+
+                var assembly =  AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.FullName == typeReference.Module.Assembly.FullName);
+                if (assembly != null)
+                {
+                    if (assembly.GetType(typeFullName) is Type result)
+                    {
+                        return result;
+                    }
                 }
             }
 
-            var assembly =  AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.FullName == typeReference.Module.Assembly.FullName);
-            if (assembly != null)
-            {
-                if (assembly.GetType(typeReference.FullName) is Type result)
-                {
-                    return result;
-                }
-            }
-
-            throw new NotSupportedException();
+            throw new NotSupportedException($"型[{typeReference.FullName}]の取得に失敗しました。");
         }
 
         #endregion
