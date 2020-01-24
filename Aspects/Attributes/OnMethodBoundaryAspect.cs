@@ -39,18 +39,20 @@ namespace SoftCube.Aspects
             method.Log();
 
             var iteratorStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
+            var asyncStateMachineAttribute    = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
+
             if (iteratorStateMachineAttribute != null)
             {
                 var enumeratorType = (TypeDefinition)iteratorStateMachineAttribute.ConstructorArguments[0].Value;
                 var module = enumeratorType.Module;
 
                 /// フィールドを追加します。
-                var aspectField      = new FieldDefinition("aspect",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
-                var isDisposingField = new FieldDefinition("isDisposing", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
-                var resumeFlagField  = new FieldDefinition("resumeFlag",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-                var exitFlagField    = new FieldDefinition("exitFlag",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-                var aspectArgsField  = new FieldDefinition("aspectArgs",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
-                var argsField        = new FieldDefinition("args",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+                var aspectField      = new FieldDefinition("*aspect*",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
+                var isDisposingField = new FieldDefinition("*isDisposing*", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
+                var resumeFlagField  = new FieldDefinition("*resumeFlag*",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+                var exitFlagField    = new FieldDefinition("*exitFlag*",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+                var aspectArgsField  = new FieldDefinition("*aspectArgs*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
+                var argsField        = new FieldDefinition("*args*",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
 
                 enumeratorType.Fields.Add(isDisposingField);
                 enumeratorType.Fields.Add(resumeFlagField);
@@ -63,6 +65,23 @@ namespace SoftCube.Aspects
                 CreateAspectField(enumeratorType, aspect, aspectField);
                 ReplaceMoveNextMethod(method, enumeratorType, isDisposingField, resumeFlagField, exitFlagField, aspectField, aspectArgsField, argsField);
                 ReplaceDisposeMethod(enumeratorType, isDisposingField);
+            }
+            else if (asyncStateMachineAttribute != null)
+            {
+                var asyncType = (TypeDefinition)asyncStateMachineAttribute.ConstructorArguments[0].Value;
+                var module = asyncType.Module;
+
+                /// フィールドを追加します。
+                var aspectField     = new FieldDefinition("*aspect*",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
+                var aspectArgsField = new FieldDefinition("*aspectArgs*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
+                var argsField       = new FieldDefinition("*args*",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+
+                asyncType.Fields.Add(aspectField);
+                asyncType.Fields.Add(aspectArgsField);
+                asyncType.Fields.Add(argsField);
+
+                /// 各メソッドを書き換えます。
+                CreateAspectField(asyncType, aspect, aspectField);
             }
             else
             {
@@ -721,6 +740,12 @@ namespace SoftCube.Aspects
             };
             exceptionHandlers.Add(handler);
         }
+
+        #endregion
+
+        #region 非同期メソッド
+
+
 
         #endregion
 

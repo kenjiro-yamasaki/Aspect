@@ -1,6 +1,8 @@
 ﻿using SoftCube.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
 {
@@ -15,27 +17,53 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            //var type = typeof(OnMethodBoundaryAspectTests.引数と戻り値.Class).FullName;
+            var program = new Program();
+            program.Test("A", "B");
 
-            //new Program().Test(true);
-            //Logger.Trace(result.ToString());
-
-            new Program().引数が1つ("a");
-            //var result = new Program().IEnumerableInt(0, 1, 2);
-
-            //foreach (var item in result)
-            //{
-            //    Logger.Trace(item.ToString());
-            //}
+            Logger.Trace("C");
 
             Console.Read();
+
+
+
+            ////var type = typeof(OnMethodBoundaryAspectTests.引数と戻り値.Class).FullName;
+
+            ////new Program().Test(true);
+            ////Logger.Trace(result.ToString());
+
+            //new Program().引数が1つ("a");
+            ////var result = new Program().IEnumerableInt(0, 1, 2);
+
+            ////foreach (var item in result)
+            ////{
+            ////    Logger.Trace(item.ToString());
+            ////}
+
+            //Console.Read();
         }
 
         [OnMethodBoundaryAspectLogger]
-        private IEnumerable<string> 引数が1つ(string value0)
+        private async Task Test(string value1, string value2)
         {
-            yield return value0;
+            await Task.Run(() => {
+                Thread.Sleep(100);
+                Logger.Trace(value1);
+            });
+
+            await Task.Run(() => {
+                Thread.Sleep(100);
+                Logger.Trace(value2);
+            });
         }
+
+
+
+
+        //[OnMethodBoundaryAspectLogger]
+        //private IEnumerable<string> 引数が1つ(string value0)
+        //{
+        //    yield return value0;
+        //}
 
         //[OnMethodBoundaryAspectLogger]
         //private IEnumerable<int> IEnumerableInt(int a0, int value1, int value2)
