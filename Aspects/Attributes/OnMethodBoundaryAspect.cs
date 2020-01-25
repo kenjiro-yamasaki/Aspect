@@ -780,21 +780,21 @@ namespace SoftCube.Aspects
             Instruction tryStart;
             {
                 var branch = new Instruction[2];
+                var insert = tryStart = handlers[0].TryStart;
 
-                tryStart = handlers[0].TryStart;
-                processor.InsertBefore(tryStart, handlers[0].TryStart = processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, resumeFlagField));
-                processor.InsertBefore(tryStart, branch[0] = processor.CreateBranch(OpCodes.Brtrue_S));
+                handlers[0].TryStart = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, resumeFlagField);
+                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Brtrue_S);
 
                 // 
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>4__this")));
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>4__this"));
                 if (method.DeclaringType.IsValueType)
                 {
-                    processor.InsertBefore(tryStart, processor.Create(OpCodes.Box, method.DeclaringType));
+                    processor.InsertBefore(insert, OpCodes.Box, method.DeclaringType);
                 }
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
                 {
                     var parameters = method.Parameters;
                     var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
@@ -818,58 +818,56 @@ namespace SoftCube.Aspects
                         for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                         {
                             var parameter = parameters[parameterIndex];
-                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name)));
+                            processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                            processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
                         }
-                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes))));
+                        processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
                     }
                     else
                     {
-                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldc_I4, parameters.Count));
-                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
+                        processor.InsertBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
                         for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                         {
                             var parameter = parameters[parameterIndex];
-                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Dup));
-                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldc_I4, parameterIndex));
-                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name)));
+                            processor.InsertBefore(insert, OpCodes.Dup);
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                            processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                            processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
                             if (parameter.ParameterType.IsValueType)
                             {
-                                processor.InsertBefore(tryStart, processor.Create(OpCodes.Box, parameter.ParameterType));
+                                processor.InsertBefore(insert, OpCodes.Box, parameter.ParameterType);
                             }
-                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Stelem_Ref));
+                            processor.InsertBefore(insert, OpCodes.Stelem_Ref);
                         }
-                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) }))));
+                        processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                     }
                 }
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Stfld, argsField));
+                processor.InsertBefore(insert, OpCodes.Stfld, argsField);
 
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, argsField));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) }))));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Stfld, aspectArgsField));
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, argsField);
+                processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+                processor.InsertBefore(insert, OpCodes.Stfld, aspectArgsField);
 
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectField));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectArgsField));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry)))));
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
 
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldc_I4_1));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Stfld, resumeFlagField));
-                processor.InsertBefore(tryStart, branch[1] = processor.CreateBranch(OpCodes.Br_S));
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
+                processor.InsertBefore(insert, OpCodes.Stfld, resumeFlagField);
+                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br_S);
 
-                branch[0].Operand = processor.Create(OpCodes.Ldarg_0);
-                processor.InsertBefore(tryStart, (Instruction)branch[0].Operand);
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectField));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectArgsField));
-                processor.InsertBefore(tryStart, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume)))));
+                branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume))));
 
-                branch[1].Operand = processor.Create(OpCodes.Nop);
-                processor.InsertBefore(tryStart, (Instruction)branch[1].Operand);
+                branch[1].Operand = processor.InsertBefore(insert, OpCodes.Nop);
             }
 
             ///
@@ -878,26 +876,23 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[2];
                 var insert = leave = handlers[0].HandlerStart.Previous;
 
-                Instruction target;
-                processor.InsertBefore(insert, target = processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state")));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, -1));
-                processor.InsertBefore(insert, branch[0] = processor.CreateBranch(OpCodes.Beq));
+                var target = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
 
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield)))));
-                processor.InsertBefore(insert, branch[1] = processor.CreateBranch(OpCodes.Br_S));
-                branch[1].Operand = insert;
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
+                branch[1] = processor.InsertBefore(insert, OpCodes.Br_S, insert);
 
-                branch[0].Operand = processor.Create(OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, (Instruction)branch[0].Operand);
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+                branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
 
                 for (var instruction = tryStart; instruction != target; instruction = instruction.Next)
                 {
@@ -935,7 +930,6 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, processor.Create(OpCodes.Rethrow));
             }
 
-            //var catchEnd = handlers[0].HandlerStart;
             /// } finally {
             Instruction catchEnd;
             Instruction finallyStart;
@@ -944,35 +938,31 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[2];
                 var insert = handlers[0].HandlerStart;
 
-                processor.InsertBefore(insert, catchEnd = finallyStart = processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state")));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, -1));
-                processor.InsertBefore(insert, branch[0] = processor.CreateBranch(OpCodes.Beq));
-                processor.InsertBefore(insert, branch[1] = processor.CreateBranch(OpCodes.Br));
+                catchEnd = finallyStart = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
+                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br);
 
-                branch[0].Operand = processor.Create(OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, (Instruction)branch[0].Operand);
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
+                branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
 
-                branch[1].Operand = processor.Create(OpCodes.Endfinally);
-                processor.InsertBefore(insert, (Instruction)branch[1].Operand);
-                processor.InsertBefore(insert, finallyEnd = processor.Create(OpCodes.Leave, handlers[0].HandlerEnd));
+                branch[1].Operand = processor.InsertBefore(insert, OpCodes.Endfinally);
+                finallyEnd = processor.InsertBefore(insert, OpCodes.Leave, handlers[0].HandlerEnd);
             }
 
             {
                 var insert = handlers[0].HandlerEnd;
 
-                leave.Operand = handlers[0].HandlerEnd = processor.Create(OpCodes.Ldarg_0);
+                leave.Operand = handlers[0].HandlerEnd = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
+                processor.InsertBefore(insert, OpCodes.Beq, insert);
 
-                processor.InsertBefore(insert, handlers[0].HandlerEnd);
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state")));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, -1));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Beq, insert));
-
-                processor.InsertBefore(insert, processor.Create(OpCodes.Br, instructions.Last()));
+                processor.InsertBefore(insert, OpCodes.Br, instructions.Last());
             }
 
             /// Catch ハンドラーを追加します。
