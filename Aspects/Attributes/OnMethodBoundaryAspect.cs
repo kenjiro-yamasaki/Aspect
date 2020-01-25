@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -48,22 +49,22 @@ namespace SoftCube.Aspects
 
                 /// フィールドを追加します。
                 var aspectField      = new FieldDefinition("*aspect*",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
-                var isDisposingField = new FieldDefinition("*isDisposing*", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
-                var resumeFlagField  = new FieldDefinition("*resumeFlag*",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-                var exitFlagField    = new FieldDefinition("*exitFlag*",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
                 var aspectArgsField  = new FieldDefinition("*aspectArgs*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
                 var argsField        = new FieldDefinition("*args*",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+                var resumeFlagField  = new FieldDefinition("*resumeFlag*",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+                var exitFlagField    = new FieldDefinition("*exitFlag*",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
+                var isDisposingField = new FieldDefinition("*isDisposing*", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
 
-                enumeratorType.Fields.Add(isDisposingField);
-                enumeratorType.Fields.Add(resumeFlagField);
-                enumeratorType.Fields.Add(exitFlagField);
                 enumeratorType.Fields.Add(aspectField);
                 enumeratorType.Fields.Add(aspectArgsField);
                 enumeratorType.Fields.Add(argsField);
+                enumeratorType.Fields.Add(resumeFlagField);
+                enumeratorType.Fields.Add(exitFlagField);
+                enumeratorType.Fields.Add(isDisposingField);
 
                 /// 各メソッドを書き換えます。
                 CreateAspectField(enumeratorType, aspect, aspectField);
-                ReplaceMoveNextMethod(method, enumeratorType, isDisposingField, resumeFlagField, exitFlagField, aspectField, aspectArgsField, argsField);
+                ReplaceMoveNextMethod(method, enumeratorType, aspectField, aspectArgsField, argsField, resumeFlagField, exitFlagField, isDisposingField);
                 ReplaceDisposeMethod(enumeratorType, isDisposingField);
             }
             else if (asyncStateMachineAttribute != null)
@@ -75,13 +76,16 @@ namespace SoftCube.Aspects
                 var aspectField     = new FieldDefinition("*aspect*",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
                 var aspectArgsField = new FieldDefinition("*aspectArgs*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
                 var argsField       = new FieldDefinition("*args*",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+                var resumeFlagField  = new FieldDefinition("*resumeFlag*", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
 
                 asyncType.Fields.Add(aspectField);
                 asyncType.Fields.Add(aspectArgsField);
                 asyncType.Fields.Add(argsField);
+                asyncType.Fields.Add(resumeFlagField);
 
                 /// 各メソッドを書き換えます。
                 CreateAspectField(asyncType, aspect, aspectField);
+                ReplaceMoveNextMethod(method, asyncType, aspectField, aspectArgsField, argsField, resumeFlagField);
             }
             else
             {
@@ -310,17 +314,17 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        #region イテレーターメソッド
+        #region 特殊なメソッド
 
         /// <summary>
         /// アスペクトフィールドのインスタンスを生成します。
         /// </summary>
-        /// <param name="enumeratorType">反復子の型。</param>
+        /// <param name="declaringType">反復子の型。</param>
         /// <param name="aspect">アスペクト。</param>
         /// <param name="aspectField">アスペクトのフィールド。</param>
-        private void CreateAspectField(TypeDefinition enumeratorType, CustomAttribute aspect, FieldDefinition aspectField)
+        private void CreateAspectField(TypeDefinition declaringType, CustomAttribute aspect, FieldDefinition aspectField)
         {
-            var constructor  = enumeratorType.Methods.Single(m => m.Name == ".ctor");
+            var constructor  = declaringType.Methods.Single(m => m.Name == ".ctor");
             var processor    = constructor.Body.GetILProcessor();
             var instructions = constructor.Body.Instructions;
             var first        = instructions.First();
@@ -334,20 +338,21 @@ namespace SoftCube.Aspects
             processor.InsertBefore(first, processor.Create(OpCodes.Stfld, aspectField));
         }
 
+        #region イテレーターメソッド
+
         /// <summary>
         /// <see cref="IEnumerator.MoveNext"/> を書き換えます。
         /// </summary>
         /// <param name="method">メソッド。</param>
         /// <param name="enumeratorType">反復子の型。</param>
-        /// <param name="isDisposingField"><c>isDisposing</c> のフィールド。</param>
-        /// <param name="resumeFlagField"><c>resumeFlag</c> のフィールド。</param>
-        /// <param name="exitFlagField"><c>exitFlag</c> のフィールド。</param>
-        /// <param name="aspectField"><c>aspect</c >のフィールド。</param>
+        /// <param name="aspectField"><c>aspect</c > のフィールド。</param>
         /// <param name="aspectArgsField"><c>aspectArgs</c> のフィールド。</param>
         /// <param name="argsField"><c>args</c> のフィールド。</param>
-        private void ReplaceMoveNextMethod(MethodDefinition method, TypeDefinition enumeratorType, FieldDefinition isDisposingField, FieldDefinition resumeFlagField, FieldDefinition exitFlagField, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField)
+        /// <param name="resumeFlagField"><c> resumeFlag</c> のフィールド。</param>
+        /// <param name="exitFlagField"><c> exitFlag</c> のフィールド。</param>
+        /// <param name="isDisposingField"><c> isDisposing</c> のフィールド。</param>
+        private void ReplaceMoveNextMethod(MethodDefinition method, TypeDefinition enumeratorType, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField, FieldDefinition resumeFlagField, FieldDefinition exitFlagField, FieldDefinition isDisposingField)
         {
-            ///
             var module         = enumeratorType.Module;
             var moveNextMethod = enumeratorType.Methods.Single(m => m.Name == "MoveNext");
             var attributes     = moveNextMethod.Attributes;
@@ -376,14 +381,14 @@ namespace SoftCube.Aspects
             /// ローカル変数を追加します。
             var variables = moveNextMethod.Body.Variables;
 
-            int exitFlagVariable = variables.Count;
-            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
-
             int resultVariable = variables.Count;
             variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
             int exceptionVariable = variables.Count;
             variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
+
+            int exitFlagVariable = variables.Count;
+            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
             ///
             var processor = moveNextMethod.Body.GetILProcessor();
@@ -623,7 +628,7 @@ namespace SoftCube.Aspects
             }
 
             /// Catch ハンドラーを追加します。
-            var exceptionHandlers = moveNextMethod.Body.ExceptionHandlers;
+            var handlers = moveNextMethod.Body.ExceptionHandlers;
             {
                 var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
@@ -633,7 +638,7 @@ namespace SoftCube.Aspects
                     HandlerStart = catchStart,
                     HandlerEnd   = catchEnd,
                 };
-                exceptionHandlers.Add(handler);
+                handlers.Add(handler);
             }
 
             /// Finally ハンドラーを追加します。
@@ -645,7 +650,7 @@ namespace SoftCube.Aspects
                     HandlerStart = finallyStart,
                     HandlerEnd   = finallyEnd,
                 };
-                exceptionHandlers.Add(handler);
+                handlers.Add(handler);
             }
 
             /// IL コードを最適化します。
@@ -745,7 +750,259 @@ namespace SoftCube.Aspects
 
         #region 非同期メソッド
 
+        /// <summary>
+        /// <see cref="IAsyncStateMachine.MoveNext"> を書き換えます。
+        /// </summary>
+        /// <param name="method">メソッド。</param>
+        /// <param name="asyncType">非同期ステートマシンの型。</param>
+        /// <param name="aspectField"><c>aspect</c > のフィールド。</param>
+        /// <param name="aspectArgsField"><c>aspectArgs</c> のフィールド。</param>
+        /// <param name="argsField"><c>args</c> のフィールド。</param>
+        private void ReplaceMoveNextMethod(MethodDefinition method, TypeDefinition asyncType, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField, FieldDefinition resumeFlagField)
+        {
+            var module         = asyncType.Module;
+            var moveNextMethod = asyncType.Methods.Single(m => m.Name == "MoveNext");
+            var attributes     = moveNextMethod.Attributes;
+            var declaringType  = moveNextMethod.DeclaringType;
+            var returnType     = moveNextMethod.ReturnType;
 
+            /// ローカル変数を追加します。
+            var variables = moveNextMethod.Body.Variables;
+
+            int exceptionVariable = variables.Count;
+            variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
+
+            ///
+            var processor    = moveNextMethod.Body.GetILProcessor();
+            var instructions = moveNextMethod.Body.Instructions;
+            var handlers     = moveNextMethod.Body.ExceptionHandlers;
+
+            Instruction tryStart;
+            {
+                var branch = new Instruction[2];
+
+                tryStart = handlers[0].TryStart;
+                processor.InsertBefore(tryStart, handlers[0].TryStart = processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, resumeFlagField));
+                processor.InsertBefore(tryStart, branch[0] = processor.CreateBranch(OpCodes.Brtrue_S));
+
+                // 
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>4__this")));
+                if (method.DeclaringType.IsValueType)
+                {
+                    processor.InsertBefore(tryStart, processor.Create(OpCodes.Box, method.DeclaringType));
+                }
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                {
+                    var parameters = method.Parameters;
+                    var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+
+                    var argumentsType = parameters.Count switch
+                    {
+                        0 => typeof(Arguments),
+                        1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                        2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                        3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                        4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                        5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                        6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                        7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                        8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                        _ => typeof(ArgumentsArray)
+                    };
+
+                    if (parameters.Count <= 8)
+                    {
+                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                        {
+                            var parameter = parameters[parameterIndex];
+                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name)));
+                        }
+                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes))));
+                    }
+                    else
+                    {
+                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldc_I4, parameters.Count));
+                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
+                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                        {
+                            var parameter = parameters[parameterIndex];
+                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Dup));
+                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldc_I4, parameterIndex));
+                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name)));
+                            if (parameter.ParameterType.IsValueType)
+                            {
+                                processor.InsertBefore(tryStart, processor.Create(OpCodes.Box, parameter.ParameterType));
+                            }
+                            processor.InsertBefore(tryStart, processor.Create(OpCodes.Stelem_Ref));
+                        }
+                        processor.InsertBefore(tryStart, processor.Create(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) }))));
+                    }
+                }
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Stfld, argsField));
+
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, argsField));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) }))));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Stfld, aspectArgsField));
+
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectField));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectArgsField));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry)))));
+
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldc_I4_1));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Stfld, resumeFlagField));
+                processor.InsertBefore(tryStart, branch[1] = processor.CreateBranch(OpCodes.Br_S));
+
+                branch[0].Operand = processor.Create(OpCodes.Ldarg_0);
+                processor.InsertBefore(tryStart, (Instruction)branch[0].Operand);
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectField));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Ldfld, aspectArgsField));
+                processor.InsertBefore(tryStart, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume)))));
+
+                branch[1].Operand = processor.Create(OpCodes.Nop);
+                processor.InsertBefore(tryStart, (Instruction)branch[1].Operand);
+            }
+
+            ///
+            Instruction leave;
+            {
+                var branch = new Instruction[2];
+                var insert = leave = handlers[0].HandlerStart.Previous;
+
+                Instruction target;
+                processor.InsertBefore(insert, target = processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state")));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, -1));
+                processor.InsertBefore(insert, branch[0] = processor.CreateBranch(OpCodes.Beq));
+
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield)))));
+                processor.InsertBefore(insert, branch[1] = processor.CreateBranch(OpCodes.Br_S));
+                branch[1].Operand = insert;
+
+                branch[0].Operand = processor.Create(OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, (Instruction)branch[0].Operand);
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess)))));
+
+                for (var instruction = tryStart; instruction != target; instruction = instruction.Next)
+                {
+                    if (instruction.OpCode == OpCodes.Br || instruction.OpCode == OpCodes.Br_S)
+                    {
+                        if (instruction.Operand == leave)
+                        {
+                            instruction.Operand = target;
+                        }
+                    }
+                    if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
+                    {
+                        instruction.OpCode = OpCodes.Br;
+                        instruction.Operand = target;
+                    }
+                }
+            }
+
+            /// } catch (Exception exception) {
+            Instruction catchStart;
+            {
+                var insert = handlers[0].HandlerStart;
+
+                processor.InsertBefore(insert, catchStart = processor.Create(OpCodes.Stloc, exceptionVariable));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldloc, exceptionVariable));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod())));
+
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException)))));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Rethrow));
+            }
+
+            //var catchEnd = handlers[0].HandlerStart;
+            /// } finally {
+            Instruction catchEnd;
+            Instruction finallyStart;
+            Instruction finallyEnd;
+            {
+                var branch = new Instruction[2];
+                var insert = handlers[0].HandlerStart;
+
+                processor.InsertBefore(insert, catchEnd = finallyStart = processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state")));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, -1));
+                processor.InsertBefore(insert, branch[0] = processor.CreateBranch(OpCodes.Beq));
+                processor.InsertBefore(insert, branch[1] = processor.CreateBranch(OpCodes.Br));
+
+                branch[0].Operand = processor.Create(OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, (Instruction)branch[0].Operand);
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit)))));
+
+                branch[1].Operand = processor.Create(OpCodes.Endfinally);
+                processor.InsertBefore(insert, (Instruction)branch[1].Operand);
+                processor.InsertBefore(insert, finallyEnd = processor.Create(OpCodes.Leave, handlers[0].HandlerEnd));
+            }
+
+            {
+                var insert = handlers[0].HandlerEnd;
+
+                leave.Operand = handlers[0].HandlerEnd = processor.Create(OpCodes.Ldarg_0);
+
+                processor.InsertBefore(insert, handlers[0].HandlerEnd);
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state")));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, -1));
+                processor.InsertBefore(insert, processor.Create(OpCodes.Beq, insert));
+
+                processor.InsertBefore(insert, processor.Create(OpCodes.Br, instructions.Last()));
+            }
+
+            /// Catch ハンドラーを追加します。
+            var handler0 = handlers[0];
+            var handler1 = new ExceptionHandler(ExceptionHandlerType.Catch)
+            {
+                CatchType    = module.ImportReference(typeof(Exception)),
+                TryStart     = tryStart,
+                TryEnd       = catchStart,
+                HandlerStart = catchStart,
+                HandlerEnd   = catchEnd,
+            };
+            var handler2 = new ExceptionHandler(ExceptionHandlerType.Finally)
+            {
+                TryStart     = tryStart,
+                TryEnd       = finallyStart,
+                HandlerStart = finallyStart,
+                HandlerEnd   = finallyEnd,
+            };
+
+            handlers.Clear();
+            handlers.Add(handler1);
+            handlers.Add(handler2);
+            handlers.Add(handler0);
+
+            ///
+            moveNextMethod.OptimizeIL();
+        }
+
+        #endregion
 
         #endregion
 

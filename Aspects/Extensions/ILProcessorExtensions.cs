@@ -151,6 +151,20 @@ namespace SoftCube.Aspects
             return attributeIndex;
         }
 
+        internal static Instruction CreateBranch(this ILProcessor processor, OpCode opcode)
+        {
+            if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S || opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
+            {
+                var instruction = processor.Create(OpCodes.Nop);
+                instruction.OpCode = opcode;
+                return instruction;
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -186,6 +200,38 @@ namespace SoftCube.Aspects
             processor.Append(instruction);
             return instruction;
         }
+
+        //internal static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
+        //{
+        //    if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S || opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
+        //    {
+        //        var instruction = processor.Create(OpCodes.Nop);
+        //        processor.InsertBefore(insert, instruction);
+        //        instruction.OpCode = opcode;
+        //    }
+        //    else
+        //    {
+        //        var instruction = processor.Create(opcode);
+        //        processor.InsertBefore(insert, instruction);
+        //    }
+        //}
+
+        //internal static Instruction InsertBeforeAndReturn(this ILProcessor processor, Instruction insert, OpCode opcode)
+        //{
+        //    if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S || opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
+        //    {
+        //        var instruction = processor.Create(OpCodes.Nop);
+        //        processor.InsertBefore(insert, instruction);
+        //        instruction.OpCode = opcode;
+        //        return instruction;
+        //    }
+        //    else
+        //    {
+        //        var instruction = processor.Create(opcode);
+        //        processor.InsertBefore(insert, instruction);
+        //        return instruction;
+        //    }
+        //}
 
         #endregion
     }

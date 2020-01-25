@@ -115,6 +115,15 @@ namespace SoftCube.Aspects
                     instruction.OpCode = OpCodes.Brfalse;
                 }
             }
+
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Leave_S))
+            {
+                var distance = instruction.DistanceTo((Instruction)instruction.Operand);
+                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                {
+                    instruction.OpCode = OpCodes.Leave;
+                }
+            }
         }
 
         /// <summary>

@@ -1,15 +1,17 @@
 ﻿using SoftCube.Asserts;
 using SoftCube.Logging;
-using System.Collections.Generic;
-using System.Text;
+using System;
 
 namespace SoftCube.Aspects
 {
+    [Serializable]
     public class OnMethodBoundaryAspectLogger : OnMethodBoundaryAspect
     {
         public override void OnEntry(MethodExecutionArgs args)
         {
             Logger.Trace("OnEntry");
+
+            Logger.Trace(ArgumentFormatter.Format(args.Instance));
 
             /// 引数をログ出力します。
             foreach (var argument in args.Arguments)
@@ -35,8 +37,8 @@ namespace SoftCube.Aspects
         {
             Logger.Trace("OnSuccess");
 
-            /// 戻り値をログ出力します。
-            Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
+            ///// 戻り値をログ出力します。
+            //Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
         }
 
         public override void OnException(MethodExecutionArgs args)

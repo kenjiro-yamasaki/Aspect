@@ -50,7 +50,8 @@ namespace SoftCube.Aspects
                 Logger.Trace(value1);
             });
 
-            await Task.Run(() => {
+            await Task.Run(() =>
+            {
                 Thread.Sleep(100);
                 Logger.Trace(value2);
             });
