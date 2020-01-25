@@ -778,24 +778,28 @@ namespace SoftCube.Aspects
             var instructions = moveNextMethod.Body.Instructions;
             var handlers     = moveNextMethod.Body.ExceptionHandlers;
 
-            Instruction tryStart;
+            var outerCatchHandler = handlers[0];
+
+            var outerCatchStart = handlers[0].HandlerStart;
+            var outerCatchEnd   = handlers[0].HandlerEnd;
+            var innerTryStart   = handlers[0].TryStart;
             {
                 var branch = new Instruction[2];
-                var insert = tryStart = handlers[0].TryStart;
+                var insert = innerTryStart;
 
-                handlers[0].TryStart = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, resumeFlagField);
-                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Brtrue_S);
+                outerCatchHandler.TryStart = processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, resumeFlagField);
+                branch[0] = processor.EmitBranchBefore(insert, OpCodes.Brtrue_S);
 
-                // 
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>4__this"));
+                /// 
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>4__this"));
                 if (method.DeclaringType.IsValueType)
                 {
-                    processor.InsertBefore(insert, OpCodes.Box, method.DeclaringType);
+                    processor.EmitBefore(insert, OpCodes.Box, method.DeclaringType);
                 }
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
                 {
                     var parameters = method.Parameters;
                     var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
@@ -819,132 +823,129 @@ namespace SoftCube.Aspects
                         for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                         {
                             var parameter = parameters[parameterIndex];
-                            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                            processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
+                            processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                            processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
                         }
-                        processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
+                        processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
                     }
                     else
                     {
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
-                        processor.InsertBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
+                        processor.EmitBefore(insert, OpCodes.Ldc_I4, parameters.Count);
+                        processor.EmitBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
                         for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                         {
                             var parameter = parameters[parameterIndex];
-                            processor.InsertBefore(insert, OpCodes.Dup);
-                            processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
-                            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                            processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
+                            processor.EmitBefore(insert, OpCodes.Dup);
+                            processor.EmitBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                            processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                            processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
                             if (parameter.ParameterType.IsValueType)
                             {
-                                processor.InsertBefore(insert, OpCodes.Box, parameter.ParameterType);
+                                processor.EmitBefore(insert, OpCodes.Box, parameter.ParameterType);
                             }
-                            processor.InsertBefore(insert, OpCodes.Stelem_Ref);
+                            processor.EmitBefore(insert, OpCodes.Stelem_Ref);
                         }
-                        processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                        processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                     }
                 }
-                processor.InsertBefore(insert, OpCodes.Stfld, argsField);
+                processor.EmitBefore(insert, OpCodes.Stfld, argsField);
 
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, argsField);
-                processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
-                processor.InsertBefore(insert, OpCodes.Stfld, aspectArgsField);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, argsField);
+                processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+                processor.EmitBefore(insert, OpCodes.Stfld, aspectArgsField);
 
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
 
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
-                processor.InsertBefore(insert, OpCodes.Stfld, resumeFlagField);
-                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br_S);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldc_I4_1);
+                processor.EmitBefore(insert, OpCodes.Stfld, resumeFlagField);
+                branch[1] = processor.EmitBranchBefore(insert, OpCodes.Br_S);
 
-                branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume))));
+                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume))));
 
-                branch[1].Operand = processor.InsertBefore(insert, OpCodes.Nop);
+                branch[1].Operand = processor.EmitBefore(insert, OpCodes.Nop);
             }
 
             ///
-            Instruction leave;
+            var leave = handlers[0].HandlerStart.Previous;
             {
                 var branch = new Instruction[2];
-                var insert = leave = handlers[0].HandlerStart.Previous;
+                var insert = leave;
 
-                var target = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
-                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
+                var leaveTarget = processor.EmitBefore(insert, OpCodes.Ldarg_0);                    // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
+                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.EmitBranchBefore(insert, OpCodes.Beq);
 
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
-                branch[1] = processor.InsertBefore(insert, OpCodes.Br_S, insert);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
+                branch[1] = processor.EmitBefore(insert, OpCodes.Br_S, insert);
 
                 if (method.ReturnType is GenericInstanceType genericReturnType)
                 {
                     var returnType = genericReturnType.GenericArguments[0];
 
-                    branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                    processor.InsertBefore(insert, OpCodes.Ldloc, resultVariable);
+                    branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                    processor.EmitBefore(insert, OpCodes.Ldloc, resultVariable);
                     if (returnType.IsValueType)
                     {
-                        processor.InsertBefore(insert, OpCodes.Box, returnType);
+                        processor.EmitBefore(insert, OpCodes.Box, returnType);
                     }
-                    processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
+                    processor.EmitBefore(insert, OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
 
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
+                    processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
+                    processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                    processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
                 }
                 else
                 {
-                    branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
+                    branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
+                    processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                    processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
                 }
 
-                for (var instruction = tryStart; instruction != target; instruction = instruction.Next)
+                /// try 内の Leave 命令の転送先を書き換えます。
+                /// この書き換えにより OnYield と OnSuccess の呼び出し処理に転送します。
+                for (var instruction = innerTryStart; instruction != leaveTarget; instruction = instruction.Next)
                 {
-                    if (instruction.OpCode == OpCodes.Br || instruction.OpCode == OpCodes.Br_S)
-                    {
-                        if (instruction.Operand == leave)
-                        {
-                            instruction.Operand = target;
-                        }
-                    }
                     if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
                     {
-                        instruction.OpCode = OpCodes.Br;
-                        instruction.Operand = target;
+                        instruction.OpCode  = OpCodes.Br;
+                        instruction.Operand = leaveTarget;
                     }
                 }
             }
 
             /// } catch (Exception exception) {
-            Instruction catchStart;
+            Instruction innerCatchStart;
             {
-                var insert = handlers[0].HandlerStart;
+                var insert = outerCatchStart;
 
-                processor.InsertBefore(insert, catchStart = processor.Create(OpCodes.Stloc, exceptionVariable));
+                /// <see cref="MethodExecutionArgs.Exception"/> に例外を設定します。
+                processor.InsertBefore(insert, innerCatchStart = processor.Create(OpCodes.Stloc, exceptionVariable));
                 processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
                 processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
                 processor.InsertBefore(insert, processor.Create(OpCodes.Ldloc, exceptionVariable));
                 processor.InsertBefore(insert, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod())));
 
+                /// <see cref="OnException(MethodExecutionArgs)"/> を呼び出します。
                 processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
                 processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
                 processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
@@ -954,62 +955,63 @@ namespace SoftCube.Aspects
             }
 
             /// } finally {
-            Instruction catchEnd;
-            Instruction finallyStart;
-            Instruction finallyEnd;
+            Instruction innerCatchEnd;
+            Instruction innerFinallyStart;
+            Instruction innerFinallyEnd;
             {
                 var branch = new Instruction[2];
-                var insert = handlers[0].HandlerStart;
+                var insert = outerCatchStart;
 
-                catchEnd = finallyStart = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
-                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
-                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br);
+                innerCatchEnd = innerFinallyStart = processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.EmitBranchBefore(insert, OpCodes.Beq);
+                branch[1] = processor.EmitBranchBefore(insert, OpCodes.Br);
 
-                branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
+                /// <see cref="OnExit(MethodExecutionArgs)"/> を呼び出します。
+                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
+                processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
 
-                branch[1].Operand = processor.InsertBefore(insert, OpCodes.Endfinally);
-                finallyEnd = insert;
+                branch[1].Operand = processor.EmitBefore(insert, OpCodes.Endfinally);
+                innerFinallyEnd = insert;
             }
 
             {
-                var insert = handlers[0].HandlerEnd;
+                var insert = outerCatchEnd;
 
-                leave.Operand = handlers[0].HandlerEnd = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
-                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
-                processor.InsertBefore(insert, OpCodes.Beq, insert);
+                leave.Operand = handlers[0].HandlerEnd = processor.EmitBefore(insert, OpCodes.Ldarg_0);
+                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
+                processor.EmitBefore(insert, OpCodes.Beq, insert);
 
-                processor.InsertBefore(insert, OpCodes.Br, instructions.Last());
+                processor.EmitBefore(insert, OpCodes.Br, instructions.Last());
             }
 
             /// Catch ハンドラーを追加します。
-            var handler0 = handlers[0];
-            var handler1 = new ExceptionHandler(ExceptionHandlerType.Catch)
+            var innerCatchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
             {
                 CatchType    = module.ImportReference(typeof(Exception)),
-                TryStart     = tryStart,
-                TryEnd       = catchStart,
-                HandlerStart = catchStart,
-                HandlerEnd   = catchEnd,
+                TryStart     = innerTryStart,
+                TryEnd       = innerCatchStart,
+                HandlerStart = innerCatchStart,
+                HandlerEnd   = innerCatchEnd,
             };
-            var handler2 = new ExceptionHandler(ExceptionHandlerType.Finally)
+
+            var innerFinallryHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
             {
-                TryStart     = tryStart,
-                TryEnd       = finallyStart,
-                HandlerStart = finallyStart,
-                HandlerEnd   = finallyEnd,
+                TryStart     = innerTryStart,
+                TryEnd       = innerFinallyStart,
+                HandlerStart = innerFinallyStart,
+                HandlerEnd   = innerFinallyEnd,
             };
 
             handlers.Clear();
-            handlers.Add(handler1);
-            handlers.Add(handler2);
-            handlers.Add(handler0);
+            handlers.Add(innerCatchHandler);
+            handlers.Add(innerFinallryHandler);
+            handlers.Add(outerCatchHandler);
 
             ///
             moveNextMethod.OptimizeIL();
