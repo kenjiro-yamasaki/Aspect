@@ -15,7 +15,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 戻り値が存在するかを判断します。
         /// </summary>
-        /// <param name="method">メソッド定義。</param>
+        /// <param name="method">メソッド。</param>
         /// <returns>戻り値が存在するか。</returns>
         public static bool HasReturnValue(this MethodDefinition method)
         {
@@ -25,7 +25,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// Return 命令を取得します。
         /// </summary>
-        /// <param name="method">メソッド定義。</param>
+        /// <param name="method">メソッド。</param>
         /// <returns>
         /// Return 命令。
         /// メソッドに戻り値がある場合、戻り値のロード命令を返します。
@@ -51,7 +51,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="method">メソッド定義。</param>
+        /// <param name="method">メソッド。</param>
         public static void Inject(this MethodDefinition method)
         {
             var baseFullName  = $"{nameof(SoftCube)}.{nameof(Aspects)}.{nameof(MethodLevelAspect)}";
@@ -78,7 +78,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// IL コードを最適化します。
         /// </summary>
-        /// <param name="method">メソッド定義。</param>
+        /// <param name="method">メソッド。</param>
         public static void OptimizeIL(this MethodDefinition method)
         {
             var processor = method.Body.GetILProcessor();
@@ -89,37 +89,53 @@ namespace SoftCube.Aspects
                 instruction.Offset = offset++;
             }
 
-            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Br_S))
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Br || i.OpCode == OpCodes.Br_S))
             {
                 var distance = instruction.DistanceTo((Instruction)instruction.Operand);
-                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                if (sbyte.MinValue <= distance && distance <= sbyte.MaxValue)
+                {
+                    instruction.OpCode = OpCodes.Br_S;
+                }
+                else
                 {
                     instruction.OpCode = OpCodes.Br;
                 }
             }
 
-            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brtrue_S))
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brtrue || i.OpCode == OpCodes.Brtrue_S))
             {
                 var distance = instruction.DistanceTo((Instruction)instruction.Operand);
-                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                if (sbyte.MinValue <= distance && distance <= sbyte.MaxValue)
+                {
+                    instruction.OpCode = OpCodes.Brtrue_S;
+                }
+                else
                 {
                     instruction.OpCode = OpCodes.Brtrue;
                 }
             }
 
-            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brfalse_S))
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Brfalse || i.OpCode == OpCodes.Brfalse_S))
             {
                 var distance = instruction.DistanceTo((Instruction)instruction.Operand);
-                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                if (sbyte.MinValue <= distance && distance <= sbyte.MaxValue)
+                {
+                    instruction.OpCode = OpCodes.Brfalse_S;
+                }
+                else
                 {
                     instruction.OpCode = OpCodes.Brfalse;
                 }
             }
 
-            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Leave_S))
+            foreach (var instruction in processor.Body.Instructions.Where(i => i.OpCode == OpCodes.Leave || i.OpCode == OpCodes.Leave_S))
             {
                 var distance = instruction.DistanceTo((Instruction)instruction.Operand);
-                if (distance < sbyte.MinValue || sbyte.MaxValue < distance)
+                if (sbyte.MinValue <= distance && distance <= sbyte.MaxValue)
+                {
+                    instruction.OpCode = OpCodes.Leave_S;
+                }
+                else
                 {
                     instruction.OpCode = OpCodes.Leave;
                 }
@@ -129,7 +145,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// IL コードをログ出力します。
         /// </summary>
-        /// <param name="method">メソッド定義。</param>
+        /// <param name="method">メソッド。</param>
         public static void Log(this MethodDefinition method)
         {
             var processor = method.Body.GetILProcessor();
