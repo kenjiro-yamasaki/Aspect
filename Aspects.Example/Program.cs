@@ -43,9 +43,10 @@ namespace SoftCube.Aspects
         }
 
         [OnMethodBoundaryAspectLogger]
-        private async Task Test(string value1, string value2)
+        private async Task<string> Test(string value1, string value2)
         {
-            await Task.Run(() => {
+            await Task.Run(() =>
+            {
                 Thread.Sleep(100);
                 Logger.Trace(value1);
             });
@@ -55,8 +56,25 @@ namespace SoftCube.Aspects
                 Thread.Sleep(100);
                 Logger.Trace(value2);
             });
+
+            return value2;
         }
 
+        //[OnMethodBoundaryAspectLogger]
+        //private async Task Test(string value1, string value2)
+        //{
+        //    await Task.Run(() =>
+        //    {
+        //        Thread.Sleep(100);
+        //        Logger.Trace(value1);
+        //    });
+
+        //    await Task.Run(() =>
+        //    {
+        //        Thread.Sleep(100);
+        //        Logger.Trace(value2);
+        //    });
+        //}
 
 
 

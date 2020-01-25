@@ -37,8 +37,8 @@ namespace SoftCube.Aspects
         {
             Logger.Trace("OnSuccess");
 
-            ///// 戻り値をログ出力します。
-            //Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
+            /// 戻り値をログ出力します。
+            Logger.Trace(ArgumentFormatter.Format(args.ReturnValue));
         }
 
         public override void OnException(MethodExecutionArgs args)

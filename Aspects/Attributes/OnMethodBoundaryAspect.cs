@@ -764,10 +764,11 @@ namespace SoftCube.Aspects
             var moveNextMethod = asyncType.Methods.Single(m => m.Name == "MoveNext");
             var attributes     = moveNextMethod.Attributes;
             var declaringType  = moveNextMethod.DeclaringType;
-            var returnType     = moveNextMethod.ReturnType;
 
             /// ローカル変数を追加します。
             var variables = moveNextMethod.Body.Variables;
+
+            int resultVariable = 1;
 
             int exceptionVariable = variables.Count;
             variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
@@ -888,11 +889,33 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
                 branch[1] = processor.InsertBefore(insert, OpCodes.Br_S, insert);
 
-                branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
+                if (method.ReturnType is GenericInstanceType genericReturnType)
+                {
+                    var returnType = genericReturnType.GenericArguments[0];
+
+                    branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                    processor.InsertBefore(insert, OpCodes.Ldloc, resultVariable);
+                    if (returnType.IsValueType)
+                    {
+                        processor.InsertBefore(insert, OpCodes.Box, returnType);
+                    }
+                    processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
+
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
+                }
+                else
+                {
+                    branch[0].Operand = processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectField);
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, aspectArgsField);
+                    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
+                }
 
                 for (var instruction = tryStart; instruction != target; instruction = instruction.Next)
                 {
@@ -951,7 +974,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
 
                 branch[1].Operand = processor.InsertBefore(insert, OpCodes.Endfinally);
-                finallyEnd = processor.InsertBefore(insert, OpCodes.Leave, handlers[0].HandlerEnd);
+                finallyEnd = insert;
             }
 
             {
