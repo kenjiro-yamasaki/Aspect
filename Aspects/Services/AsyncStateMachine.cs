@@ -24,7 +24,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="aspect">アスペクト。</param>
-        /// <param name="targetMethod">ステートマシンのターゲットメソッド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
         public AsyncStateMachine(CustomAttribute aspect, MethodDefinition targetMethod)
             : base(aspect, targetMethod)
         {
@@ -46,14 +46,14 @@ namespace SoftCube.Aspects
             {
                 var returnType = genericReturnType.GenericArguments[0];
 
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, AspectArgsField);
-                processor.EmitBefore(insert, OpCodes.Ldloc, returnVariable);
+                processor.Emit(insert, OpCodes.Ldarg_0);
+                processor.Emit(insert, OpCodes.Ldfld, AspectArgsField);
+                processor.Emit(insert, OpCodes.Ldloc, returnVariable);
                 if (returnType.IsValueType)
                 {
-                    processor.EmitBefore(insert, OpCodes.Box, returnType);
+                    processor.Emit(insert, OpCodes.Box, returnType);
                 }
-                processor.EmitBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
+                processor.Emit(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
             }
         }
 

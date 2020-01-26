@@ -68,7 +68,7 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        #region EmitBefore
+        #region Emit
 
         /// <summary>
         /// 指定命令の前に命令を挿入します。
@@ -77,10 +77,17 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
             var instruction = processor.Create(opcode);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -92,10 +99,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -107,10 +121,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -122,10 +143,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -137,10 +165,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -152,10 +187,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -167,10 +209,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -182,10 +231,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -197,10 +253,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -212,10 +275,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -227,10 +297,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -242,10 +319,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -257,10 +341,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -272,10 +363,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -287,10 +385,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -302,10 +407,17 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
         /// <returns>挿入された命令。</returns>
-        public static Instruction EmitBefore(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
+        public static Instruction Emit(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
         {
             var instruction = processor.Create(opcode, operand);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -322,10 +434,17 @@ namespace SoftCube.Aspects
         /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Branch 命令を挿入し、挿入した Branch 命令を戻します。
         /// 転送先の命令が生成された後、Branch 命令のオペランドを設定してください。
         /// </remarks>
-        public static Instruction EmitBranchBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
+        public static Instruction EmitBranch(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
             var instruction = processor.CreateBranch(opcode);
-            processor.InsertBefore(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
@@ -342,294 +461,48 @@ namespace SoftCube.Aspects
         /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Leave 命令を挿入し、挿入した Leave 命令を戻します。
         /// 転送先の命令が生成された後、Leave 命令のオペランドを設定してください。
         /// </remarks>
-        public static Instruction EmitLeaveBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
+        public static Instruction EmitLeave(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
             var instruction = processor.CreateLeave(opcode);
-            processor.InsertBefore(insert, instruction);
-            return instruction;
-        }
-
-        #endregion
-
-        #region EmitAfter
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode)
-        {
-            var instruction = processor.Create(opcode);
-            processor.InsertAfter(insert, instruction);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
         /// <summary>
-        /// 指定命令の後に命令を挿入します。
+        /// 
         /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
+        /// <param name="processor"></param>
+        /// <param name="insert"></param>
+        /// <returns></returns>
+        public static Instruction EmitNop(this ILProcessor processor, Instruction insert)
         {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
+            var instruction = processor.Create(OpCodes.Nop);
+            if (insert != null)
+            {
+                processor.InsertBefore(insert, instruction);
+            }
+            else
+            {
+                processor.Append(instruction);
+            }
             return instruction;
         }
 
         /// <summary>
-        /// 指定命令の後に命令を挿入します。
+        /// 
         /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
+        /// <param name="processor"></param>
+        /// <returns></returns>
+        public static Instruction EmitNop(this ILProcessor processor)
         {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction EmitAfter(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に Branch 命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <returns>挿入された Branch 命令。</returns>
-        /// <remarks>
-        /// Branch 命令を生成するとき、オペランド (転送先の命令) が指定できないことがあります。
-        /// 転送先の命令よりも先に Branch 命令を生成することが一般的であるため、このような状況は良く起こります。
-        /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Branch 命令を挿入し、挿入した Branch 命令を戻します。
-        /// 転送先の命令が生成された後、Branch 命令のオペランドを設定してください。
-        /// </remarks>
-        public static Instruction EmitBranchAfter(this ILProcessor processor, Instruction insert, OpCode opcode)
-        {
-            var instruction = processor.CreateBranch(opcode);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
-        }
-
-        /// <summary>
-        /// 指定命令の後に Leave 命令を挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="opcode">オペコード。</param>
-        /// <returns>挿入された Leave 命令。</returns>
-        /// <remarks>
-        /// Leave 命令を生成するとき、オペランド (転送先の命令) を指定できないことがあります。
-        /// 転送先の命令よりも先に Leave 命令を生成することが一般的であるため、このような状況は良く起こります。
-        /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Leave 命令を挿入し、挿入した Leave 命令を戻します。
-        /// 転送先の命令が生成された後、Leave 命令のオペランドを設定してください。
-        /// </remarks>
-        public static Instruction EmitLeaveAfter(this ILProcessor processor, Instruction insert, OpCode opcode)
-        {
-            var instruction = processor.CreateLeave(opcode);
-            processor.InsertAfter(insert, instruction);
-            return instruction;
+            return EmitNop(processor, null);
         }
 
         #endregion

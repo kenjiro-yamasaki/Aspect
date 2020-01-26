@@ -96,7 +96,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="aspect">アスペクト。</param>
-        /// <param name="targetMethod">ステートマシンのターゲットメソッド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
         public StateMachine(CustomAttribute aspect, MethodDefinition targetMethod)
         {
             Aspect       = aspect ?? throw new ArgumentNullException(nameof(aspect));
@@ -104,10 +104,10 @@ namespace SoftCube.Aspects
             Module       = StateMachineType.Module;
 
             StateField      = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
-            AspectField     = CreateOrGetField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
-            AspectArgsField = CreateOrGetField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(typeof(MethodExecutionArgs)));
-            ArgsField       = CreateOrGetField("*args*",       FieldAttributes.Private, Module.ImportReference(typeof(Arguments)));
-            ResumeFlagField = CreateOrGetField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
+            AspectField     = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
+            AspectArgsField = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(typeof(MethodExecutionArgs)));
+            ArgsField       = CreateField("*args*",       FieldAttributes.Private, Module.ImportReference(typeof(Arguments)));
+            ResumeFlagField = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
         }
 
         #endregion
@@ -139,20 +139,29 @@ namespace SoftCube.Aspects
         /// <summary>
         /// AspectArgs フィールドのインスタンスを生成します。
         /// </summary>
+        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
+        public void CreateAspectArgsInstance(ILProcessor processor)
+        {
+            CreateAspectArgsInstance(processor, null);
+        }
+
+        /// <summary>
+        /// AspectArgs フィールドのインスタンスを生成します。
+        /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         public void CreateAspectArgsInstance(ILProcessor processor, Instruction insert)
         {
             var module = TargetMethod.Module;
 
-            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-            processor.EmitBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
+            processor.Emit(insert, OpCodes.Ldarg_0);
+            processor.Emit(insert, OpCodes.Ldarg_0);
+            processor.Emit(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
             if (TargetMethod.DeclaringType.IsValueType)
             {
-                processor.EmitBefore(insert, OpCodes.Box, TargetMethod.DeclaringType);
+                processor.Emit(insert, OpCodes.Box, TargetMethod.DeclaringType);
             }
-            processor.EmitBefore(insert, OpCodes.Ldarg_0);
+            processor.Emit(insert, OpCodes.Ldarg_0);
             {
                 var parameters = TargetMethod.Parameters;
                 var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
@@ -176,37 +185,47 @@ namespace SoftCube.Aspects
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                     {
                         var parameter = parameters[parameterIndex];
-                        processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                        processor.EmitBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                        processor.Emit(insert, OpCodes.Ldarg_0);
+                        processor.Emit(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                     }
-                    processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
+                    processor.Emit(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
                 }
                 else
                 {
-                    processor.EmitBefore(insert, OpCodes.Ldc_I4, parameters.Count);
-                    processor.EmitBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
+                    processor.Emit(insert, OpCodes.Ldc_I4, parameters.Count);
+                    processor.Emit(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                     {
                         var parameter = parameters[parameterIndex];
-                        processor.EmitBefore(insert, OpCodes.Dup);
-                        processor.EmitBefore(insert, OpCodes.Ldc_I4, parameterIndex);
-                        processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                        processor.EmitBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                        processor.Emit(insert, OpCodes.Dup);
+                        processor.Emit(insert, OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(insert, OpCodes.Ldarg_0);
+                        processor.Emit(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                         if (parameter.ParameterType.IsValueType)
                         {
-                            processor.EmitBefore(insert, OpCodes.Box, parameter.ParameterType);
+                            processor.Emit(insert, OpCodes.Box, parameter.ParameterType);
                         }
-                        processor.EmitBefore(insert, OpCodes.Stelem_Ref);
+                        processor.Emit(insert, OpCodes.Stelem_Ref);
                     }
-                    processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                    processor.Emit(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                 }
             }
-            processor.EmitBefore(insert, OpCodes.Stfld, ArgsField);
+            processor.Emit(insert, OpCodes.Stfld, ArgsField);
 
-            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-            processor.EmitBefore(insert, OpCodes.Ldfld, ArgsField);
-            processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
-            processor.EmitBefore(insert, OpCodes.Stfld, AspectArgsField);
+            processor.Emit(insert, OpCodes.Ldarg_0);
+            processor.Emit(insert, OpCodes.Ldfld, ArgsField);
+            processor.Emit(insert, OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+            processor.Emit(insert, OpCodes.Stfld, AspectArgsField);
+        }
+
+        /// <summary>
+        /// イベントハンドラーを呼びだします。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="eventHandlerName">イベントハンドラー名。</param>
+        public void InvokeEventHandler(ILProcessor processor, string eventHandlerName)
+        {
+            InvokeEventHandler(processor, null, eventHandlerName);
         }
 
         /// <summary>
@@ -217,11 +236,11 @@ namespace SoftCube.Aspects
         /// <param name="eventHandlerName">イベントハンドラー名。</param>
         public void InvokeEventHandler(ILProcessor processor, Instruction insert, string eventHandlerName)
         {
-            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-            processor.EmitBefore(insert, OpCodes.Ldfld, AspectField);
-            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-            processor.EmitBefore(insert, OpCodes.Ldfld, AspectArgsField);
-            processor.EmitBefore(insert, OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
+            processor.Emit(insert, OpCodes.Ldarg_0);
+            processor.Emit(insert, OpCodes.Ldfld, AspectField);
+            processor.Emit(insert, OpCodes.Ldarg_0);
+            processor.Emit(insert, OpCodes.Ldfld, AspectArgsField);
+            processor.Emit(insert, OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
         }
 
         /// <summary>
@@ -232,29 +251,23 @@ namespace SoftCube.Aspects
         /// <param name="exceptionVariable">例外のローカル変数。</param>
         public void SetException(ILProcessor processor, Instruction insert, int exceptionVariable)
         {
-            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-            processor.EmitBefore(insert, OpCodes.Ldfld, AspectArgsField);
-            processor.EmitBefore(insert, OpCodes.Ldloc, exceptionVariable);
-            processor.EmitBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
+            processor.Emit(insert, OpCodes.Ldarg_0);
+            processor.Emit(insert, OpCodes.Ldfld, AspectArgsField);
+            processor.Emit(insert, OpCodes.Ldloc, exceptionVariable);
+            processor.Emit(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
         }
 
         /// <summary>
-        /// フィールドを生成、または取得します。
+        /// フィールドを生成します。
         /// </summary>
         /// <param name="fieldName">フィールドの名前。</param>
         /// <param name="fieldAttributes">フィールドの属性。</param>
         /// <param name="fieldType">フィールドの型。</param>
         /// <returns>フィールド。</returns>
-        private FieldDefinition CreateOrGetField(string fieldName, FieldAttributes fieldAttributes, TypeReference fieldType)
+        protected FieldDefinition CreateField(string fieldName, FieldAttributes fieldAttributes, TypeReference fieldType)
         {
-            var field = StateMachineType.Fields.SingleOrDefault(f => f.Name == fieldName);
-
-            if (field == null)
-            {
-                field = new FieldDefinition(fieldName, fieldAttributes, fieldType);
-                StateMachineType.Fields.Add(field);
-            }
-
+            var field = new FieldDefinition(fieldName, fieldAttributes, fieldType);
+            StateMachineType.Fields.Add(field);
             return field;
         }
 

@@ -44,35 +44,18 @@ namespace SoftCube.Aspects
 
             if (iteratorStateMachineAttribute != null)
             {
-                var enumeratorType = (TypeDefinition)iteratorStateMachineAttribute.ConstructorArguments[0].Value;
-                var module = enumeratorType.Module;
+                var stateMachine = new IteratorStateMachine(aspect, method);
 
-                /// フィールドを追加します。
-                var aspectField      = new FieldDefinition("*aspect*",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
-                var aspectArgsField  = new FieldDefinition("*aspectArgs*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
-                var argsField        = new FieldDefinition("*args*",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
-                var resumeFlagField  = new FieldDefinition("*resumeFlag*",  Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-                var exitFlagField    = new FieldDefinition("*exitFlag*",    Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-                var isDisposingField = new FieldDefinition("*isDisposing*", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Int32);
-
-                enumeratorType.Fields.Add(aspectField);
-                enumeratorType.Fields.Add(aspectArgsField);
-                enumeratorType.Fields.Add(argsField);
-                enumeratorType.Fields.Add(resumeFlagField);
-                enumeratorType.Fields.Add(exitFlagField);
-                enumeratorType.Fields.Add(isDisposingField);
-
-                /// 各メソッドを書き換えます。
-                CreateAspectField(enumeratorType, aspect, aspectField);
-                ReplaceMoveNextMethod(method, enumeratorType, aspectField, aspectArgsField, argsField, resumeFlagField, exitFlagField, isDisposingField);
-                ReplaceDisposeMethod(enumeratorType, isDisposingField);
+                stateMachine.CreateAspectInstance();
+                ReplaceMoveNextMethod(stateMachine);
+                ReplaceDisposeMethod(stateMachine);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var injector = new AsyncStateMachine(aspect, method);
+                var stateMachine = new AsyncStateMachine(aspect, method);
 
-                injector.CreateAspectInstance();
-                ReplaceMoveNextMethod(injector);
+                stateMachine.CreateAspectInstance();
+                ReplaceMoveNextMethod(stateMachine);
             }
             else
             {
@@ -300,30 +283,6 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        #region 特殊なメソッド
-
-        /// <summary>
-        /// アスペクトフィールドのインスタンスを生成します。
-        /// </summary>
-        /// <param name="stateMachineType">ステートマシンの型。</param>
-        /// <param name="aspect">アスペクト。</param>
-        /// <param name="aspectField">アスペクトのフィールド。</param>
-        private void CreateAspectField(TypeDefinition stateMachineType, CustomAttribute aspect, FieldDefinition aspectField)
-        {
-            var constructor  = stateMachineType.Methods.Single(m => m.Name == ".ctor");
-            var processor    = constructor.Body.GetILProcessor();
-            var instructions = constructor.Body.Instructions;
-            var first        = instructions.First();
-
-            /// アスペクトのインスタンスを生成し、ローカル変数にストアします。
-            var aspectVariable = processor.InsertBefore(first, aspect);
-
-            /// アスペクトのインスタンスをフィールドにストアします。
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectVariable));
-            processor.InsertBefore(first, processor.Create(OpCodes.Stfld, aspectField));
-        }
-
         #region イテレーターメソッド
 
         /// <summary>
@@ -337,16 +296,17 @@ namespace SoftCube.Aspects
         /// <param name="resumeFlagField"><c> resumeFlag</c> のフィールド。</param>
         /// <param name="exitFlagField"><c> exitFlag</c> のフィールド。</param>
         /// <param name="isDisposingField"><c> isDisposing</c> のフィールド。</param>
-        private void ReplaceMoveNextMethod(MethodDefinition method, TypeDefinition enumeratorType, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField, FieldDefinition resumeFlagField, FieldDefinition exitFlagField, FieldDefinition isDisposingField)
+        private void ReplaceMoveNextMethod(IteratorStateMachine stateMachine)
         {
-            var module         = enumeratorType.Module;
-            var moveNextMethod = enumeratorType.Methods.Single(m => m.Name == "MoveNext");
-            var attributes     = moveNextMethod.Attributes;
-            var declaringType  = moveNextMethod.DeclaringType;
-            var returnType     = moveNextMethod.ReturnType;
+            var enumeratorType   = stateMachine.StateMachineType;
+            var method           = stateMachine.TargetMethod;
+            var moveNextMethod   = stateMachine.MoveNextMethod;
+
+            var module           = stateMachine.Module;
+            var declaringType    = stateMachine.StateMachineType;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-            var originalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", attributes, returnType);
+            var originalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
             foreach (var parameter in moveNextMethod.Parameters)
             {
                 originalMoveNextMethod.Parameters.Add(parameter);
@@ -382,101 +342,33 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[5];
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, exitFlagField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
                 branch[0] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, isDisposingField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
                 branch[1] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, resumeFlagField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
                 branch[2] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 // 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == "<>4__this"));
-                if (method.DeclaringType.IsValueType)
-                {
-                    processor.Emit(OpCodes.Box, method.DeclaringType);
-                }
-                processor.Emit(OpCodes.Ldarg_0);
-                {
-                    var parameters     = method.Parameters;
-                    var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+                stateMachine.CreateAspectArgsInstance(processor);
 
-                    var argumentsType = parameters.Count switch
-                    {
-                        0 => typeof(Arguments),
-                        1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                        2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                        3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                        4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                        5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                        6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                        7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                        8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                        _ => typeof(ArgumentsArray)
-                    };
-
-                    if (parameters.Count <= 8)
-                    {
-                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                        {
-                            var parameter = parameters[parameterIndex];
-                            processor.Emit(OpCodes.Ldarg_0);
-                            processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == parameter.Name));
-                        }
-                        processor.Emit(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
-                    }
-                    else
-                    {
-                        processor.Emit(OpCodes.Ldc_I4, parameters.Count);
-                        processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
-                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                        {
-                            var parameter = parameters[parameterIndex];
-                            processor.Emit(OpCodes.Dup);
-                            processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                            processor.Emit(OpCodes.Ldarg_0);
-                            processor.Emit(OpCodes.Ldfld, enumeratorType.Fields.Single(f => f.Name == parameter.Name));
-                            if (parameter.ParameterType.IsValueType)
-                            {
-                                processor.Emit(OpCodes.Box, parameter.ParameterType);
-                            }
-                            processor.Emit(OpCodes.Stelem_Ref);
-                        }
-                        processor.Emit(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
-                    }
-                }
-                processor.Emit(OpCodes.Stfld, argsField);
+                stateMachine.InvokeEventHandler(processor, nameof(OnEntry));
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, argsField);
-                processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
-                processor.Emit(OpCodes.Stfld, aspectArgsField);
-
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectField);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
-                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
-
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, resumeFlagField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
                 branch[3] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, resumeFlagField);
+                processor.Emit(OpCodes.Stfld, stateMachine.ResumeFlagField);
                 branch[4] = processor.EmitAndReturn(OpCodes.Br_S);
 
-                branch[2].Operand = branch[3].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectField);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
-                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume))));
+                branch[2].Operand = branch[3].Operand = processor.EmitNop();
+                stateMachine.InvokeEventHandler(processor, nameof(OnResume));
 
                 branch[0].Operand = branch[1].Operand = branch[4].Operand = processor.EmitAndReturn(OpCodes.Nop);
             }
@@ -492,7 +384,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Stloc, exitFlagVariable);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, isDisposingField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
                 processor.Emit(OpCodes.Ldc_I4_2);
                 branch[0] = processor.EmitAndReturn(OpCodes.Beq_S);
 
@@ -501,7 +393,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Stloc, resultVariable);
 
                 branch[0].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, isDisposingField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
 
                 branch[1] = processor.EmitAndReturn(OpCodes.Brtrue_S);
                 processor.Emit(OpCodes.Ldloc, resultVariable);
@@ -515,25 +407,25 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Stloc, exitFlagVariable);
 
                 branch[3].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, exitFlagField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
                 branch[4] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, resumeFlagField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
                 branch[5] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldloc, exitFlagVariable);
                 branch[6] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
                 branch[7] = processor.EmitAndReturn(OpCodes.Br_S);
 
                 branch[6].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
                 processor.Emit(OpCodes.Ldarg_0);
                 var currentField = enumeratorType.Fields.Single(f => f.Name == "<>2__current");
                 processor.Emit(OpCodes.Ldfld, currentField);
@@ -544,9 +436,9 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
 
                 branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitAndReturn(OpCodes.Leave);
@@ -557,14 +449,14 @@ namespace SoftCube.Aspects
             {
                 catchStart = processor.EmitAndReturn(OpCodes.Stloc, exceptionVariable);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
                 processor.Emit(OpCodes.Ldloc, exceptionVariable);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod()));
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException))));
                 processor.Emit(OpCodes.Rethrow);
             }
@@ -576,11 +468,11 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[3];
 
                 catchEnd = finallyStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, exitFlagField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
                 branch[0] = processor.EmitAndReturn(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, resumeFlagField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
                 branch[1] = processor.EmitAndReturn(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldloc, exitFlagVariable);
@@ -588,12 +480,12 @@ namespace SoftCube.Aspects
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, exitFlagField);
+                processor.Emit(OpCodes.Stfld, stateMachine.ExitFlagField);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, aspectArgsField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
 
                 branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitAndReturn(OpCodes.Endfinally);
@@ -639,54 +531,46 @@ namespace SoftCube.Aspects
                 handlers.Add(handler);
             }
 
-            /// IL コードを最適化します。
+            /// IL を最適化します。
             moveNextMethod.OptimizeIL();
         }
 
         /// <summary>
         /// <see cref="IDisposable.Dispose"/> を書き換えます。
         /// </summary>
-        /// <param name="enumeratorType">反復子の型。</param>
-        /// <param name="isDisposingField"><c>isDisposing</c> のフィールド。</param>
-        private void ReplaceDisposeMethod(TypeDefinition enumeratorType, FieldDefinition isDisposingField)
+        /// <param name="stateMachine">イテレーターステートマシン。</param>
+        private void ReplaceDisposeMethod(IteratorStateMachine stateMachine)
         {
-            ///
-            var module        = enumeratorType.Module;
-            var disposeMethod = enumeratorType.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
-            var attributes    = disposeMethod.Attributes;
-            var declaringType = disposeMethod.DeclaringType;
-            var returnType    = disposeMethod.ReturnType;
+            var disposeMethod = stateMachine.DisposeMethod;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-            var originalDisposeMethod = new MethodDefinition(disposeMethod.Name + "<Original>", attributes, returnType);
+            var originalDisposeMethod = new MethodDefinition(disposeMethod.Name + "<Original>", disposeMethod.Attributes, disposeMethod.ReturnType);
             foreach (var parameter in disposeMethod.Parameters)
             {
                 originalDisposeMethod.Parameters.Add(parameter);
             }
 
             originalDisposeMethod.Body = disposeMethod.Body;
-
             foreach (var sequencePoint in disposeMethod.DebugInformation.SequencePoints)
             {
                 originalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            declaringType.Methods.Add(originalDisposeMethod);
+            stateMachine.StateMachineType.Methods.Add(originalDisposeMethod);
 
             /// 元々のメソッドを書き換えます。
             disposeMethod.Body = new Mono.Cecil.Cil.MethodBody(disposeMethod);
 
             var processor = disposeMethod.Body.GetILProcessor();
-
             {
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, isDisposingField);
+                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
                 var branch = processor.EmitAndReturn(OpCodes.Brfalse_S);
                 processor.Emit(OpCodes.Ret);
 
                 branch.Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, isDisposingField);
+                processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
             }
 
             /// try {
@@ -703,15 +587,15 @@ namespace SoftCube.Aspects
             {
                 finallyStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_2);
-                processor.Emit(OpCodes.Stfld, isDisposingField);
+                processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Callvirt, enumeratorType.Methods.Single(m => m.Name == "MoveNext"));
+                processor.Emit(OpCodes.Callvirt, stateMachine.MoveNextMethod);
 
                 processor.Emit(OpCodes.Pop);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_0);
-                processor.Emit(OpCodes.Stfld, isDisposingField);
+                processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
                 processor.Emit(OpCodes.Endfinally);
             }
 
@@ -721,15 +605,15 @@ namespace SoftCube.Aspects
             }
 
             /// Finally ハンドラーを追加します。
-            var exceptionHandlers = disposeMethod.Body.ExceptionHandlers;
-            var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
+            var handlers = disposeMethod.Body.ExceptionHandlers;
+            var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
             {
                 TryStart     = tryStart,
                 TryEnd       = finallyStart,
                 HandlerStart = finallyStart,
                 HandlerEnd   = finallyEnd,
             };
-            exceptionHandlers.Add(handler);
+            handlers.Add(finallyHandler);
         }
 
         #endregion
@@ -764,9 +648,9 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[2];
                 var insert = innerTryStart;
 
-                outerCatchHandler.TryStart = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.ResumeFlagField);
-                branch[0] = processor.EmitBranchBefore(insert, OpCodes.Brtrue_S);
+                outerCatchHandler.TryStart = processor.Emit(insert, OpCodes.Ldarg_0);
+                processor.Emit(insert, OpCodes.Ldfld, stateMachine.ResumeFlagField);
+                branch[0] = processor.EmitBranch(insert, OpCodes.Brtrue_S);
 
                 /// AspectArgs フィールドのインスタンスを生成します。
                 stateMachine.CreateAspectArgsInstance(processor, insert);
@@ -774,16 +658,16 @@ namespace SoftCube.Aspects
                 /// <see cref="OnEntry"/> を呼びだします。
                 stateMachine.InvokeEventHandler(processor, insert, nameof(OnEntry));
 
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldc_I4_1);
-                processor.EmitBefore(insert, OpCodes.Stfld, stateMachine.ResumeFlagField);
-                branch[1] = processor.EmitBranchBefore(insert, OpCodes.Br_S);
+                processor.Emit(insert, OpCodes.Ldarg_0);
+                processor.Emit(insert, OpCodes.Ldc_I4_1);
+                processor.Emit(insert, OpCodes.Stfld, stateMachine.ResumeFlagField);
+                branch[1] = processor.EmitBranch(insert, OpCodes.Br_S);
 
                 /// <see cref="OnResume"/> を呼びだします。
-                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Nop);
+                branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
                 stateMachine.InvokeEventHandler(processor, insert, nameof(OnResume));
 
-                branch[1].Operand = processor.EmitBefore(insert, OpCodes.Nop);
+                branch[1].Operand = processor.Emit(insert, OpCodes.Nop);
             }
 
             ///
@@ -792,17 +676,17 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[2];
                 var insert = leave;
 
-                var leaveTarget = processor.EmitBefore(insert, OpCodes.Ldarg_0);                    // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
-                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.StateField);
-                processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.EmitBranchBefore(insert, OpCodes.Beq);
+                var leaveTarget = processor.Emit(insert, OpCodes.Ldarg_0);                    // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
+                processor.Emit(insert, OpCodes.Ldfld, stateMachine.StateField);
+                processor.Emit(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.EmitBranch(insert, OpCodes.Beq);
 
                 /// <see cref="OnYield"/> を呼びだします。
                 stateMachine.InvokeEventHandler(processor, insert, nameof(OnYield));
-                branch[1] = processor.EmitBefore(insert, OpCodes.Br_S, insert);
+                branch[1] = processor.Emit(insert, OpCodes.Br_S, insert);
 
                 /// <see cref="OnSuccess"/> を呼びだします。
-                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Nop);
+                branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
                 stateMachine.SetReturnValue(processor, insert, resultVariable);
                 stateMachine.InvokeEventHandler(processor, insert, nameof(OnSuccess));
 
@@ -824,10 +708,10 @@ namespace SoftCube.Aspects
                 var insert = outerCatchStart;
 
                 /// <see cref="OnException"/> を呼び出します。
-                innerCatchStart = processor.EmitBefore(insert, OpCodes.Stloc, exceptionVariable);
+                innerCatchStart = processor.Emit(insert, OpCodes.Stloc, exceptionVariable);
                 stateMachine.SetException(processor, insert, exceptionVariable);
                 stateMachine.InvokeEventHandler(processor, insert, nameof(OnException));
-                processor.EmitBefore(insert, OpCodes.Rethrow);
+                processor.Emit(insert, OpCodes.Rethrow);
             }
 
             /// } finally {
@@ -838,29 +722,29 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[2];
                 var insert = outerCatchStart;
 
-                innerCatchEnd = innerFinallyStart = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.StateField);
-                processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.EmitBranchBefore(insert, OpCodes.Beq);
-                branch[1] = processor.EmitBranchBefore(insert, OpCodes.Br);
+                innerCatchEnd = innerFinallyStart = processor.Emit(insert, OpCodes.Ldarg_0);
+                processor.Emit(insert, OpCodes.Ldfld, stateMachine.StateField);
+                processor.Emit(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.EmitBranch(insert, OpCodes.Beq);
+                branch[1] = processor.EmitBranch(insert, OpCodes.Br);
 
                 /// <see cref="OnExit"/> を呼び出します。
-                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Nop);
+                branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
                 stateMachine.InvokeEventHandler(processor, insert, nameof(OnExit));
 
-                branch[1].Operand = processor.EmitBefore(insert, OpCodes.Endfinally);
+                branch[1].Operand = processor.Emit(insert, OpCodes.Endfinally);
                 innerFinallyEnd = insert;
             }
 
             {
                 var insert = outerCatchEnd;
 
-                leave.Operand = handlers[0].HandlerEnd = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.StateField);
-                processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
-                processor.EmitBefore(insert, OpCodes.Beq, insert);
+                leave.Operand = handlers[0].HandlerEnd = processor.Emit(insert, OpCodes.Ldarg_0);
+                processor.Emit(insert, OpCodes.Ldfld, stateMachine.StateField);
+                processor.Emit(insert, OpCodes.Ldc_I4, -1);
+                processor.Emit(insert, OpCodes.Beq, insert);
 
-                processor.EmitBefore(insert, OpCodes.Br, instructions.Last());
+                processor.Emit(insert, OpCodes.Br, instructions.Last());
             }
 
             /// 例外ハンドラーを追加します。
@@ -895,8 +779,6 @@ namespace SoftCube.Aspects
             /// IL を最適化します。
             moveNextMethod.OptimizeIL();
         }
-
-        #endregion
 
         #endregion
 
