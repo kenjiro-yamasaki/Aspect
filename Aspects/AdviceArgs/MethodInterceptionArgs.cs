@@ -6,40 +6,17 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプト引数。
     /// </summary>
-    public abstract class MethodInterceptionArgs : AdviceArgs
+    public abstract class MethodInterceptionArgs : MethodArgs
     {
-        #region プロパティ
-
-        /// <summary>
-        /// メソッド情報。
-        /// </summary>
-        public MethodBase Method { get; set; }
-
-        /// <summary>
-        /// 引数コレクション。
-        /// </summary>
-        public Arguments Arguments { get; set; }
-
-        /// <summary>
-        /// 戻り値。
-        /// </summary>
-        public object ReturnValue { get; set; }
-
-        /// <summary>
-        /// 例外。
-        /// </summary>
-        public Exception Exception { get; set; }
-
-        #endregion
-
         #region コンストラクター
 
         /// <summary>
         /// コンストラクター。
         /// </summary>
         /// <param name="instance">メソッドが実行されたインスタンス (静的メッソドが実行された場合、<c>null</c>)。</param>
-        public MethodInterceptionArgs(object instance)
-            : base(instance)
+        /// <param name="arguments">引数コレクション。</param>
+        public MethodInterceptionArgs(object instance, Arguments arguments)
+            : base(instance, arguments)
         {
         }
 

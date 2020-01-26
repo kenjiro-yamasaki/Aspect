@@ -77,13 +77,16 @@ namespace SoftCube.Aspects
             var methodAttributes = Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName;
             var constructor = new MethodDefinition(".ctor", methodAttributes, module.TypeSystem.Void);
 
-            var parameter = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, module.TypeSystem.Object);
-            constructor.Parameters.Add(parameter);
+            var instanceParameter  = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, module.TypeSystem.Object);
+            var argumentsParameter = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, module.ImportReference(typeof(Arguments)));
+            constructor.Parameters.Add(instanceParameter);
+            constructor.Parameters.Add(argumentsParameter);
 
             var processor = constructor.Body.GetILProcessor();
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Ldarg_1);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object) })));
+            processor.Emit(OpCodes.Ldarg_2);
+            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object), typeof(Arguments) })));
             processor.Emit(OpCodes.Ret);
             derivedMethodInterceptionArgsType.Methods.Add(constructor);
         }
@@ -100,7 +103,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         private void ReplaceMethod(MethodDefinition method, CustomAttribute attribute)
         {
-            ///
             var module        = method.DeclaringType.Module.Assembly.MainModule;
             var attributes    = method.Attributes;
             var declaringType = method.DeclaringType;
@@ -136,16 +138,6 @@ namespace SoftCube.Aspects
 
             var derivedMethodInterceptionArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
             processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Newobj, derivedMethodInterceptionArgsType.Methods.Single(m => m.Name == ".ctor"));
-            processor.Emit(OpCodes.Stloc, eventArgsIndex);
-
-            /// メソッド情報をイベントデータに設定します。
-            processor.Emit(OpCodes.Ldloc, eventArgsIndex);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
-            processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Method)).GetSetMethod()));
-
-            /// パラメーター情報をイベントデータに設定します。
-            processor.Emit(OpCodes.Ldloc, eventArgsIndex);
             {
                 /// パラメーターコレクションを生成し、ロードします。
                 var parameters = method.Parameters;
@@ -165,7 +157,13 @@ namespace SoftCube.Aspects
                 }
                 processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(ArgumentsArray).GetConstructor(new Type[] { typeof(object[]) })));
             }
-            processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetSetMethod()));
+            processor.Emit(OpCodes.Newobj, derivedMethodInterceptionArgsType.Methods.Single(m => m.Name == ".ctor"));
+            processor.Emit(OpCodes.Stloc, eventArgsIndex);
+
+            /// メソッド情報をイベントデータに設定します。
+            processor.Emit(OpCodes.Ldloc, eventArgsIndex);
+            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
+            processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Method)).GetSetMethod()));
 
             /// OnInvoke を呼び出します。
             processor.Emit(OpCodes.Ldloc, attributeIndex);

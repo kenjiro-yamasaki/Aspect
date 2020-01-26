@@ -30,11 +30,6 @@ namespace SoftCube.Aspects
         /// </summary>
         public Exception Exception { get; set; }
 
-        /// <summary>
-        /// イテレーターメソッドによって <c>yield return</c> された値。
-        /// </summary>
-        public object YieldValue { get; set; }
-
         #endregion
 
         #region コンストラクター

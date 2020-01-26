@@ -5,6 +5,15 @@
     /// </summary>
     public class MethodExecutionArgs : MethodArgs
     {
+        #region プロパティ
+
+        /// <summary>
+        /// イテレーターメソッドによって <c>yield return</c> された値。
+        /// </summary>
+        public object YieldValue { get; set; }
+
+        #endregion
+
         #region コンストラクター
 
         /// <summary>
