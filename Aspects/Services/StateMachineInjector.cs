@@ -6,9 +6,9 @@ using System.Linq;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// ステートマシン。
+    /// ステートマシンへの注入。
     /// </summary>
-    public abstract class StateMachine
+    public abstract class StateMachineInjector
     {
         #region プロパティ
 
@@ -32,7 +32,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクトの型。
         /// </summary>
-        public TypeDefinition AspectType => Aspect.AttributeType.Resolve();
+        public TypeDefinition AspectType { get; }
 
         #endregion
 
@@ -46,7 +46,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// ステートマシンの型。
         /// </summary>
-        public TypeDefinition StateMachineType => (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
+        public TypeDefinition StateMachineType { get; }// => (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
 
         #endregion
 
@@ -84,7 +84,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// MoveNext メソッド。
         /// </summary>
-        public MethodDefinition MoveNextMethod => StateMachineType.Methods.Single(m => m.Name == "MoveNext");
+        public MethodDefinition MoveNextMethod { get; }
 
         #endregion
 
@@ -97,17 +97,21 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="aspect">アスペクト。</param>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        public StateMachine(CustomAttribute aspect, MethodDefinition targetMethod)
+        public StateMachineInjector(CustomAttribute aspect, MethodDefinition targetMethod)
         {
-            Aspect       = aspect ?? throw new ArgumentNullException(nameof(aspect));
-            TargetMethod = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
-            Module       = StateMachineType.Module;
+            Aspect           = aspect ?? throw new ArgumentNullException(nameof(aspect));
+            AspectType       = Aspect.AttributeType.Resolve();
+            TargetMethod     = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
+            StateMachineType = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
+            Module           = StateMachineType.Module;
 
             StateField      = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
             AspectField     = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
             AspectArgsField = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(typeof(MethodExecutionArgs)));
             ArgsField       = CreateField("*args*",       FieldAttributes.Private, Module.ImportReference(typeof(Arguments)));
             ResumeFlagField = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
+
+            MoveNextMethod  = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }
 
         #endregion

@@ -44,18 +44,18 @@ namespace SoftCube.Aspects
 
             if (iteratorStateMachineAttribute != null)
             {
-                var stateMachine = new IteratorStateMachine(aspect, method);
+                var injector = new IteratorStateMachineInjector(aspect, method);
 
-                stateMachine.CreateAspectInstance();
-                ReplaceMoveNextMethod(stateMachine);
-                ReplaceDisposeMethod(stateMachine);
+                injector.CreateAspectInstance();
+                ReplaceMoveNextMethod(injector);
+                ReplaceDisposeMethod(injector);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var stateMachine = new AsyncStateMachine(aspect, method);
+                var injector = new AsyncStateMachineInjector(aspect, method);
 
-                stateMachine.CreateAspectInstance();
-                ReplaceMoveNextMethod(stateMachine);
+                injector.CreateAspectInstance();
+                ReplaceMoveNextMethod(injector);
             }
             else
             {
@@ -293,11 +293,11 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IEnumerator.MoveNext"/> を書き換えます。
         /// </summary>
-        /// <param name="stateMachine">イテレーターステートマシン。</param>
-        private void ReplaceMoveNextMethod(IteratorStateMachine stateMachine)
+        /// <param name="injector">イテレーターステートマシンへの注入。</param>
+        private void ReplaceMoveNextMethod(IteratorStateMachineInjector injector)
         {
-            var module         = stateMachine.Module;
-            var moveNextMethod = stateMachine.MoveNextMethod;
+            var module         = injector.Module;
+            var moveNextMethod = injector.MoveNextMethod;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
             var originalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
@@ -313,7 +313,7 @@ namespace SoftCube.Aspects
                 originalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            stateMachine.StateMachineType.Methods.Add(originalMoveNextMethod);
+            injector.StateMachineType.Methods.Add(originalMoveNextMethod);
 
             /// 元々のメソッドを書き換えます。
             moveNextMethod.Body = new Mono.Cecil.Cil.MethodBody(moveNextMethod);
@@ -335,33 +335,33 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[5];
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
+                processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
                 branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
+                processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
                 branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
+                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
                 branch[2] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 /// <see cref="OnEntry"/> を呼びだします。
-                stateMachine.CreateAspectArgsInstance(processor);
-                stateMachine.InvokeEventHandler(processor, nameof(OnEntry));
+                injector.CreateAspectArgsInstance(processor);
+                injector.InvokeEventHandler(processor, nameof(OnEntry));
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
+                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
                 branch[3] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, stateMachine.ResumeFlagField);
+                processor.Emit(OpCodes.Stfld, injector.ResumeFlagField);
                 branch[4] = processor.EmitBranch(OpCodes.Br_S);
 
                 /// <see cref="OnResume"/> を呼びだします。
                 branch[2].Operand = branch[3].Operand = processor.EmitNop();
-                stateMachine.InvokeEventHandler(processor, nameof(OnResume));
+                injector.InvokeEventHandler(processor, nameof(OnResume));
 
                 branch[0].Operand = branch[1].Operand = branch[4].Operand = processor.EmitNop();
             }
@@ -377,7 +377,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Stloc, exitFlagVariable);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
+                processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
                 processor.Emit(OpCodes.Ldc_I4_2);
                 branch[0] = processor.EmitBranch(OpCodes.Beq_S);
 
@@ -387,7 +387,7 @@ namespace SoftCube.Aspects
 
                 branch[0].Operand = processor.EmitNop();
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
+                processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
                 branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldloc, resultVariable);
@@ -403,23 +403,23 @@ namespace SoftCube.Aspects
 
                 branch[3].Operand = processor.EmitNop();
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
+                processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
                 branch[4] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
+                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
                 branch[5] = processor.EmitBranch(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldloc, exitFlagVariable);
                 branch[6] = processor.EmitBranch(OpCodes.Brfalse_S);
 
-                stateMachine.InvokeEventHandler(processor, nameof(OnSuccess));
+                injector.InvokeEventHandler(processor, nameof(OnSuccess));
                 branch[7] = processor.EmitBranch(OpCodes.Br_S);
 
                 /// <see cref="OnYield"/> を呼びだします。
                 branch[6].Operand = processor.EmitNop();
-                stateMachine.SetYieldValue(processor);
-                stateMachine.InvokeEventHandler(processor, nameof(OnYield));
+                injector.SetYieldValue(processor);
+                injector.InvokeEventHandler(processor, nameof(OnYield));
 
                 branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
             }
@@ -430,8 +430,8 @@ namespace SoftCube.Aspects
                 /// <see cref="OnException"/> を呼びだします。
                 catchStart = processor.EmitNop();
                 processor.Emit(OpCodes.Stloc, exceptionVariable);
-                stateMachine.SetException(processor, exceptionVariable);
-                stateMachine.InvokeEventHandler(processor, nameof(OnException));
+                injector.SetException(processor, exceptionVariable);
+                injector.InvokeEventHandler(processor, nameof(OnException));
                 processor.Emit(OpCodes.Rethrow);
             }
 
@@ -443,11 +443,11 @@ namespace SoftCube.Aspects
 
                 catchEnd = finallyStart = processor.EmitNop();
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
+                processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
                 branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
+                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
                 branch[1] = processor.EmitBranch(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldloc, exitFlagVariable);
@@ -456,10 +456,10 @@ namespace SoftCube.Aspects
                 /// ExitFlag を true にします。
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, stateMachine.ExitFlagField);
+                processor.Emit(OpCodes.Stfld, injector.ExitFlagField);
 
                 /// <see cref="OnExit"/> を呼びだします。
-                stateMachine.InvokeEventHandler(processor, nameof(OnExit));
+                injector.InvokeEventHandler(processor, nameof(OnExit));
 
                 branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitNop();
                 processor.Emit(OpCodes.Endfinally);
@@ -482,8 +482,9 @@ namespace SoftCube.Aspects
 
             /// 例外ハンドラーを追加します。
             {
-                /// Catch ハンドラーを追加します。
                 var handlers = moveNextMethod.Body.ExceptionHandlers;
+
+                /// Catch ハンドラーを追加します。
                 var catchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
                     CatchType    = module.ImportReference(typeof(Exception)),
@@ -512,10 +513,10 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IDisposable.Dispose"/> を書き換えます。
         /// </summary>
-        /// <param name="stateMachine">イテレーターステートマシン。</param>
-        private void ReplaceDisposeMethod(IteratorStateMachine stateMachine)
+        /// <param name="injector">イテレーターステートマシンへの注入。</param>
+        private void ReplaceDisposeMethod(IteratorStateMachineInjector injector)
         {
-            var disposeMethod = stateMachine.DisposeMethod;
+            var disposeMethod = injector.DisposeMethod;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
             var originalDisposeMethod = new MethodDefinition(disposeMethod.Name + "<Original>", disposeMethod.Attributes, disposeMethod.ReturnType);
@@ -530,7 +531,7 @@ namespace SoftCube.Aspects
                 originalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            stateMachine.StateMachineType.Methods.Add(originalDisposeMethod);
+            injector.StateMachineType.Methods.Add(originalDisposeMethod);
 
             /// 元々のメソッドを書き換えます。
             disposeMethod.Body = new Mono.Cecil.Cil.MethodBody(disposeMethod);
@@ -538,14 +539,14 @@ namespace SoftCube.Aspects
             var processor = disposeMethod.Body.GetILProcessor();
             {
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
+                processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
                 var branch = processor.EmitBranch(OpCodes.Brfalse_S);
                 processor.Emit(OpCodes.Ret);
 
                 branch.Operand = processor.EmitNop();
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
+                processor.Emit(OpCodes.Stfld, injector.IsDisposingField);
             }
 
             /// try {
@@ -564,15 +565,15 @@ namespace SoftCube.Aspects
                 finallyStart = processor.EmitNop();
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_2);
-                processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
+                processor.Emit(OpCodes.Stfld, injector.IsDisposingField);
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Callvirt, stateMachine.MoveNextMethod);
+                processor.Emit(OpCodes.Callvirt, injector.MoveNextMethod);
 
                 processor.Emit(OpCodes.Pop);
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_0);
-                processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
+                processor.Emit(OpCodes.Stfld, injector.IsDisposingField);
                 processor.Emit(OpCodes.Endfinally);
             }
 
@@ -601,11 +602,11 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IAsyncStateMachine.MoveNext"> を書き換えます。
         /// </summary>
-        /// <param name="stateMachine">非同期ステートマシン。</param>
-        private void ReplaceMoveNextMethod(AsyncStateMachine stateMachine)
+        /// <param name="injector">非同期ステートマシンへの注入。</param>
+        private void ReplaceMoveNextMethod(AsyncStateMachineInjector injector)
         {
-            var module         = stateMachine.Module;
-            var moveNextMethod = stateMachine.MoveNextMethod;
+            var module         = injector.Module;
+            var moveNextMethod = injector.MoveNextMethod;
 
             /// ローカル変数を追加します。
             var variables = moveNextMethod.Body.Variables;
@@ -627,23 +628,23 @@ namespace SoftCube.Aspects
                 var insert = innerTryStart;
 
                 outerCatchHandler.TryStart = processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldfld, stateMachine.ResumeFlagField);
+                processor.Emit(insert, OpCodes.Ldfld, injector.ResumeFlagField);
                 branch[0] = processor.EmitBranch(insert, OpCodes.Brtrue_S);
 
                 /// AspectArgs フィールドのインスタンスを生成します。
-                stateMachine.CreateAspectArgsInstance(processor, insert);
+                injector.CreateAspectArgsInstance(processor, insert);
 
                 /// <see cref="OnEntry"/> を呼びだします。
-                stateMachine.InvokeEventHandler(processor, insert, nameof(OnEntry));
+                injector.InvokeEventHandler(processor, insert, nameof(OnEntry));
 
                 processor.Emit(insert, OpCodes.Ldarg_0);
                 processor.Emit(insert, OpCodes.Ldc_I4_1);
-                processor.Emit(insert, OpCodes.Stfld, stateMachine.ResumeFlagField);
+                processor.Emit(insert, OpCodes.Stfld, injector.ResumeFlagField);
                 branch[1] = processor.EmitBranch(insert, OpCodes.Br_S);
 
                 /// <see cref="OnResume"/> を呼びだします。
                 branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
-                stateMachine.InvokeEventHandler(processor, insert, nameof(OnResume));
+                injector.InvokeEventHandler(processor, insert, nameof(OnResume));
 
                 branch[1].Operand = processor.Emit(insert, OpCodes.Nop);
             }
@@ -655,18 +656,18 @@ namespace SoftCube.Aspects
                 var insert = leave;
 
                 var leaveTarget = processor.Emit(insert, OpCodes.Ldarg_0);                    // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
-                processor.Emit(insert, OpCodes.Ldfld, stateMachine.StateField);
+                processor.Emit(insert, OpCodes.Ldfld, injector.StateField);
                 processor.Emit(insert, OpCodes.Ldc_I4, -1);
                 branch[0] = processor.EmitBranch(insert, OpCodes.Beq);
 
                 /// <see cref="OnYield"/> を呼びだします。
-                stateMachine.InvokeEventHandler(processor, insert, nameof(OnYield));
+                injector.InvokeEventHandler(processor, insert, nameof(OnYield));
                 branch[1] = processor.Emit(insert, OpCodes.Br_S, insert);
 
                 /// <see cref="OnSuccess"/> を呼びだします。
                 branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
-                stateMachine.SetReturnValue(processor, insert, resultVariable);
-                stateMachine.InvokeEventHandler(processor, insert, nameof(OnSuccess));
+                injector.SetReturnValue(processor, insert, resultVariable);
+                injector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
 
                 /// try 内の Leave 命令の転送先を書き換えます。
                 /// この書き換えにより OnYield と OnSuccess の呼び出し処理に転送します。
@@ -687,8 +688,8 @@ namespace SoftCube.Aspects
 
                 /// <see cref="OnException"/> を呼び出します。
                 innerCatchStart = processor.Emit(insert, OpCodes.Stloc, exceptionVariable);
-                stateMachine.SetException(processor, insert, exceptionVariable);
-                stateMachine.InvokeEventHandler(processor, insert, nameof(OnException));
+                injector.SetException(processor, insert, exceptionVariable);
+                injector.InvokeEventHandler(processor, insert, nameof(OnException));
                 processor.Emit(insert, OpCodes.Rethrow);
             }
 
@@ -701,14 +702,14 @@ namespace SoftCube.Aspects
                 var insert = outerCatchStart;
 
                 innerCatchEnd = innerFinallyStart = processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldfld, stateMachine.StateField);
+                processor.Emit(insert, OpCodes.Ldfld, injector.StateField);
                 processor.Emit(insert, OpCodes.Ldc_I4, -1);
                 branch[0] = processor.EmitBranch(insert, OpCodes.Beq);
                 branch[1] = processor.EmitBranch(insert, OpCodes.Br);
 
                 /// <see cref="OnExit"/> を呼び出します。
                 branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
-                stateMachine.InvokeEventHandler(processor, insert, nameof(OnExit));
+                injector.InvokeEventHandler(processor, insert, nameof(OnExit));
 
                 branch[1].Operand = processor.Emit(insert, OpCodes.Endfinally);
                 innerFinallyEnd = insert;
@@ -718,7 +719,7 @@ namespace SoftCube.Aspects
                 var insert = outerCatchEnd;
 
                 leave.Operand = handlers[0].HandlerEnd = processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldfld, stateMachine.StateField);
+                processor.Emit(insert, OpCodes.Ldfld, injector.StateField);
                 processor.Emit(insert, OpCodes.Ldc_I4, -1);
                 processor.Emit(insert, OpCodes.Beq, insert);
 

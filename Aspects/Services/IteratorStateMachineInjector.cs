@@ -6,9 +6,9 @@ using System.Linq;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// イテレーターステートマシン。
+    /// イテレーターステートマシンへの注入。
     /// </summary>
-    public class IteratorStateMachine : StateMachine
+    public class IteratorStateMachineInjector : StateMachineInjector
     {
         #region プロパティ
 
@@ -54,7 +54,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="aspect">アスペクト。</param>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        public IteratorStateMachine(CustomAttribute aspect, MethodDefinition targetMethod)
+        public IteratorStateMachineInjector(CustomAttribute aspect, MethodDefinition targetMethod)
             : base(aspect, targetMethod)
         {
             ExitFlagField    = CreateField("*exitFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
