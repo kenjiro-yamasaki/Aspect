@@ -69,23 +69,10 @@ namespace SoftCube.Aspects
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var asyncType = (TypeDefinition)asyncStateMachineAttribute.ConstructorArguments[0].Value;
-                var module = asyncType.Module;
+                var injector = new AsyncStateMachine(aspect, method);
 
-                /// フィールドを追加します。
-                var aspectField     = new FieldDefinition("*aspect*",      Mono.Cecil.FieldAttributes.Private, module.ImportReference(GetType()));
-                var aspectArgsField = new FieldDefinition("*aspectArgs*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(MethodExecutionArgs)));
-                var argsField       = new FieldDefinition("*args*",        Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
-                var resumeFlagField  = new FieldDefinition("*resumeFlag*", Mono.Cecil.FieldAttributes.Private, module.TypeSystem.Boolean);
-
-                asyncType.Fields.Add(aspectField);
-                asyncType.Fields.Add(aspectArgsField);
-                asyncType.Fields.Add(argsField);
-                asyncType.Fields.Add(resumeFlagField);
-
-                /// 各メソッドを書き換えます。
-                CreateAspectField(asyncType, aspect, aspectField);
-                ReplaceMoveNextMethod(method, asyncType, aspectField, aspectArgsField, argsField, resumeFlagField);
+                injector.CreateAspectInstance();
+                ReplaceMoveNextMethod(injector);
             }
             else
             {
@@ -105,7 +92,6 @@ namespace SoftCube.Aspects
         /// <param name="aspect">アスペクト。</param>
         private void ReplaceMethod(MethodDefinition method, CustomAttribute aspect)
         {
-            ///
             var module        = method.Module;
             var attributes    = method.Attributes;
             var declaringType = method.DeclaringType;
@@ -319,12 +305,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクトフィールドのインスタンスを生成します。
         /// </summary>
-        /// <param name="declaringType">反復子の型。</param>
+        /// <param name="stateMachineType">ステートマシンの型。</param>
         /// <param name="aspect">アスペクト。</param>
         /// <param name="aspectField">アスペクトのフィールド。</param>
-        private void CreateAspectField(TypeDefinition declaringType, CustomAttribute aspect, FieldDefinition aspectField)
+        private void CreateAspectField(TypeDefinition stateMachineType, CustomAttribute aspect, FieldDefinition aspectField)
         {
-            var constructor  = declaringType.Methods.Single(m => m.Name == ".ctor");
+            var constructor  = stateMachineType.Methods.Single(m => m.Name == ".ctor");
             var processor    = constructor.Body.GetILProcessor();
             var instructions = constructor.Body.Instructions;
             var first        = instructions.First();
@@ -753,124 +739,49 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IAsyncStateMachine.MoveNext"> を書き換えます。
         /// </summary>
-        /// <param name="method">メソッド。</param>
-        /// <param name="asyncType">非同期ステートマシンの型。</param>
-        /// <param name="aspectField"><c>aspect</c > のフィールド。</param>
-        /// <param name="aspectArgsField"><c>aspectArgs</c> のフィールド。</param>
-        /// <param name="argsField"><c>args</c> のフィールド。</param>
-        private void ReplaceMoveNextMethod(MethodDefinition method, TypeDefinition asyncType, FieldDefinition aspectField, FieldDefinition aspectArgsField, FieldDefinition argsField, FieldDefinition resumeFlagField)
+        /// <param name="stateMachine">非同期ステートマシン。</param>
+        private void ReplaceMoveNextMethod(AsyncStateMachine stateMachine)
         {
-            var module         = asyncType.Module;
-            var moveNextMethod = asyncType.Methods.Single(m => m.Name == "MoveNext");
-            var attributes     = moveNextMethod.Attributes;
-            var declaringType  = moveNextMethod.DeclaringType;
+            var module         = stateMachine.Module;
+            var moveNextMethod = stateMachine.MoveNextMethod;
 
             /// ローカル変数を追加します。
             var variables = moveNextMethod.Body.Variables;
-
-            int resultVariable = 1;
-
+            int resultVariable    = 1;
             int exceptionVariable = variables.Count;
             variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
 
-            ///
+            /// IL を書き換えます。
             var processor    = moveNextMethod.Body.GetILProcessor();
             var instructions = moveNextMethod.Body.Instructions;
             var handlers     = moveNextMethod.Body.ExceptionHandlers;
 
             var outerCatchHandler = handlers[0];
-
-            var outerCatchStart = handlers[0].HandlerStart;
-            var outerCatchEnd   = handlers[0].HandlerEnd;
-            var innerTryStart   = handlers[0].TryStart;
+            var outerCatchStart   = outerCatchHandler.HandlerStart;
+            var outerCatchEnd     = outerCatchHandler.HandlerEnd;
+            var innerTryStart     = outerCatchHandler.TryStart;
             {
                 var branch = new Instruction[2];
                 var insert = innerTryStart;
 
                 outerCatchHandler.TryStart = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, resumeFlagField);
+                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.ResumeFlagField);
                 branch[0] = processor.EmitBranchBefore(insert, OpCodes.Brtrue_S);
 
-                /// 
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>4__this"));
-                if (method.DeclaringType.IsValueType)
-                {
-                    processor.EmitBefore(insert, OpCodes.Box, method.DeclaringType);
-                }
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                {
-                    var parameters = method.Parameters;
-                    var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+                /// AspectArgs フィールドのインスタンスを生成します。
+                stateMachine.CreateAspectArgsInstance(processor, insert);
 
-                    var argumentsType = parameters.Count switch
-                    {
-                        0 => typeof(Arguments),
-                        1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                        2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                        3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                        4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                        5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                        6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                        7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                        8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                        _ => typeof(ArgumentsArray)
-                    };
-
-                    if (parameters.Count <= 8)
-                    {
-                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                        {
-                            var parameter = parameters[parameterIndex];
-                            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                            processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
-                        }
-                        processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
-                    }
-                    else
-                    {
-                        processor.EmitBefore(insert, OpCodes.Ldc_I4, parameters.Count);
-                        processor.EmitBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
-                        for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                        {
-                            var parameter = parameters[parameterIndex];
-                            processor.EmitBefore(insert, OpCodes.Dup);
-                            processor.EmitBefore(insert, OpCodes.Ldc_I4, parameterIndex);
-                            processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                            processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == parameter.Name));
-                            if (parameter.ParameterType.IsValueType)
-                            {
-                                processor.EmitBefore(insert, OpCodes.Box, parameter.ParameterType);
-                            }
-                            processor.EmitBefore(insert, OpCodes.Stelem_Ref);
-                        }
-                        processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
-                    }
-                }
-                processor.EmitBefore(insert, OpCodes.Stfld, argsField);
-
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, argsField);
-                processor.EmitBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
-                processor.EmitBefore(insert, OpCodes.Stfld, aspectArgsField);
-
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnEntry))));
+                /// <see cref="OnEntry"/> を呼びだします。
+                stateMachine.InvokeEventHandler(processor, insert, nameof(OnEntry));
 
                 processor.EmitBefore(insert, OpCodes.Ldarg_0);
                 processor.EmitBefore(insert, OpCodes.Ldc_I4_1);
-                processor.EmitBefore(insert, OpCodes.Stfld, resumeFlagField);
+                processor.EmitBefore(insert, OpCodes.Stfld, stateMachine.ResumeFlagField);
                 branch[1] = processor.EmitBranchBefore(insert, OpCodes.Br_S);
 
-                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnResume))));
+                /// <see cref="OnResume"/> を呼びだします。
+                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Nop);
+                stateMachine.InvokeEventHandler(processor, insert, nameof(OnResume));
 
                 branch[1].Operand = processor.EmitBefore(insert, OpCodes.Nop);
             }
@@ -882,44 +793,18 @@ namespace SoftCube.Aspects
                 var insert = leave;
 
                 var leaveTarget = processor.EmitBefore(insert, OpCodes.Ldarg_0);                    // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
-                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.StateField);
                 processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
                 branch[0] = processor.EmitBranchBefore(insert, OpCodes.Beq);
 
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
+                /// <see cref="OnYield"/> を呼びだします。
+                stateMachine.InvokeEventHandler(processor, insert, nameof(OnYield));
                 branch[1] = processor.EmitBefore(insert, OpCodes.Br_S, insert);
 
-                if (method.ReturnType is GenericInstanceType genericReturnType)
-                {
-                    var returnType = genericReturnType.GenericArguments[0];
-
-                    branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                    processor.EmitBefore(insert, OpCodes.Ldloc, resultVariable);
-                    if (returnType.IsValueType)
-                    {
-                        processor.EmitBefore(insert, OpCodes.Box, returnType);
-                    }
-                    processor.EmitBefore(insert, OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
-
-                    processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
-                    processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                    processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
-                }
-                else
-                {
-                    branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
-                    processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                    processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                    processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
-                }
+                /// <see cref="OnSuccess"/> を呼びだします。
+                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Nop);
+                stateMachine.SetReturnValue(processor, insert, resultVariable);
+                stateMachine.InvokeEventHandler(processor, insert, nameof(OnSuccess));
 
                 /// try 内の Leave 命令の転送先を書き換えます。
                 /// この書き換えにより OnYield と OnSuccess の呼び出し処理に転送します。
@@ -938,20 +823,11 @@ namespace SoftCube.Aspects
             {
                 var insert = outerCatchStart;
 
-                /// <see cref="MethodExecutionArgs.Exception"/> に例外を設定します。
-                processor.InsertBefore(insert, innerCatchStart = processor.Create(OpCodes.Stloc, exceptionVariable));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldloc, exceptionVariable));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod())));
-
-                /// <see cref="OnException(MethodExecutionArgs)"/> を呼び出します。
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldarg_0));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldfld, aspectArgsField));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException)))));
-                processor.InsertBefore(insert, processor.Create(OpCodes.Rethrow));
+                /// <see cref="OnException"/> を呼び出します。
+                innerCatchStart = processor.EmitBefore(insert, OpCodes.Stloc, exceptionVariable);
+                stateMachine.SetException(processor, insert, exceptionVariable);
+                stateMachine.InvokeEventHandler(processor, insert, nameof(OnException));
+                processor.EmitBefore(insert, OpCodes.Rethrow);
             }
 
             /// } finally {
@@ -963,17 +839,14 @@ namespace SoftCube.Aspects
                 var insert = outerCatchStart;
 
                 innerCatchEnd = innerFinallyStart = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.StateField);
                 processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
                 branch[0] = processor.EmitBranchBefore(insert, OpCodes.Beq);
                 branch[1] = processor.EmitBranchBefore(insert, OpCodes.Br);
 
-                /// <see cref="OnExit(MethodExecutionArgs)"/> を呼び出します。
-                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectField);
-                processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, aspectArgsField);
-                processor.EmitBefore(insert, OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
+                /// <see cref="OnExit"/> を呼び出します。
+                branch[0].Operand = processor.EmitBefore(insert, OpCodes.Nop);
+                stateMachine.InvokeEventHandler(processor, insert, nameof(OnExit));
 
                 branch[1].Operand = processor.EmitBefore(insert, OpCodes.Endfinally);
                 innerFinallyEnd = insert;
@@ -983,37 +856,41 @@ namespace SoftCube.Aspects
                 var insert = outerCatchEnd;
 
                 leave.Operand = handlers[0].HandlerEnd = processor.EmitBefore(insert, OpCodes.Ldarg_0);
-                processor.EmitBefore(insert, OpCodes.Ldfld, asyncType.Fields.Single(f => f.Name == "<>1__state"));
+                processor.EmitBefore(insert, OpCodes.Ldfld, stateMachine.StateField);
                 processor.EmitBefore(insert, OpCodes.Ldc_I4, -1);
                 processor.EmitBefore(insert, OpCodes.Beq, insert);
 
                 processor.EmitBefore(insert, OpCodes.Br, instructions.Last());
             }
 
-            /// Catch ハンドラーを追加します。
-            var innerCatchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+            /// 例外ハンドラーを追加します。
             {
-                CatchType    = module.ImportReference(typeof(Exception)),
-                TryStart     = innerTryStart,
-                TryEnd       = innerCatchStart,
-                HandlerStart = innerCatchStart,
-                HandlerEnd   = innerCatchEnd,
-            };
+                /// Catch ハンドラーを追加します。
+                var innerCatchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+                {
+                    CatchType    = module.ImportReference(typeof(Exception)),
+                    TryStart     = innerTryStart,
+                    TryEnd       = innerCatchStart,
+                    HandlerStart = innerCatchStart,
+                    HandlerEnd   = innerCatchEnd,
+                };
 
-            var innerFinallryHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-            {
-                TryStart     = innerTryStart,
-                TryEnd       = innerFinallyStart,
-                HandlerStart = innerFinallyStart,
-                HandlerEnd   = innerFinallyEnd,
-            };
+                /// Finally ハンドラーを追加します。
+                var innerFinallryHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
+                {
+                    TryStart     = innerTryStart,
+                    TryEnd       = innerFinallyStart,
+                    HandlerStart = innerFinallyStart,
+                    HandlerEnd   = innerFinallyEnd,
+                };
 
-            handlers.Clear();
-            handlers.Add(innerCatchHandler);
-            handlers.Add(innerFinallryHandler);
-            handlers.Add(outerCatchHandler);
+                handlers.Clear();
+                handlers.Add(innerCatchHandler);
+                handlers.Add(innerFinallryHandler);
+                handlers.Add(outerCatchHandler);
+            }
 
-            ///
+            /// IL を最適化します。
             moveNextMethod.OptimizeIL();
         }
 

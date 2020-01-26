@@ -76,7 +76,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// IL コードを最適化します。
+        /// IL を最適化します。
         /// </summary>
         /// <param name="method">メソッド。</param>
         public static void OptimizeIL(this MethodDefinition method)
