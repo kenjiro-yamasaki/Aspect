@@ -293,14 +293,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="IEnumerator.MoveNext"/> を書き換えます。
         /// </summary>
-        /// <param name="method">メソッド。</param>
-        /// <param name="enumeratorType">反復子の型。</param>
-        /// <param name="aspectField"><c>aspect</c > のフィールド。</param>
-        /// <param name="aspectArgsField"><c>aspectArgs</c> のフィールド。</param>
-        /// <param name="argsField"><c>args</c> のフィールド。</param>
-        /// <param name="resumeFlagField"><c> resumeFlag</c> のフィールド。</param>
-        /// <param name="exitFlagField"><c> exitFlag</c> のフィールド。</param>
-        /// <param name="isDisposingField"><c> isDisposing</c> のフィールド。</param>
+        /// <param name="stateMachine">イテレーターステートマシン。</param>
         private void ReplaceMoveNextMethod(IteratorStateMachine stateMachine)
         {
             var module         = stateMachine.Module;
@@ -656,7 +649,7 @@ namespace SoftCube.Aspects
             }
 
             ///
-            var leave = handlers[0].HandlerStart.Previous;
+            var leave = outerCatchHandler.HandlerStart.Previous;
             {
                 var branch = new Instruction[2];
                 var insert = leave;
