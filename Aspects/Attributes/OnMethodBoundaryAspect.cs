@@ -884,6 +884,8 @@ namespace SoftCube.Aspects
                     HandlerEnd   = innerFinallyEnd,
                 };
 
+                /// 内側の例外ハンドラーが先になるように並び変えます。
+                /// この順番を間違えるとランタイムエラーが発生します。
                 handlers.Clear();
                 handlers.Add(innerCatchHandler);
                 handlers.Add(innerFinallryHandler);
