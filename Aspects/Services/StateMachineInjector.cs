@@ -82,6 +82,11 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
+        /// Constructor メソッド。
+        /// </summary>
+        public MethodDefinition Constructor { get; }
+
+        /// <summary>
         /// MoveNext メソッド。
         /// </summary>
         public MethodDefinition MoveNextMethod { get; }
@@ -111,7 +116,8 @@ namespace SoftCube.Aspects
             ArgsField       = CreateField("*args*",       FieldAttributes.Private, Module.ImportReference(typeof(Arguments)));
             ResumeFlagField = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
-            MoveNextMethod  = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
+            Constructor    = StateMachineType.Methods.Single(m => m.Name == ".ctor");
+            MoveNextMethod = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }
 
         #endregion
@@ -126,9 +132,8 @@ namespace SoftCube.Aspects
         /// <param name="aspectField">アスペクトのフィールド。</param>
         public void CreateAspectInstance()
         {
-            var constructor  = StateMachineType.Methods.Single(m => m.Name == ".ctor");
-            var processor    = constructor.Body.GetILProcessor();
-            var instructions = constructor.Body.Instructions;
+            var processor    = Constructor.Body.GetILProcessor();
+            var instructions = Constructor.Body.Instructions;
             var first        = instructions.First();
 
             /// アスペクトのインスタンスを生成し、ローカル変数にストアします。
