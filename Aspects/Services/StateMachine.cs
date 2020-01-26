@@ -247,6 +247,16 @@ namespace SoftCube.Aspects
         /// <see cref="MethodArgs.Exception"/> に例外を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="exceptionVariable">例外のローカル変数。</param>
+        public void SetException(ILProcessor processor, int exceptionVariable)
+        {
+            SetException(processor, null, exceptionVariable);
+        }
+
+        /// <summary>
+        /// <see cref="MethodArgs.Exception"/> に例外を設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         /// <param name="exceptionVariable">例外のローカル変数。</param>
         public void SetException(ILProcessor processor, Instruction insert, int exceptionVariable)

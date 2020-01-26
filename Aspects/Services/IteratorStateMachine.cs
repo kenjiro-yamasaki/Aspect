@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Linq;
 
@@ -17,6 +18,11 @@ namespace SoftCube.Aspects
         public override CustomAttribute StateMachineAttribute => TargetMethod.CustomAttributes.Single(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
 
         #region フィールド
+
+        /// <summary>
+        /// Current フィールド。
+        /// </summary>
+        public FieldDefinition CurrentField => StateMachineType.Fields.Single(f => f.Name == "<>2__current");
 
         /// <summary>
         /// ExitFlag フィールド。
@@ -53,6 +59,27 @@ namespace SoftCube.Aspects
         {
             ExitFlagField    = CreateField("*exitFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
             IsDisposingField = CreateField("*isDisposing*", FieldAttributes.Private, Module.TypeSystem.Int32);
+        }
+
+        #endregion
+
+        #region メソッド
+
+        /// <summary>
+        /// <see cref="MethodExecutionArgs.YieldValue"/> に値を設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        public void SetYieldValue(ILProcessor processor)
+        {
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldfld, AspectArgsField);
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldfld, CurrentField);
+            if (CurrentField.FieldType.IsValueType)
+            {
+                processor.Emit(OpCodes.Box, CurrentField.FieldType);
+            }
+            processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
         }
 
         #endregion

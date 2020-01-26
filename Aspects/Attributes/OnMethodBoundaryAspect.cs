@@ -182,7 +182,8 @@ namespace SoftCube.Aspects
             Instruction tryStart;
             Instruction leave;
             {
-                tryStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                tryStart = processor.EmitNop();
+                processor.Emit(OpCodes.Ldarg_0);
 
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
@@ -209,13 +210,14 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
 
-                leave = processor.EmitAndReturn(OpCodes.Leave);
+                leave = processor.EmitLeave(OpCodes.Leave);
             }
 
             /// } catch (Exception exception) {
             Instruction catchStart;
             {
-                catchStart = processor.EmitAndReturn(OpCodes.Stloc, exceptionVariable);
+                catchStart = processor.EmitNop();
+                processor.Emit(OpCodes.Stloc, exceptionVariable);
 
                 processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
                 processor.Emit(OpCodes.Ldloc, exceptionVariable);
@@ -231,7 +233,8 @@ namespace SoftCube.Aspects
             Instruction catchEnd;
             Instruction finallyStart;
             {
-                catchEnd = finallyStart = processor.EmitAndReturn(OpCodes.Ldloc, aspectVariable);
+                catchEnd = finallyStart = processor.EmitNop();
+                processor.Emit(OpCodes.Ldloc, aspectVariable);
                 processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
                 processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
 
@@ -243,12 +246,14 @@ namespace SoftCube.Aspects
             {
                 if (method.HasReturnValue())
                 {
-                    leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, resultVariable);
+                    leave.Operand = finallyEnd = processor.EmitNop();
+                    processor.Emit(OpCodes.Ldloc, resultVariable);
                     processor.Emit(OpCodes.Ret);
                 }
                 else
                 {
-                    leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ret);
+                    leave.Operand = finallyEnd = processor.EmitNop();
+                    processor.Emit(OpCodes.Ret);
                 }
             }
 
@@ -298,12 +303,8 @@ namespace SoftCube.Aspects
         /// <param name="isDisposingField"><c> isDisposing</c> のフィールド。</param>
         private void ReplaceMoveNextMethod(IteratorStateMachine stateMachine)
         {
-            var enumeratorType   = stateMachine.StateMachineType;
-            var method           = stateMachine.TargetMethod;
-            var moveNextMethod   = stateMachine.MoveNextMethod;
-
-            var module           = stateMachine.Module;
-            var declaringType    = stateMachine.StateMachineType;
+            var module         = stateMachine.Module;
+            var moveNextMethod = stateMachine.MoveNextMethod;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
             var originalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
@@ -319,7 +320,7 @@ namespace SoftCube.Aspects
                 originalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            declaringType.Methods.Add(originalMoveNextMethod);
+            stateMachine.StateMachineType.Methods.Add(originalMoveNextMethod);
 
             /// 元々のメソッドを書き換えます。
             moveNextMethod.Body = new Mono.Cecil.Cil.MethodBody(moveNextMethod);
@@ -327,13 +328,12 @@ namespace SoftCube.Aspects
             /// ローカル変数を追加します。
             var variables = moveNextMethod.Body.Variables;
 
-            int resultVariable = variables.Count;
+            int resultVariable    = variables.Count;
+            int exceptionVariable = variables.Count + 1;
+            int exitFlagVariable  = variables.Count + 2;
+
             variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
-
-            int exceptionVariable = variables.Count;
             variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
-
-            int exitFlagVariable = variables.Count;
             variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
             ///
@@ -343,34 +343,34 @@ namespace SoftCube.Aspects
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
-                branch[0] = processor.EmitAndReturn(OpCodes.Brtrue_S);
+                branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
-                branch[1] = processor.EmitAndReturn(OpCodes.Brtrue_S);
+                branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
-                branch[2] = processor.EmitAndReturn(OpCodes.Brtrue_S);
+                branch[2] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-                // 
+                /// <see cref="OnEntry"/> を呼びだします。
                 stateMachine.CreateAspectArgsInstance(processor);
-
                 stateMachine.InvokeEventHandler(processor, nameof(OnEntry));
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
-                branch[3] = processor.EmitAndReturn(OpCodes.Brtrue_S);
+                branch[3] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
                 processor.Emit(OpCodes.Stfld, stateMachine.ResumeFlagField);
-                branch[4] = processor.EmitAndReturn(OpCodes.Br_S);
+                branch[4] = processor.EmitBranch(OpCodes.Br_S);
 
+                /// <see cref="OnResume"/> を呼びだします。
                 branch[2].Operand = branch[3].Operand = processor.EmitNop();
                 stateMachine.InvokeEventHandler(processor, nameof(OnResume));
 
-                branch[0].Operand = branch[1].Operand = branch[4].Operand = processor.EmitAndReturn(OpCodes.Nop);
+                branch[0].Operand = branch[1].Operand = branch[4].Operand = processor.EmitNop();
             }
 
             /// try {
@@ -379,85 +379,66 @@ namespace SoftCube.Aspects
             {
                 var branch = new Instruction[8];
 
-                //
-                tryStart = processor.EmitAndReturn(OpCodes.Ldc_I4_1);
+                tryStart =  processor.EmitNop();
+                processor.Emit(OpCodes.Ldc_I4_1);
                 processor.Emit(OpCodes.Stloc, exitFlagVariable);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
                 processor.Emit(OpCodes.Ldc_I4_2);
-                branch[0] = processor.EmitAndReturn(OpCodes.Beq_S);
+                branch[0] = processor.EmitBranch(OpCodes.Beq_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Call, originalMoveNextMethod);
                 processor.Emit(OpCodes.Stloc, resultVariable);
 
-                branch[0].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                branch[0].Operand = processor.EmitNop();
+                processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
+                branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-                branch[1] = processor.EmitAndReturn(OpCodes.Brtrue_S);
                 processor.Emit(OpCodes.Ldloc, resultVariable);
-                branch[2] = processor.EmitAndReturn(OpCodes.Brfalse_S);
+                branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldc_I4_0);
                 processor.Emit(OpCodes.Stloc, exitFlagVariable);
-                branch[3] = processor.EmitAndReturn(OpCodes.Br_S);
+                branch[3] = processor.EmitBranch(OpCodes.Br_S);
 
-                branch[1].Operand = branch[2].Operand = processor.EmitAndReturn(OpCodes.Ldc_I4_1);
+                branch[1].Operand = branch[2].Operand = processor.EmitNop();
+                processor.Emit(OpCodes.Ldc_I4_1);
                 processor.Emit(OpCodes.Stloc, exitFlagVariable);
 
-                branch[3].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                branch[3].Operand = processor.EmitNop();
+                processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
-                branch[4] = processor.EmitAndReturn(OpCodes.Brtrue_S);
+                branch[4] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
-                branch[5] = processor.EmitAndReturn(OpCodes.Brfalse_S);
+                branch[5] = processor.EmitBranch(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldloc, exitFlagVariable);
-                branch[6] = processor.EmitAndReturn(OpCodes.Brfalse_S);
+                branch[6] = processor.EmitBranch(OpCodes.Brfalse_S);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
-                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnSuccess))));
-                branch[7] = processor.EmitAndReturn(OpCodes.Br_S);
+                stateMachine.InvokeEventHandler(processor, nameof(OnSuccess));
+                branch[7] = processor.EmitBranch(OpCodes.Br_S);
 
-                branch[6].Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
-                processor.Emit(OpCodes.Ldarg_0);
-                var currentField = enumeratorType.Fields.Single(f => f.Name == "<>2__current");
-                processor.Emit(OpCodes.Ldfld, currentField);
-                if (currentField.FieldType.IsValueType)
-                {
-                    processor.Emit(OpCodes.Box, currentField.FieldType);
-                }
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
+                /// <see cref="OnYield"/> を呼びだします。
+                branch[6].Operand = processor.EmitNop();
+                stateMachine.SetYieldValue(processor);
+                stateMachine.InvokeEventHandler(processor, nameof(OnYield));
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
-                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnYield))));
-
-                branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitAndReturn(OpCodes.Leave);
+                branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
             }
 
             /// } catch (Exception exception) {
             Instruction catchStart;
             {
-                catchStart = processor.EmitAndReturn(OpCodes.Stloc, exceptionVariable);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
-                processor.Emit(OpCodes.Ldloc, exceptionVariable);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Exception)).GetSetMethod()));
-
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
-                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnException))));
+                /// <see cref="OnException"/> を呼びだします。
+                catchStart = processor.EmitNop();
+                processor.Emit(OpCodes.Stloc, exceptionVariable);
+                stateMachine.SetException(processor, exceptionVariable);
+                stateMachine.InvokeEventHandler(processor, nameof(OnException));
                 processor.Emit(OpCodes.Rethrow);
             }
 
@@ -467,28 +448,28 @@ namespace SoftCube.Aspects
             {
                 var branch = new Instruction[3];
 
-                catchEnd = finallyStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                catchEnd = finallyStart = processor.EmitNop();
+                processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.ExitFlagField);
-                branch[0] = processor.EmitAndReturn(OpCodes.Brtrue_S);
+                branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.ResumeFlagField);
-                branch[1] = processor.EmitAndReturn(OpCodes.Brfalse_S);
+                branch[1] = processor.EmitBranch(OpCodes.Brfalse_S);
 
                 processor.Emit(OpCodes.Ldloc, exitFlagVariable);
-                branch[2] = processor.EmitAndReturn(OpCodes.Brfalse_S);
+                branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
 
+                /// ExitFlag を true にします。
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
                 processor.Emit(OpCodes.Stfld, stateMachine.ExitFlagField);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectField);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, stateMachine.AspectArgsField);
-                processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnExit))));
+                /// <see cref="OnExit"/> を呼びだします。
+                stateMachine.InvokeEventHandler(processor, nameof(OnExit));
 
-                branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitAndReturn(OpCodes.Endfinally);
+                branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitNop();
+                processor.Emit(OpCodes.Endfinally);
             }
 
             ///
@@ -497,7 +478,8 @@ namespace SoftCube.Aspects
                 int resultIndex = variables.Count;
                 variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
-                leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ldloc, exitFlagVariable);
+                leave.Operand = finallyEnd = processor.EmitNop();
+                processor.Emit(OpCodes.Ldloc, exitFlagVariable);
                 processor.Emit(OpCodes.Ldc_I4_0);
                 processor.Emit(OpCodes.Ceq);
                 processor.Emit(OpCodes.Stloc, resultIndex);
@@ -505,10 +487,11 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Ret);
             }
 
-            /// Catch ハンドラーを追加します。
-            var handlers = moveNextMethod.Body.ExceptionHandlers;
+            /// 例外ハンドラーを追加します。
             {
-                var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
+                /// Catch ハンドラーを追加します。
+                var handlers = moveNextMethod.Body.ExceptionHandlers;
+                var catchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
                     CatchType    = module.ImportReference(typeof(Exception)),
                     TryStart     = tryStart,
@@ -516,19 +499,17 @@ namespace SoftCube.Aspects
                     HandlerStart = catchStart,
                     HandlerEnd   = catchEnd,
                 };
-                handlers.Add(handler);
-            }
+                handlers.Add(catchHandler);
 
-            /// Finally ハンドラーを追加します。
-            {
-                var handler = new ExceptionHandler(ExceptionHandlerType.Finally)
+                /// Finally ハンドラーを追加します。
+                var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
                 {
                     TryStart     = tryStart,
                     TryEnd       = finallyStart,
                     HandlerStart = finallyStart,
                     HandlerEnd   = finallyEnd,
                 };
-                handlers.Add(handler);
+                handlers.Add(finallyHandler);
             }
 
             /// IL を最適化します。
@@ -565,10 +546,11 @@ namespace SoftCube.Aspects
             {
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldfld, stateMachine.IsDisposingField);
-                var branch = processor.EmitAndReturn(OpCodes.Brfalse_S);
+                var branch = processor.EmitBranch(OpCodes.Brfalse_S);
                 processor.Emit(OpCodes.Ret);
 
-                branch.Operand = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                branch.Operand = processor.EmitNop();
+                processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_1);
                 processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
             }
@@ -577,15 +559,17 @@ namespace SoftCube.Aspects
             Instruction tryStart;
             Instruction leave;
             {
-                tryStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                tryStart = processor.EmitNop();
+                processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Call, originalDisposeMethod);
-                leave = processor.EmitAndReturn(OpCodes.Leave_S);
+                leave = processor.EmitLeave(OpCodes.Leave_S);
             }
 
             /// } finally {
             Instruction finallyStart;
             {
-                finallyStart = processor.EmitAndReturn(OpCodes.Ldarg_0);
+                finallyStart = processor.EmitNop();
+                processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Ldc_I4_2);
                 processor.Emit(OpCodes.Stfld, stateMachine.IsDisposingField);
 
@@ -601,7 +585,8 @@ namespace SoftCube.Aspects
 
             Instruction finallyEnd;
             {
-                leave.Operand = finallyEnd = processor.EmitAndReturn(OpCodes.Ret);
+                leave.Operand = finallyEnd = processor.EmitNop();
+                processor.Emit(OpCodes.Ret);
             }
 
             /// Finally ハンドラーを追加します。

@@ -422,6 +422,23 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
+        /// 末尾に Branch 命令を追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="opcode">オペコード。</param>
+        /// <returns>追加された Branch 命令。</returns>
+        /// <remarks>
+        /// Branch 命令を生成するとき、オペランド (転送先の命令) を指定できないことがあります。
+        /// 転送先の命令よりも先に Branch 命令を生成することが一般的であるため、このような状況は良く起こります。
+        /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Branch 命令を挿入し、挿入した Branch 命令を戻します。
+        /// 転送先の命令が生成された後、Branch 命令のオペランドを設定してください。
+        /// </remarks>
+        public static Instruction EmitBranch(this ILProcessor processor, OpCode opcode)
+        {
+            return EmitBranch(processor, null, opcode);
+        }
+
+        /// <summary>
         /// 指定命令の前に Branch 命令を挿入します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
@@ -446,6 +463,23 @@ namespace SoftCube.Aspects
                 processor.Append(instruction);
             }
             return instruction;
+        }
+
+        /// <summary>
+        /// 末尾に Leave 命令を挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="opcode">オペコード。</param>
+        /// <returns>追加された Leave 命令。</returns>
+        /// <remarks>
+        /// Leave 命令を生成するとき、オペランド (転送先の命令) を指定できないことがあります。
+        /// 転送先の命令よりも先に Leave 命令を生成することが一般的であるため、このような状況は良く起こります。
+        /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Leave 命令を挿入し、挿入した Leave 命令を戻します。
+        /// 転送先の命令が生成された後、Leave 命令のオペランドを設定してください。
+        /// </remarks>
+        public static Instruction EmitLeave(this ILProcessor processor, OpCode opcode)
+        {
+            return EmitLeave(processor, null, opcode);
         }
 
         /// <summary>
@@ -476,11 +510,21 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// 末尾に Nop 命令を追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="insert"></param>
-        /// <returns></returns>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <returns>追加された Nop 命令。</returns>
+        public static Instruction EmitNop(this ILProcessor processor)
+        {
+            return EmitNop(processor, null);
+        }
+
+        /// <summary>
+        /// 指定命令の前に Nop 命令を挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <returns>追加された Nop 命令。</returns>
         public static Instruction EmitNop(this ILProcessor processor, Instruction insert)
         {
             var instruction = processor.Create(OpCodes.Nop);
@@ -493,16 +537,6 @@ namespace SoftCube.Aspects
                 processor.Append(instruction);
             }
             return instruction;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <returns></returns>
-        public static Instruction EmitNop(this ILProcessor processor)
-        {
-            return EmitNop(processor, null);
         }
 
         #endregion
@@ -645,82 +679,6 @@ namespace SoftCube.Aspects
 
             return attributeIndex;
         }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="opcode"></param>
-        /// <returns></returns>
-        internal static Instruction EmitAndReturn(this ILProcessor processor, OpCode opcode)
-        {
-            if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S || opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
-            {
-                var instruction = processor.Create(OpCodes.Nop);
-                processor.Append(instruction);
-                instruction.OpCode = opcode;
-                return instruction;
-            }
-            else
-            {
-                var instruction = processor.Create(opcode);
-                processor.Append(instruction);
-                return instruction;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="opcode"></param>
-        /// <returns></returns>
-        internal static Instruction EmitAndReturn(this ILProcessor processor, OpCode opcode, int operand)
-        {
-            var instruction = processor.Create(opcode, operand);
-            processor.Append(instruction);
-            return instruction;
-        }
-
-
-
-
-
-
-
-
-        //internal static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
-        //{
-        //    if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S || opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
-        //    {
-        //        var instruction = processor.Create(OpCodes.Nop);
-        //        processor.InsertBefore(insert, instruction);
-        //        instruction.OpCode = opcode;
-        //    }
-        //    else
-        //    {
-        //        var instruction = processor.Create(opcode);
-        //        processor.InsertBefore(insert, instruction);
-        //    }
-        //}
-
-        //internal static Instruction InsertBeforeAndReturn(this ILProcessor processor, Instruction insert, OpCode opcode)
-        //{
-        //    if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S || opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
-        //    {
-        //        var instruction = processor.Create(OpCodes.Nop);
-        //        processor.InsertBefore(insert, instruction);
-        //        instruction.OpCode = opcode;
-        //        return instruction;
-        //    }
-        //    else
-        //    {
-        //        var instruction = processor.Create(opcode);
-        //        processor.InsertBefore(insert, instruction);
-        //        return instruction;
-        //    }
-        //}
 
         #endregion
     }
