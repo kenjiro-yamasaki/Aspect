@@ -52,10 +52,10 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="aspect">アスペクト。</param>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        public IteratorStateMachineInjector(CustomAttribute aspect, MethodDefinition targetMethod)
-            : base(aspect, targetMethod)
+        /// <param name="aspect">アスペクト。</param>
+        public IteratorStateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspect)
+            : base(targetMethod, aspect)
         {
             ExitFlagField    = CreateField("*exitFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
             IsDisposingField = CreateField("*isDisposing*", FieldAttributes.Private, Module.TypeSystem.Int32);

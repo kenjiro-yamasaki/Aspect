@@ -617,7 +617,7 @@ namespace SoftCube.Aspects
         /// <param name="instruction">命令。</param>
         /// <param name="attribute">属性。</param>
         /// <returns>属性の変数インデックス。</returns>
-        internal static int InsertBefore(this ILProcessor processor, Instruction instruction, CustomAttribute attribute)
+        internal static int Emit(this ILProcessor processor, Instruction instruction, CustomAttribute attribute)
         {
             var method       = processor.Body.Method;
             var module       = method.DeclaringType.Module.Assembly.MainModule;

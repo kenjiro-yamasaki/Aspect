@@ -13,18 +13,6 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// モジュール。
-        /// </summary>
-        public ModuleDefinition Module { get; }
-
-        /// <summary>
-        /// ターゲットメソッド。
-        /// </summary>
-        public MethodDefinition TargetMethod { get; }
-
-        #region アスペクト
-
-        /// <summary>
         /// アスペクト。
         /// </summary>
         public CustomAttribute Aspect { get; }
@@ -34,9 +22,17 @@ namespace SoftCube.Aspects
         /// </summary>
         public TypeDefinition AspectType { get; }
 
-        #endregion
+        /// <summary>
+        /// ターゲットメソッド。
+        /// </summary>
+        public MethodDefinition TargetMethod { get; }
 
-        #region 属性
+        /// <summary>
+        /// モジュール。
+        /// </summary>
+        public ModuleDefinition Module { get; }
+
+        #region ステートマシン
 
         /// <summary>
         /// ステートマシンの属性。
@@ -46,7 +42,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// ステートマシンの型。
         /// </summary>
-        public TypeDefinition StateMachineType { get; }// => (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
+        public TypeDefinition StateMachineType { get; }
 
         #endregion
 
@@ -100,24 +96,24 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="aspect">アスペクト。</param>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        public StateMachineInjector(CustomAttribute aspect, MethodDefinition targetMethod)
+        /// <param name="aspect">アスペクト。</param>
+        public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspect)
         {
             Aspect           = aspect ?? throw new ArgumentNullException(nameof(aspect));
             AspectType       = Aspect.AttributeType.Resolve();
             TargetMethod     = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
+            Module           = TargetMethod.Module;
             StateMachineType = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
-            Module           = StateMachineType.Module;
 
-            StateField      = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
-            AspectField     = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
-            AspectArgsField = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(typeof(MethodExecutionArgs)));
-            ArgsField       = CreateField("*args*",       FieldAttributes.Private, Module.ImportReference(typeof(Arguments)));
-            ResumeFlagField = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
+            StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
+            AspectField      = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
+            AspectArgsField  = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(typeof(MethodExecutionArgs)));
+            ArgsField        = CreateField("*args*",       FieldAttributes.Private, Module.ImportReference(typeof(Arguments)));
+            ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
-            Constructor    = StateMachineType.Methods.Single(m => m.Name == ".ctor");
-            MoveNextMethod = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
+            Constructor      = StateMachineType.Methods.Single(m => m.Name == ".ctor");
+            MoveNextMethod   = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }
 
         #endregion
@@ -137,7 +133,7 @@ namespace SoftCube.Aspects
             var first        = instructions.First();
 
             /// アスペクトのインスタンスを生成し、ローカル変数にストアします。
-            var aspectVariable = processor.InsertBefore(first, Aspect);
+            var aspectVariable = processor.Emit(first, Aspect);
 
             /// アスペクトのインスタンスをフィールドにストアします。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
@@ -161,8 +157,6 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         public void CreateAspectArgsInstance(ILProcessor processor, Instruction insert)
         {
-            var module = TargetMethod.Module;
-
             processor.Emit(insert, OpCodes.Ldarg_0);
             processor.Emit(insert, OpCodes.Ldarg_0);
             processor.Emit(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
@@ -197,12 +191,12 @@ namespace SoftCube.Aspects
                         processor.Emit(insert, OpCodes.Ldarg_0);
                         processor.Emit(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                     }
-                    processor.Emit(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
+                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
                 }
                 else
                 {
                     processor.Emit(insert, OpCodes.Ldc_I4, parameters.Count);
-                    processor.Emit(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
+                    processor.Emit(insert, OpCodes.Newarr, Module.ImportReference(typeof(object)));
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                     {
                         var parameter = parameters[parameterIndex];
@@ -216,14 +210,14 @@ namespace SoftCube.Aspects
                         }
                         processor.Emit(insert, OpCodes.Stelem_Ref);
                     }
-                    processor.Emit(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                 }
             }
             processor.Emit(insert, OpCodes.Stfld, ArgsField);
 
             processor.Emit(insert, OpCodes.Ldarg_0);
             processor.Emit(insert, OpCodes.Ldfld, ArgsField);
-            processor.Emit(insert, OpCodes.Newobj, module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+            processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
             processor.Emit(insert, OpCodes.Stfld, AspectArgsField);
         }
 

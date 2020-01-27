@@ -23,10 +23,10 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="aspect">アスペクト。</param>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        public AsyncStateMachineInjector(CustomAttribute aspect, MethodDefinition targetMethod)
-            : base(aspect, targetMethod)
+        /// <param name="aspect">アスペクト。</param>
+        public AsyncStateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspect)
+            : base(targetMethod, aspect)
         {
         }
 
