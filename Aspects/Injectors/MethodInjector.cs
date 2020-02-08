@@ -34,6 +34,11 @@ namespace SoftCube.Aspects
         /// </summary>
         public ModuleDefinition Module { get; }
 
+        /// <summary>
+        /// ターゲットメソッドの内容を移動した新たなメソッド。
+        /// </summary>
+        public MethodDefinition OriginalMethod { get; private set; }
+
         #region ローカル変数
 
         /// <summary>
@@ -70,7 +75,31 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 
+        /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
+        /// </summary>
+        public void ReplaceMethod()
+        {
+            Assert.Null(OriginalMethod);
+
+            OriginalMethod = new MethodDefinition(TargetMethod.Name + "<Original>", TargetMethod.Attributes, TargetMethod.ReturnType);
+            foreach (var parameter in TargetMethod.Parameters)
+            {
+                OriginalMethod.Parameters.Add(parameter);
+            }
+
+            OriginalMethod.Body = TargetMethod.Body;
+
+            foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
+            {
+                OriginalMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
+
+            TargetMethod.DeclaringType.Methods.Add(OriginalMethod);
+        
+        }
+
+        /// <summary>
+        /// Aspect ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="processor"></param>
         /// <param name="insert"></param>
@@ -81,31 +110,10 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="insert"></param>
-        public void CreateAspectVariable(ILProcessor processor, Instruction insert)
-        {
-            Assert.Equal(AspectVariable, -1);
-            AspectVariable = processor.Emit(null, Aspect);
-        }
-
-        /// <summary>
-        /// AspectArgs フィールドのインスタンスを生成します。
-        /// </summary>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void CreateAspectArgsVariable<TAspectArgs>(ILProcessor processor)
-        {
-            CreateAspectArgsVariable<TAspectArgs>(processor, null);
-        }
-
-        /// <summary>
-        /// AspectArgs フィールドのインスタンスを生成します。
+        /// AspectArgs ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void CreateAspectArgsVariable<TAspectArgs>(ILProcessor processor, Instruction insert)
+        public void CreateAspectArgsVariable<TAspectArgs>(ILProcessor processor)
         {
             Assert.Equal(AspectArgsVariable, -1);
             var variables = TargetMethod.Body.Variables;
@@ -136,31 +144,90 @@ namespace SoftCube.Aspects
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                     {
                         var parameter = parameters[parameterIndex];
-                        processor.Emit(insert, OpCodes.Ldarg, parameterIndex + 1);
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                     }
-                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
+                    processor.Emit(OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
                 }
                 else
                 {
-                    processor.Emit(insert, OpCodes.Ldc_I4, parameters.Count);
-                    processor.Emit(insert, OpCodes.Newarr, Module.ImportReference(typeof(object)));
+                    processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+                    processor.Emit(OpCodes.Newarr, Module.ImportReference(typeof(object)));
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                     {
                         var parameter = parameters[parameterIndex];
-                        processor.Emit(insert, OpCodes.Dup);
-                        processor.Emit(insert, OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(insert, OpCodes.Ldarg, parameterIndex + 1);
+                        processor.Emit(OpCodes.Dup);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         if (parameter.ParameterType.IsValueType)
                         {
-                            processor.Emit(insert, OpCodes.Box, parameter.ParameterType);
+                            processor.Emit(OpCodes.Box, parameter.ParameterType);
                         }
-                        processor.Emit(insert, OpCodes.Stelem_Ref);
+                        processor.Emit(OpCodes.Stelem_Ref);
                     }
-                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                    processor.Emit(OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                 }
             }
-            processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
-            processor.Emit(insert, OpCodes.Stloc, AspectArgsVariable);
+            processor.Emit(OpCodes.Newobj, Module.ImportReference(typeof(TAspectArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+            processor.Emit(OpCodes.Stloc, AspectArgsVariable);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        public void InvokeOriginalMethod(ILProcessor processor)
+        {
+            Assert.NotNull(OriginalMethod);
+
+            if (OriginalMethod.HasReturnValue())
+            {
+                processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+                {
+                    processor.Emit(OpCodes.Ldarg_0);
+                    for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
+                    processor.Emit(OpCodes.Callvirt, OriginalMethod);
+                }
+                if (OriginalMethod.ReturnType.IsValueType)
+                {
+                    processor.Emit(OpCodes.Box, OriginalMethod.ReturnType);
+                }
+                processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
+            }
+            else
+            {
+                processor.Emit(OpCodes.Ldarg_0);
+                for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                }
+                processor.Emit(OpCodes.Callvirt, OriginalMethod);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        public void Return(ILProcessor processor)
+        {
+            if (TargetMethod.HasReturnValue())
+            {
+                processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+                processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetGetMethod()));
+                if (TargetMethod.ReturnType.IsValueType)
+                {
+                    processor.Emit(OpCodes.Unbox_Any, TargetMethod.ReturnType);
+                }
+
+                processor.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                processor.Emit(OpCodes.Ret);
+            }
         }
 
         /// <summary>
@@ -170,23 +237,12 @@ namespace SoftCube.Aspects
         /// <param name="eventHandlerName">イベントハンドラー名。</param>
         public void InvokeEventHandler(ILProcessor processor, string eventHandlerName)
         {
-            InvokeEventHandler(processor, null, eventHandlerName);
-        }
-
-        /// <summary>
-        /// イベントハンドラーを呼びだします。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        /// <param name="eventHandlerName">イベントハンドラー名。</param>
-        public void InvokeEventHandler(ILProcessor processor, Instruction insert, string eventHandlerName)
-        {
             Assert.NotEqual(AspectVariable, -1);
             Assert.NotEqual(AspectArgsVariable, -1);
 
-            processor.Emit(insert, OpCodes.Ldloc, AspectVariable);
-            processor.Emit(insert, OpCodes.Ldloc, AspectArgsVariable);
-            processor.Emit(insert, OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
+            processor.Emit(OpCodes.Ldloc, AspectVariable);
+            processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+            processor.Emit(OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
         }
 
         /// <summary>
@@ -195,48 +251,27 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         public void SetMethod(ILProcessor processor)
         {
-            SetMethod(processor, null);
-        }
-
-        /// <summary>
-        /// <see cref="MethodArgs.Method"/> にメソッド情報を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void SetMethod(ILProcessor processor, Instruction insert)
-        {
             processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
             processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod()));
-
-            //processor.Emit(insert, OpCodes.Ldarg_0);
-            //processor.Emit(insert, OpCodes.Ldloc, AspectArgsVariable);
-            //processor.Emit(insert, OpCodes.Ldloc, exceptionVariable);
-            //processor.Emit(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
         }
 
         /// <summary>
         /// <see cref="MethodArgs.Exception"/> に例外を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="exceptionVariable">例外のローカル変数。</param>
-        public void SetException(ILProcessor processor, int exceptionVariable)
+        public void SetException(ILProcessor processor)
         {
-            SetException(processor, null, exceptionVariable);
-        }
+            var variables = TargetMethod.Body.Variables;
+            int exceptionVariable = variables.Count;
+            variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
 
-        /// <summary>
-        /// <see cref="MethodArgs.Exception"/> に例外を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        /// <param name="exceptionVariable">例外のローカル変数。</param>
-        public void SetException(ILProcessor processor, Instruction insert, int exceptionVariable)
-        {
-            processor.Emit(insert, OpCodes.Ldarg_0);
-            processor.Emit(insert, OpCodes.Ldloc, AspectArgsVariable);
-            processor.Emit(insert, OpCodes.Ldloc, exceptionVariable);
-            processor.Emit(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
+            processor.Emit(OpCodes.Stloc, exceptionVariable);
+
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+            processor.Emit(OpCodes.Ldloc, exceptionVariable);
+            processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
         }
 
         #endregion

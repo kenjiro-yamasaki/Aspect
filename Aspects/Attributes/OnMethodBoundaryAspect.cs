@@ -76,45 +76,15 @@ namespace SoftCube.Aspects
         /// <param name="injector">メソッドへの注入。</param>
         private void ReplaceMethod(MethodInjector injector)
         {
-            var method        = injector.TargetMethod;
-            var aspect        = injector.Aspect;
-            var module        = method.Module;
-            var attributes    = method.Attributes;
-            var declaringType = method.DeclaringType;
-            var returnType    = method.ReturnType;
+            var method = injector.TargetMethod;
+            var module = method.Module;
 
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-            var originalMethod = new MethodDefinition(method.Name + "<Original>", attributes, returnType);
-            foreach (var parameter in method.Parameters)
-            {
-                originalMethod.Parameters.Add(parameter);
-            }
-
-            originalMethod.Body = method.Body;
-
-            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
-            {
-                originalMethod.DebugInformation.SequencePoints.Add(sequencePoint);
-            }
-
-            declaringType.Methods.Add(originalMethod);
+            injector.ReplaceMethod();
 
             /// 元々のメソッドを書き換えます。
             method.Body = new Mono.Cecil.Cil.MethodBody(method);
-
             var processor = method.Body.GetILProcessor();
-            var variables = method.Body.Variables;
-
-            int returnVariable = -1;
-            if (method.HasReturnValue())
-            {
-                returnVariable = variables.Count();
-                variables.Add(new VariableDefinition(method.ReturnType));
-            }
-
-            int exceptionVariable = variables.Count;
-            variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
-
             {
                 /// アスペクトのインスタンスを生成します。
                 injector.CreateAspectVariable(processor);
@@ -132,24 +102,7 @@ namespace SoftCube.Aspects
                 tryStart = processor.EmitNop();
 
                 /// 元々のメソッドを呼びだします。
-                processor.Emit(OpCodes.Ldarg_0);
-                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
-                {
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                }
-                processor.Emit(OpCodes.Callvirt, originalMethod);
-
-                if (method.HasReturnValue())
-                {
-                    processor.Emit(OpCodes.Stloc, returnVariable);
-                    processor.Emit(OpCodes.Ldloc, injector.AspectArgsVariable);
-                    processor.Emit(OpCodes.Ldloc, returnVariable);
-                    if (method.ReturnType.IsValueType)
-                    {
-                        processor.Emit(OpCodes.Box, method.ReturnType);
-                    }
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
-                }
+                injector.InvokeOriginalMethod(processor);
 
                 /// OnSuccess を呼びだします。
                 injector.InvokeEventHandler(processor, nameof(OnSuccess));
@@ -160,10 +113,10 @@ namespace SoftCube.Aspects
             /// } catch (Exception exception) {
             Instruction catchStart;
             {
-                /// OnException を呼びだします。
                 catchStart = processor.EmitNop();
-                processor.Emit(OpCodes.Stloc, exceptionVariable);
-                injector.SetException(processor, exceptionVariable);
+
+                /// OnException を呼びだします。
+                injector.SetException(processor);
                 injector.InvokeEventHandler(processor, nameof(OnException));
                 processor.Emit(OpCodes.Rethrow);
             }
@@ -172,25 +125,18 @@ namespace SoftCube.Aspects
             Instruction catchEnd;
             Instruction finallyStart;
             {
-                /// OnExit を呼びだします。
                 catchEnd = finallyStart = processor.EmitNop();
+
+                /// OnExit を呼びだします。
                 injector.InvokeEventHandler(processor, nameof(OnExit));
                 processor.Emit(OpCodes.Endfinally);
             }
 
-            ///
+            /// リターンコードを追加します。
             Instruction finallyEnd;
             {
                 leave.Operand = finallyEnd = processor.EmitNop();
-                if (method.HasReturnValue())
-                {
-                    processor.Emit(OpCodes.Ldloc, returnVariable);
-                    processor.Emit(OpCodes.Ret);
-                }
-                else
-                {
-                    processor.Emit(OpCodes.Ret);
-                }
+                injector.Return(processor);
             }
 
             /// 例外ハンドラーを追加します。
