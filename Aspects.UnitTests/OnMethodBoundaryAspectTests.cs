@@ -3037,6 +3037,731 @@ namespace SoftCube.Aspects
                 }
 
                 #endregion
+
+                #region 引数と戻り値の型
+
+                #region int
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<int> @int(int arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void int_正しくアスペクトが適用される(int arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @int(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region sbyte
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<sbyte> @sbyte(sbyte arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void sbyte_正しくアスペクトが適用される(sbyte arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @sbyte(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region short
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<short> @short(short arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void short_正しくアスペクトが適用される(short arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @short(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region long
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<long> @long(long arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                [InlineData(-1)]
+                [InlineData(-2)]
+                [InlineData(-3)]
+                [InlineData(-4)]
+                [InlineData(-5)]
+                [InlineData(-6)]
+                [InlineData(-7)]
+                [InlineData(-8)]
+                [InlineData(-10)]
+                public void long_正しくアスペクトが適用される(long arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @long(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region uint
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<uint> @uint(uint arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void uint_正しくアスペクトが適用される(uint arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @uint(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region byte
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<byte> @byte(byte arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void byte_正しくアスペクトが適用される(byte arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @byte(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region ushort
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<ushort> @ushort(ushort arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void ushort_正しくアスペクトが適用される(ushort arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @ushort(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region ulong
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<ulong> @ulong(ulong arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0)]
+                [InlineData(1)]
+                [InlineData(2)]
+                [InlineData(3)]
+                [InlineData(4)]
+                [InlineData(5)]
+                [InlineData(6)]
+                [InlineData(7)]
+                [InlineData(8)]
+                [InlineData(10)]
+                public void ulong_正しくアスペクトが適用される(ulong arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @ulong(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region double
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<double> @double(double arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0.0)]
+                [InlineData(0.5)]
+                [InlineData(1.0)]
+                [InlineData(100.0)]
+                [InlineData(-0.5)]
+                [InlineData(-1.0)]
+                [InlineData(-100.0)]
+                public void double_正しくアスペクトが適用される(double arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @double(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region float
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<float> @float(float arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0.0)]
+                [InlineData(0.5)]
+                [InlineData(1.0)]
+                [InlineData(100.0)]
+                [InlineData(-0.5)]
+                [InlineData(-1.0)]
+                [InlineData(-100.0)]
+                public void float_正しくアスペクトが適用される(float arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @float(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region decimal
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<decimal> @decimal(decimal arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData(0.0)]
+                [InlineData(0.5)]
+                [InlineData(1.0)]
+                [InlineData(100.0)]
+                [InlineData(-0.5)]
+                [InlineData(-1.0)]
+                [InlineData(-100.0)]
+                public void decimal_正しくアスペクトが適用される(decimal arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @decimal(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region char
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<char> @char(char arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData('a')]
+                [InlineData('あ')]
+                public void char_正しくアスペクトが適用される(char arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @char(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry '{arg}' OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region string
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<string> @string(string arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Theory]
+                [InlineData("a")]
+                [InlineData("あ")]
+                public void string_正しくアスペクトが適用される(string arg)
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+
+                        var task = @string(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry \"{arg}\" OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region class
+
+                public class Class
+                {
+                    public string Property { get; set; }
+
+                    public override string ToString() => Property;
+                }
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<Class> @class(Class arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Fact]
+                public void class_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        var arg = new Class() { Property = "a" };
+
+                        var task = @class(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region struct
+
+                public struct Struct
+                {
+                    public string Property { get; set; }
+
+                    public override string ToString() => Property;
+                }
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<Struct> @struct(Struct arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(arg.ToString());
+                    });
+
+                    return arg;
+                }
+
+                [Fact]
+                public void struct_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        var arg = new Struct() { Property = "a" };
+
+                        var task = @struct(arg);
+                        task.Wait();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry {arg} OnYield null {arg} OnResume OnSuccess OnExit {arg} ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region IEnumerable
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<IEnumerable> IEnumerable(IEnumerable arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(Asserts.ArgumentFormatter.Format(arg));
+                    });
+
+                    return arg;
+                }
+
+                [Fact]
+                public void IEnumerable_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        var arg      = new List<int>() { 7 };
+
+                        var task = IEnumerable(arg);
+                        task.Wait();
+                        Logger.Trace(Asserts.ArgumentFormatter.Format(arg));
+
+
+                        Assert.Equal($"OnEntry [7] OnYield null [7] OnResume OnSuccess OnExit [7] ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region IEnumerableT
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<IEnumerable<int>> IEnumerableT(IEnumerable<int> arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(Asserts.ArgumentFormatter.Format(arg));
+                    });
+
+                    return arg;
+                }
+
+                [Fact]
+                public void IEnumerableT_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        var arg      = new List<int>() { 7 };
+
+                        var task = IEnumerableT(arg);
+                        task.Wait();
+                        Logger.Trace(Asserts.ArgumentFormatter.Format(arg));
+
+                        Assert.Equal($"OnEntry [7] OnYield null [7] OnResume OnSuccess OnExit [7] ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+                #region ListT
+
+                [OnMethodBoundaryAspectLogger(MethodType.AsyncMethod)]
+                private async Task<List<int>> ListT(List<int> arg)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace(Asserts.ArgumentFormatter.Format(arg));
+                    });
+
+                    return arg;
+                }
+
+                [Fact]
+                public void ListT_正しくアスペクトが適用される()
+                {
+                    lock (LockObject)
+                    {
+                        var appender = CreateAppender();
+                        var arg      = new List<int>() { 7 };
+
+                        var task = ListT(arg);
+                        task.Wait();
+                        Logger.Trace(Asserts.ArgumentFormatter.Format(arg));
+
+                        Assert.Equal($"OnEntry [7] OnYield null [7] OnResume OnSuccess OnExit [7] ", appender.ToString());
+                    }
+                }
+
+                #endregion
+
+
+
+                #endregion
             }
         }
     }
