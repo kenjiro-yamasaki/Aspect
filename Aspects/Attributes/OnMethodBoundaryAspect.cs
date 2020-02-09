@@ -99,6 +99,7 @@ namespace SoftCube.Aspects
                 /// AspectArgs.Exception にメソッド情報を設定します。
                 /// OnEntry を呼びだします。
                 injector.CreateAspectVariable(processor);
+                injector.CreateArgumentsVariable(processor);
                 injector.CreateAspectArgsVariable<MethodExecutionArgs>(processor);
                 injector.SetMethod(processor);
                 injector.InvokeEventHandler(processor, nameof(OnEntry));

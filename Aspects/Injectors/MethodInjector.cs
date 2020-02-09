@@ -35,9 +35,34 @@ namespace SoftCube.Aspects
         public ModuleDefinition Module { get; }
 
         /// <summary>
-        /// ターゲットメソッドの内容を移動した新たなメソッド。
+        /// ターゲットメソッドの内容を移動したメソッド。
         /// </summary>
         public MethodDefinition OriginalMethod { get; private set; }
+
+        /// <summary>
+        /// Arguments の型。
+        /// </summary>
+        public Type ArgumentsType
+        {
+            get
+            {
+                var parameters = TargetMethod.Parameters;
+                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+                return parameters.Count switch
+                {
+                    0 => typeof(Arguments),
+                    1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                    2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                    3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                    4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                    5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                    6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                    7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                    8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                    _ => typeof(ArgumentsArray)
+                };
+            }
+        }
 
         #region ローカル変数
 
@@ -45,6 +70,11 @@ namespace SoftCube.Aspects
         /// Aspect のローカル変数。
         /// </summary>
         public int AspectVariable { get; private set; } = -1;
+
+        /// <summary>
+        /// Arguments のローカル変数。
+        /// </summary>
+        public int ArgumentsVariable { get; private set; } = -1;
 
         /// <summary>
         /// AspectArgs のローカル変数。
@@ -102,11 +132,55 @@ namespace SoftCube.Aspects
         /// Aspect ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="processor"></param>
-        /// <param name="insert"></param>
         public void CreateAspectVariable(ILProcessor processor)
         {
             Assert.Equal(AspectVariable, -1);
             AspectVariable = processor.Emit(Aspect);
+        }
+
+        /// <summary>
+        /// Arguments ローカル変数のインスタンスを生成します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        public void CreateArgumentsVariable(ILProcessor processor)
+        {
+            Assert.Equal(ArgumentsVariable, -1);
+            var variables = TargetMethod.Body.Variables;
+            ArgumentsVariable = variables.Count();
+
+            var parameters = TargetMethod.Parameters;
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+            variables.Add(new VariableDefinition(Module.ImportReference(ArgumentsType)));
+
+            if (parameters.Count <= 8)
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                }
+                processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
+                processor.Emit(OpCodes.Stloc, ArgumentsVariable);
+            }
+            else
+            {
+                processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+                processor.Emit(OpCodes.Newarr, Module.ImportReference(typeof(object)));
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.Emit(OpCodes.Dup);
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    if (parameter.ParameterType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Box, parameter.ParameterType);
+                    }
+                    processor.Emit(OpCodes.Stelem_Ref);
+                }
+                processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                processor.Emit(OpCodes.Stloc, ArgumentsVariable);
+            }
         }
 
         /// <summary>
@@ -116,101 +190,75 @@ namespace SoftCube.Aspects
         public void CreateAspectArgsVariable<TAspectArgs>(ILProcessor processor)
         {
             Assert.Equal(AspectArgsVariable, -1);
+            Assert.NotEqual(ArgumentsVariable, -1);
             var variables = TargetMethod.Body.Variables;
             AspectArgsVariable = variables.Count();
             variables.Add(new VariableDefinition(Module.ImportReference(typeof(TAspectArgs))));
 
             processor.Emit(OpCodes.Ldarg_0);
-            {
-                var parameters     = TargetMethod.Parameters;
-                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+            processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
 
-                var argumentsType = parameters.Count switch
-                {
-                    0 => typeof(Arguments),
-                    1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                    2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                    3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                    4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                    5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                    6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                    7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                    8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                    _ => typeof(ArgumentsArray)
-                };
-
-                if (parameters.Count <= 8)
-                {
-                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                    {
-                        var parameter = parameters[parameterIndex];
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    }
-                    processor.Emit(OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
-                }
-                else
-                {
-                    processor.Emit(OpCodes.Ldc_I4, parameters.Count);
-                    processor.Emit(OpCodes.Newarr, Module.ImportReference(typeof(object)));
-                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                    {
-                        var parameter = parameters[parameterIndex];
-                        processor.Emit(OpCodes.Dup);
-                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                        if (parameter.ParameterType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Box, parameter.ParameterType);
-                        }
-                        processor.Emit(OpCodes.Stelem_Ref);
-                    }
-                    processor.Emit(OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
-                }
-            }
             processor.Emit(OpCodes.Newobj, Module.ImportReference(typeof(TAspectArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
             processor.Emit(OpCodes.Stloc, AspectArgsVariable);
         }
 
         /// <summary>
-        /// 
+        /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
         /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
         public void InvokeOriginalMethod(ILProcessor processor)
         {
             Assert.NotNull(OriginalMethod);
 
+            /// 戻り値がある場合、AspectArgs をスタックにロードします (戻り値を AspectArgs.ReturnValue に設定するための前処理)。
             if (OriginalMethod.HasReturnValue())
             {
                 processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+            }
+
+            /// 
+            processor.Emit(OpCodes.Ldarg_0);
+
+            /// 引数をスタックにロードします。
+            var parameters = TargetMethod.Parameters;
+            if (parameters.Count <= 8)
+            {
+                var propertyNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
+
+                for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
                 {
-                    processor.Emit(OpCodes.Ldarg_0);
-                    for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
-                    {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    }
-                    processor.Emit(OpCodes.Callvirt, OriginalMethod);
+                    processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
+                    processor.Emit(OpCodes.Call, Module.ImportReference(ArgumentsType.GetProperty(propertyNames[parameterIndex]).GetGetMethod()));
                 }
+            }
+            else
+            {
+                for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
+                {
+                    processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                    processor.Emit(OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+                }
+            }
+
+            /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
+            processor.Emit(OpCodes.Callvirt, OriginalMethod);
+
+            /// 戻り値を AspectArgs.ReturnValue に設定します。
+            if (OriginalMethod.HasReturnValue())
+            {
                 if (OriginalMethod.ReturnType.IsValueType)
                 {
                     processor.Emit(OpCodes.Box, OriginalMethod.ReturnType);
                 }
                 processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
             }
-            else
-            {
-                processor.Emit(OpCodes.Ldarg_0);
-                for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
-                {
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                }
-                processor.Emit(OpCodes.Callvirt, OriginalMethod);
-            }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
         public void Return(ILProcessor processor)
         {
             if (TargetMethod.HasReturnValue())

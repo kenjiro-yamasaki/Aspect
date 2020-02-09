@@ -18,12 +18,12 @@ namespace SoftCube.Aspects
         static void Main(string[] args)
         {
             var program = new Program();
-            var result = program.Test("A", "B");
+            var result = program.Test("A");
 
-            foreach (var value in result)
-            {
-                Logger.Trace(value);
-            }
+            //foreach (var value in result)
+            //{
+            //    Logger.Trace(value);
+            //}
 
             Logger.Trace("C");
 
@@ -31,10 +31,9 @@ namespace SoftCube.Aspects
         }
 
         [OnMethodBoundaryAspectLogger]
-        private IEnumerable<string> Test(string value1, string value2)
+        private string Test(string value)
         {
-            yield return value1;
-            yield return value2;
+            return value;
         }
 
 

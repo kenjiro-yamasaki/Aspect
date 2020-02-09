@@ -73,7 +73,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected virtual object GetArgument(int index)
+        public virtual object GetArgument(int index)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
         }
@@ -117,7 +117,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             if (index == 0)
             {
@@ -173,7 +173,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             switch (index)
             {
@@ -243,7 +243,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             switch (index)
             {
@@ -324,7 +324,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             switch (index)
             {
@@ -416,7 +416,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             switch (index)
             {
@@ -519,7 +519,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             switch (index)
             {
@@ -633,7 +633,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             switch (index)
             {
@@ -758,7 +758,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             switch (index)
             {
@@ -829,7 +829,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">引数のインデックス。</param>
         /// <returns>引数。</returns>
-        protected override object GetArgument(int index)
+        public override object GetArgument(int index)
         {
             return Arguments[index];
         }
