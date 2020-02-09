@@ -18,60 +18,37 @@ namespace SoftCube.Aspects
         static void Main(string[] args)
         {
             var program = new Program();
-            var result = program.Test("A");
 
-            //foreach (var value in result)
-            //{
-            //    Logger.Trace(value);
-            //}
-
-            Logger.Trace("C");
+            var result = program.引数が1つ("a");
+            Logger.Trace(result);
 
             Console.Read();
         }
 
-        [OnMethodBoundaryAspectLogger]
-        private string Test(string value)
+
+        public class ChangeArg1Aspect : OnMethodBoundaryAspect
         {
-            return value;
+            public override void OnEntry(MethodExecutionArgs args)
+            {
+                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                {
+                    var argument = args.Arguments[argumentIndex] as string;
+                    args.Arguments[argumentIndex] = argument.ToUpper();
+                }
+            }
         }
 
+        [ChangeArg1Aspect]
+        public string 引数が1つ(string arg1)
+        {
+            return arg1;
+        }
 
-
-        //[OnMethodBoundaryAspectLogger]
-        //private async Task<string> Test(string value1, string value2)
+        //[Fact]
+        //public void 引数が1つ_正しくアスペクトが適用される()
         //{
-        //    await Task.Run(() =>
-        //    {
-        //        Thread.Sleep(100);
-        //        Logger.Trace(value1);
-        //    });
-
-        //    await Task.Run(() =>
-        //    {
-        //        Thread.Sleep(100);
-        //        Logger.Trace(value2);
-        //    });
-
-        //    return value2;
+        //    var result = 引数が1つ("a");
+        //    Assert.Equal("A", result);
         //}
-
-        //[OnMethodBoundaryAspectLogger]
-        //private async Task Test(string value1, string value2)
-        //{
-        //    await Task.Run(() =>
-        //    {
-        //        Thread.Sleep(100);
-        //        Logger.Trace(value1);
-        //    });
-
-        //    await Task.Run(() =>
-        //    {
-        //        Thread.Sleep(100);
-        //        Logger.Trace(value2);
-        //    });
-        //}
-
-
     }
 }

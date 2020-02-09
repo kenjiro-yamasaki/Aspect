@@ -1808,6 +1808,174 @@ namespace SoftCube.Aspects
 
                 #endregion
             }
+
+            public class 引数の変更
+            {
+                private class ChangeArgAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            var argument = args.Arguments[argumentIndex] as string;
+                            args.Arguments[argumentIndex] = argument.ToUpper();
+                        }
+                    }
+                }
+
+                [ChangeArgAspect]
+                private string 引数が1つ(string arg1)
+                {
+                    return arg1;
+                }
+
+                [ChangeArgAspect]
+                private (string, string) 引数が2つ(string arg1, string arg2)
+                {
+                    return (arg1, arg2);
+                }
+
+                [ChangeArgAspect]
+                private (string, string, string) 引数が3つ(string arg1, string arg2, string arg3)
+                {
+                    return (arg1, arg2, arg3);
+                }
+
+                [ChangeArgAspect]
+                private (string, string, string, string) 引数が4つ(string arg1, string arg2, string arg3, string arg4)
+                {
+                    return (arg1, arg2, arg3, arg4);
+                }
+
+                [ChangeArgAspect]
+                private (string, string, string, string, string) 引数が5つ(string arg1, string arg2, string arg3, string arg4, string arg5)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5);
+                }
+
+                [ChangeArgAspect]
+                private (string, string, string, string, string, string) 引数が6つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6);
+                }
+
+                [ChangeArgAspect]
+                private (string, string, string, string, string, string, string) 引数が7つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                }
+
+                [ChangeArgAspect]
+                private (string, string, string, string, string, string, string, string) 引数が8つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                }
+
+                [ChangeArgAspect]
+                private (string, string, string, string, string, string, string, string, string) 引数が9つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                }
+
+                [Fact]
+                public void 引数が1つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数が1つ("a");
+                    Assert.Equal("A", result);
+                }
+
+                [Fact]
+                public void 引数が2つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2) = 引数が2つ("a", "b");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                }
+
+                [Fact]
+                public void 引数が3つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3) = 引数が3つ("a", "b", "c");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                }
+
+                [Fact]
+                public void 引数が4つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4) = 引数が4つ("a", "b", "c", "d");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                }
+
+                [Fact]
+                public void 引数が5つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5) = 引数が5つ("a", "b", "c", "d", "e");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                }
+
+                [Fact]
+                public void 引数が6つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6) = 引数が6つ("a", "b", "c", "d", "e", "f");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                }
+
+                [Fact]
+                public void 引数が7つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6, result7) = 引数が7つ("a", "b", "c", "d", "e", "f", "g");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                }
+
+                [Fact]
+                public void 引数が8つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6, result7, result8) = 引数が8つ("a", "b", "c", "d", "e", "f", "g", "h");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                }
+
+                [Fact]
+                public void 引数が9つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6, result7, result8, result9) = 引数が9つ("a", "b", "c", "d", "e", "f", "g", "h", "i");
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                    Assert.Equal("I", result9);
+                }
+            }
         }
 
         public class イテレーターメソッド
@@ -2668,7 +2836,7 @@ namespace SoftCube.Aspects
                     lock (LockObject)
                     {
                         var appender = CreateAppender();
-                        int arg    = 7;
+                        int arg = 7;
 
                         foreach (var result in IEnumerable(new List<int>() { arg }))
                         {
@@ -2698,7 +2866,7 @@ namespace SoftCube.Aspects
                     lock (LockObject)
                     {
                         var appender = CreateAppender();
-                        int arg    = 7;
+                        int arg = 7;
 
                         foreach (var result in IEnumerableT(new List<int>() { arg }))
                         {
@@ -2728,7 +2896,7 @@ namespace SoftCube.Aspects
                     lock (LockObject)
                     {
                         var appender = CreateAppender();
-                        int arg    = 7;
+                        int arg = 7;
 
                         foreach (var result in ListT(new List<int>() { arg }))
                         {
@@ -3682,7 +3850,7 @@ namespace SoftCube.Aspects
                     lock (LockObject)
                     {
                         var appender = CreateAppender();
-                        var arg      = new List<int>() { 7 };
+                        var arg = new List<int>() { 7 };
 
                         var task = IEnumerable(arg);
                         task.Wait();
@@ -3715,7 +3883,7 @@ namespace SoftCube.Aspects
                     lock (LockObject)
                     {
                         var appender = CreateAppender();
-                        var arg      = new List<int>() { 7 };
+                        var arg = new List<int>() { 7 };
 
                         var task = IEnumerableT(arg);
                         task.Wait();
@@ -3747,7 +3915,7 @@ namespace SoftCube.Aspects
                     lock (LockObject)
                     {
                         var appender = CreateAppender();
-                        var arg      = new List<int>() { 7 };
+                        var arg = new List<int>() { 7 };
 
                         var task = ListT(arg);
                         task.Wait();

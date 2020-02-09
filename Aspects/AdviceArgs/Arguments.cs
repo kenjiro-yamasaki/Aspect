@@ -21,7 +21,11 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="index">インデックス。</param>
         /// <returns>要素。</returns>
-        public object this[int index] => GetArgument(index);
+        public object this[int index]
+        {
+            get => GetArgument(index);
+            set => SetArgument(index, value);
+        }
 
         #endregion
 
@@ -78,6 +82,16 @@ namespace SoftCube.Aspects
             throw new ArgumentOutOfRangeException(nameof(index));
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public virtual void SetArgument(int index, object value)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
         #endregion
     }
 
@@ -92,7 +106,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         #endregion
 
@@ -119,11 +133,32 @@ namespace SoftCube.Aspects
         /// <returns>引数。</returns>
         public override object GetArgument(int index)
         {
-            if (index == 0)
+            switch (index)
             {
-                return Arg0;
+                case 0:
+                    return Arg0;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
             }
-            throw new ArgumentOutOfRangeException("index");
+        }
+
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
         }
 
         #endregion
@@ -141,12 +176,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; }
+        public TArg1 Arg1 { get; set; }
 
         #endregion
 
@@ -188,6 +223,28 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                case 1:
+                    Arg1 = (TArg1)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+        }
+
         #endregion
     }
 
@@ -204,17 +261,17 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; }
+        public TArg1 Arg1 { get; set; }
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; }
+        public TArg2 Arg2 { get; set; }
 
         #endregion
 
@@ -261,6 +318,32 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                case 1:
+                    Arg1 = (TArg1)value;
+                    break;
+
+                case 2:
+                    Arg2 = (TArg2)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+        }
+
         #endregion
     }
 
@@ -278,22 +361,22 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; }
+        public TArg1 Arg1 { get; set; }
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; }
+        public TArg2 Arg2 { get; set; }
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; }
+        public TArg3 Arg3 { get; set; }
 
         #endregion
 
@@ -345,6 +428,36 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                case 1:
+                    Arg1 = (TArg1)value;
+                    break;
+
+                case 2:
+                    Arg2 = (TArg2)value;
+                    break;
+
+                case 3:
+                    Arg3 = (TArg3)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+        }
+
         #endregion
     }
 
@@ -363,27 +476,27 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; }
+        public TArg1 Arg1 { get; set; }
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; }
+        public TArg2 Arg2 { get; set; }
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; }
+        public TArg3 Arg3 { get; set; }
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; }
+        public TArg4 Arg4 { get; set; }
 
         #endregion
 
@@ -440,6 +553,40 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                case 1:
+                    Arg1 = (TArg1)value;
+                    break;
+
+                case 2:
+                    Arg2 = (TArg2)value;
+                    break;
+
+                case 3:
+                    Arg3 = (TArg3)value;
+                    break;
+
+                case 4:
+                    Arg4 = (TArg4)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+        }
+
         #endregion
     }
 
@@ -459,32 +606,32 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; }
+        public TArg1 Arg1 { get; set; }
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; }
+        public TArg2 Arg2 { get; set; }
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; }
+        public TArg3 Arg3 { get; set; }
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; }
+        public TArg4 Arg4 { get; set; }
 
         /// <summary>
         /// 第 5 引数。
         /// </summary>
-        public TArg5 Arg5 { get; }
+        public TArg5 Arg5 { get; set; }
 
         #endregion
 
@@ -546,6 +693,44 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                case 1:
+                    Arg1 = (TArg1)value;
+                    break;
+
+                case 2:
+                    Arg2 = (TArg2)value;
+                    break;
+
+                case 3:
+                    Arg3 = (TArg3)value;
+                    break;
+
+                case 4:
+                    Arg4 = (TArg4)value;
+                    break;
+
+                case 5:
+                    Arg5 = (TArg5)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+        }
+
         #endregion
     }
 
@@ -566,37 +751,37 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; }
+        public TArg1 Arg1 { get; set; }
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; }
+        public TArg2 Arg2 { get; set; }
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; }
+        public TArg3 Arg3 { get; set; }
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; }
+        public TArg4 Arg4 { get; set; }
 
         /// <summary>
         /// 第 5 引数。
         /// </summary>
-        public TArg5 Arg5 { get; }
+        public TArg5 Arg5 { get; set; }
 
         /// <summary>
         /// 第 6 引数。
         /// </summary>
-        public TArg6 Arg6 { get; }
+        public TArg6 Arg6 { get; set; }
 
         #endregion
 
@@ -663,6 +848,48 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                case 1:
+                    Arg1 = (TArg1)value;
+                    break;
+
+                case 2:
+                    Arg2 = (TArg2)value;
+                    break;
+
+                case 3:
+                    Arg3 = (TArg3)value;
+                    break;
+
+                case 4:
+                    Arg4 = (TArg4)value;
+                    break;
+
+                case 5:
+                    Arg5 = (TArg5)value;
+                    break;
+
+                case 6:
+                    Arg6 = (TArg6)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+        }
+
         #endregion
     }
 
@@ -684,42 +911,42 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; }
+        public TArg0 Arg0 { get; set; }
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; }
+        public TArg1 Arg1 { get; set; }
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; }
+        public TArg2 Arg2 { get; set; }
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; }
+        public TArg3 Arg3 { get; set; }
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; }
+        public TArg4 Arg4 { get; set; }
 
         /// <summary>
         /// 第 5 引数。
         /// </summary>
-        public TArg5 Arg5 { get; }
+        public TArg5 Arg5 { get; set; }
 
         /// <summary>
         /// 第 6 引数。
         /// </summary>
-        public TArg6 Arg6 { get; }
+        public TArg6 Arg6 { get; set; }
 
         /// <summary>
         /// 第 7 引数。
         /// </summary>
-        public TArg7 Arg7 { get; }
+        public TArg7 Arg7 { get; set; }
 
         #endregion
 
@@ -791,6 +1018,52 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            switch (index)
+            {
+                case 0:
+                    Arg0 = (TArg0)value;
+                    break;
+
+                case 1:
+                    Arg1 = (TArg1)value;
+                    break;
+
+                case 2:
+                    Arg2 = (TArg2)value;
+                    break;
+
+                case 3:
+                    Arg3 = (TArg3)value;
+                    break;
+
+                case 4:
+                    Arg4 = (TArg4)value;
+                    break;
+
+                case 5:
+                    Arg5 = (TArg5)value;
+                    break;
+
+                case 6:
+                    Arg6 = (TArg6)value;
+                    break;
+
+                case 7:
+                    Arg7 = (TArg7)value;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(index));
+            }
+        }
+
         #endregion
     }
 
@@ -832,6 +1105,16 @@ namespace SoftCube.Aspects
         public override object GetArgument(int index)
         {
             return Arguments[index];
+        }
+
+        /// <summary>
+        /// 引数を設定します。
+        /// </summary>
+        /// <param name="index">引数のインデックス。</param>
+        /// <param name="value">引数の値。</param>
+        public override void SetArgument(int index, object value)
+        {
+            Arguments[index] = value;
         }
 
         #endregion

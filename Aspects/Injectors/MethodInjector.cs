@@ -290,7 +290,22 @@ namespace SoftCube.Aspects
 
             processor.Emit(OpCodes.Ldloc, AspectVariable);
             processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-            processor.Emit(OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
+
+            var aspectType = AspectType;
+            while (true)
+            {
+                var eventHandler = aspectType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);
+                if (eventHandler != null)
+                {
+                    processor.Emit(OpCodes.Callvirt, Module.ImportReference(eventHandler));
+                    break;
+                }
+                else
+                {
+                    Assert.NotNull(aspectType.BaseType);
+                    aspectType = aspectType.BaseType.Resolve();
+                }
+            }
         }
 
         /// <summary>
