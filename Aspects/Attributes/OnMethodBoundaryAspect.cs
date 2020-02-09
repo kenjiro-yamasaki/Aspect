@@ -184,59 +184,7 @@ namespace SoftCube.Aspects
                 ///         aspect.OnResume(aspectArgs);
                 ///     }
                 /// }
-                /// bool exit;
-                /// try
-                /// {
-                ///     exit = true;
-                ///     bool result;
-                ///     if (isDisposing != 2)
-                ///     {
-                ///         result = MoveNext<Original>();
-                ///     }
-                ///     exit = isDisposing != 0 || !result;
-                ///     if (!exitFlag && resumeFlag)
-                ///     {
-                ///         if (exit)
-                ///         {
-                ///             aspect.OnSuccess(aspectArgs);
-                ///         }
-                ///         else
-                ///         {
-                ///             aspectArgs.YieldValue = <> 2__current;
-                ///             aspect.OnYield(aspectArgs);
-                ///         }
-                ///     }
-                /// }
-                /// catch (Exception exception)
-                /// {
-                ///     aspectArgs.Exception = exception;
-                ///     aspect.OnException(aspectArgs);
-                ///     throw;
-                /// }
-                /// finally
-                /// {
-                ///     if (!exitFlag && resumeFlag && exit)
-                ///     {
-                ///         exitFlag = true;
-                ///         aspect.OnExit(aspectArgs);
-                ///     }
-                /// }
-                /// return !exit;
                 {
-                    /// if (!exitFlag && isDisposing == 0)
-                    /// {
-                    ///     if (!resumeFlag)
-                    ///     {
-                    ///         args = new Arguments(...);
-                    ///         aspectArgs = new MethodExecutionArgs(instance, args);
-                    ///         aspect.OnEntry(aspectArgs);
-                    ///         resumeFlag = true;
-                    ///     }
-                    ///     else
-                    ///     {
-                    ///         aspect.OnResume(aspectArgs);
-                    ///     }
-                    /// }
                     var branch = new Instruction[4];
 
                     processor.Emit(OpCodes.Ldarg_0);
@@ -265,30 +213,30 @@ namespace SoftCube.Aspects
                     branch[0].Operand = branch[1].Operand = branch[3].Operand = processor.EmitNop();
                 }
 
+                /// bool exit;
+                /// try
+                /// {
+                ///     exit = true;
+                ///     bool result;
+                ///     if (isDisposing != 2)
+                ///     {
+                ///         result = MoveNext<Original>();
+                ///     }
+                ///     exit = isDisposing != 0 || !result;
+                ///     if (!exitFlag && resumeFlag)
+                ///     {
+                ///         if (exit)
+                ///         {
+                ///             aspect.OnSuccess(aspectArgs);
+                ///         }
+                ///         else
+                ///         {
+                ///             aspectArgs.YieldValue = <> 2__current;
+                ///             aspect.OnYield(aspectArgs);
+                ///         }
+                ///     }
                 Instruction leave;
                 {
-                    /// bool exit;
-                    /// try
-                    /// {
-                    ///     exit = true;
-                    ///     bool result;
-                    ///     if (isDisposing != 2)
-                    ///     {
-                    ///         result = MoveNext<Original>();
-                    ///     }
-                    ///     exit = isDisposing != 0 || !result;
-                    ///     if (!exitFlag && resumeFlag)
-                    ///     {
-                    ///         if (exit)
-                    ///         {
-                    ///             aspect.OnSuccess(aspectArgs);
-                    ///         }
-                    ///         else
-                    ///         {
-                    ///             aspectArgs.YieldValue = <> 2__current;
-                    ///             aspect.OnYield(aspectArgs);
-                    ///         }
-                    ///     }
                     var branch = new Instruction[8];
 
                     @catch.TryStart = @finally.TryStart = processor.EmitNop();
@@ -346,28 +294,28 @@ namespace SoftCube.Aspects
                     branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
                 }
 
+                /// }
+                /// catch (Exception exception)
+                /// {
+                ///     aspectArgs.Exception = exception;
+                ///     aspect.OnException(aspectArgs);
+                ///     throw;
                 {
-                    /// }
-                    /// catch (Exception exception)
-                    /// {
-                    ///     aspectArgs.Exception = exception;
-                    ///     aspect.OnException(aspectArgs);
-                    ///     throw;
                     @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
                     injector.SetException(processor);
                     injector.InvokeEventHandler(processor, nameof(OnException));
                     processor.Emit(OpCodes.Rethrow);
                 }
 
+                /// }
+                /// finally
+                /// {
+                ///     if (!exitFlag && resumeFlag && exit)
+                ///     {
+                ///         exitFlag = true;
+                ///         aspect.OnExit(aspectArgs);
+                ///     }
                 {
-                    /// }
-                    /// finally
-                    /// {
-                    ///     if (!exitFlag && resumeFlag && exit)
-                    ///     {
-                    ///         exitFlag = true;
-                    ///         aspect.OnExit(aspectArgs);
-                    ///     }
                     var branch = new Instruction[3];
 
                     @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
@@ -392,18 +340,18 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Endfinally);
                 }
 
+                /// }
+                /// return !exit;
                 {
-                    /// }
-                    /// return !exit;
-                    int resultIndex = variables.Count;
+                    int resultVariable = variables.Count;
                     variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
                     leave.Operand = @finally.HandlerEnd = processor.EmitNop();
                     processor.Emit(OpCodes.Ldloc, exitVariable);
                     processor.Emit(OpCodes.Ldc_I4_0);
                     processor.Emit(OpCodes.Ceq);
-                    processor.Emit(OpCodes.Stloc, resultIndex);
-                    processor.Emit(OpCodes.Ldloc, resultIndex);
+                    processor.Emit(OpCodes.Stloc, resultVariable);
+                    processor.Emit(OpCodes.Ldloc, resultVariable);
                     processor.Emit(OpCodes.Ret);
                 }
 
@@ -436,21 +384,7 @@ namespace SoftCube.Aspects
                 /// if (isDisposing == 0)
                 /// {
                 ///     isDisposing = 1;
-                ///     try
-                ///     {
-                ///         System.IDisposable.Dispose<Original>();
-                ///     }
-                ///     finally
-                ///     {
-                ///         isDisposing = 2;
-                ///         MoveNext();
-                ///         isDisposing = 0;
-                ///     }
-                /// }
                 {
-                    /// if (isDisposing == 0)
-                    /// {
-                    ///     isDisposing = 1;
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
                     var branch = processor.EmitBranch(OpCodes.Brfalse_S);
@@ -462,24 +396,24 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Stfld, injector.IsDisposingField);
                 }
 
+                ///     try
+                ///     {
+                ///         System.IDisposable.Dispose<Original>();
                 Instruction leave;
                 {
-                    ///     try
-                    ///     {
-                    ///         System.IDisposable.Dispose<Original>();
                     @finally.TryStart = processor.EmitNop();
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Call, injector.OriginalDisposeMethod);
                     leave = processor.EmitLeave(OpCodes.Leave_S);
                 }
 
+                ///     }
+                ///     finally
+                ///     {
+                ///         isDisposing = 2;
+                ///         MoveNext();
+                ///         isDisposing = 0;
                 {
-                    ///     }
-                    ///     finally
-                    ///     {
-                    ///         isDisposing = 2;
-                    ///         MoveNext();
-                    ///         isDisposing = 0;
                     @finally.HandlerStart = @finally.TryEnd = processor.EmitNop();
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldc_I4_2);
@@ -495,9 +429,9 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Endfinally);
                 }
 
+                ///     }
+                /// }
                 {
-                    ///     }
-                    /// }
                     leave.Operand = @finally.HandlerEnd = processor.EmitNop();
                     processor.Emit(OpCodes.Ret);
                 }
