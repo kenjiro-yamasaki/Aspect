@@ -93,10 +93,10 @@ namespace SoftCube.Aspects
                 handlers.Add(@catch);
                 handlers.Add(@finally);
 
-                /// Aspect ローカル変数のインスタンスを生成します。
-                /// AspectArgs ローカル変数のインスタンスを生成します。
-                /// AspectArgs.Exception にメソッド情報を設定します。
-                /// OnEntry を呼びだします。
+                /// aspect ローカル変数のインスタンスを生成します。
+                /// aspectArgs ローカル変数のインスタンスを生成します。
+                /// aspectArgs.Exception にメソッド情報を設定します。
+                /// aspect.OnEntry を呼びだします。
                 injector.CreateAspectVariable(processor);
                 injector.CreateArgumentsVariable(processor);
                 injector.CreateAspectArgsVariable<MethodExecutionArgs>(processor);
@@ -105,22 +105,22 @@ namespace SoftCube.Aspects
 
                 /// try {
                 ///     元々のメソッドを呼びだします。
-                ///     OnSuccess を呼びだします。
+                ///     aspect.OnSuccess を呼びだします。
                 @catch.TryStart = @finally.TryStart = processor.EmitNop();
                 injector.InvokeOriginalMethod(processor);
                 injector.InvokeEventHandler(processor, nameof(OnSuccess));
                 var leave = processor.EmitLeave(OpCodes.Leave);
 
                 /// } catch (Exception exception) {
-                ///     AspectArgs.Exception に例外を設定します。
-                ///     OnException を呼びだします。
+                ///     aspectArgs.Exception に例外を設定します。
+                ///     aspect.OnException を呼びだします。
                 @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
                 injector.SetException(processor);
                 injector.InvokeEventHandler(processor, nameof(OnException));
                 processor.Emit(OpCodes.Rethrow);
 
                 /// } finally {
-                ///     OnExit を呼びだします。
+                ///     aspect.OnExit を呼びだします。
                 @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
                 injector.InvokeEventHandler(processor, nameof(OnExit));
                 processor.Emit(OpCodes.Endfinally);

@@ -67,17 +67,17 @@ namespace SoftCube.Aspects
         #region ローカル変数
 
         /// <summary>
-        /// Aspect のローカル変数。
+        /// aspect のローカル変数。
         /// </summary>
         public int AspectVariable { get; private set; } = -1;
 
         /// <summary>
-        /// Arguments のローカル変数。
+        /// arguments のローカル変数。
         /// </summary>
         public int ArgumentsVariable { get; private set; } = -1;
 
         /// <summary>
-        /// AspectArgs のローカル変数。
+        /// aspectArgs のローカル変数。
         /// </summary>
         public int AspectArgsVariable { get; private set; } = -1;
 
@@ -129,9 +129,9 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Aspect ローカル変数のインスタンスを生成します。
+        /// aspect ローカル変数のインスタンスを生成します。
         /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
         public void CreateAspectVariable(ILProcessor processor)
         {
             Assert.Equal(AspectVariable, -1);
@@ -139,7 +139,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Arguments ローカル変数のインスタンスを生成します。
+        /// arguments ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         public void CreateArgumentsVariable(ILProcessor processor)
@@ -184,7 +184,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs ローカル変数のインスタンスを生成します。
+        /// aspectArgs ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         public void CreateAspectArgsVariable<TAspectArgs>(ILProcessor processor)
@@ -256,7 +256,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// 戻り値を戻します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         public void Return(ILProcessor processor)
@@ -309,7 +309,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// <see cref="MethodArgs.Method"/> にメソッド情報を設定します。
+        /// aspectArgs.Method にメソッド情報を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         public void SetMethod(ILProcessor processor)
@@ -320,7 +320,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// <see cref="MethodArgs.Exception"/> に例外を設定します。
+        /// aspectArgs.Exception に例外を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         public void SetException(ILProcessor processor)
