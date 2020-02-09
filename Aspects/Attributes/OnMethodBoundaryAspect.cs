@@ -83,89 +83,56 @@ namespace SoftCube.Aspects
             injector.ReplaceMethod();
 
             /// 元々のメソッドを書き換えます。
-            method.Body = new Mono.Cecil.Cil.MethodBody(method);
-            var processor = method.Body.GetILProcessor();
             {
-                /// アスペクトのインスタンスを生成します。
+                method.Body = new Mono.Cecil.Cil.MethodBody(method);
+                var processor = method.Body.GetILProcessor();
+
+                /// 例外ハンドラーを追加します。
+                var handlers = method.Body.ExceptionHandlers;
+                var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
+                var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
+                handlers.Add(@catch);
+                handlers.Add(@finally);
+
+                /// Aspect ローカル変数のインスタンスを生成します。
+                /// AspectArgs ローカル変数のインスタンスを生成します。
+                /// AspectArgs.Exception にメソッド情報を設定します。
+                /// OnEntry を呼びだします。
                 injector.CreateAspectVariable(processor);
                 injector.CreateAspectArgsVariable<MethodExecutionArgs>(processor);
                 injector.SetMethod(processor);
-
-                /// OnEntry を呼びだします。
                 injector.InvokeEventHandler(processor, nameof(OnEntry));
-            }
 
-            /// try {
-            Instruction tryStart;
-            Instruction leave;
-            {
-                tryStart = processor.EmitNop();
-
-                /// 元々のメソッドを呼びだします。
+                /// try {
+                ///     元々のメソッドを呼びだします。
+                ///     OnSuccess を呼びだします。
+                @catch.TryStart = @finally.TryStart = processor.EmitNop();
                 injector.InvokeOriginalMethod(processor);
-
-                /// OnSuccess を呼びだします。
                 injector.InvokeEventHandler(processor, nameof(OnSuccess));
+                var leave = processor.EmitLeave(OpCodes.Leave);
 
-                leave = processor.EmitLeave(OpCodes.Leave);
-            }
-
-            /// } catch (Exception exception) {
-            Instruction catchStart;
-            {
-                catchStart = processor.EmitNop();
-
-                /// OnException を呼びだします。
+                /// } catch (Exception exception) {
+                ///     AspectArgs.Exception に例外を設定します。
+                ///     OnException を呼びだします。
+                @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
                 injector.SetException(processor);
                 injector.InvokeEventHandler(processor, nameof(OnException));
                 processor.Emit(OpCodes.Rethrow);
-            }
 
-            /// } finally {
-            Instruction catchEnd;
-            Instruction finallyStart;
-            {
-                catchEnd = finallyStart = processor.EmitNop();
-
-                /// OnExit を呼びだします。
+                /// } finally {
+                ///     OnExit を呼びだします。
+                @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
                 injector.InvokeEventHandler(processor, nameof(OnExit));
                 processor.Emit(OpCodes.Endfinally);
-            }
 
-            /// リターンコードを追加します。
-            Instruction finallyEnd;
-            {
-                leave.Operand = finallyEnd = processor.EmitNop();
+                /// }
+                /// リターンコードを追加します。
+                leave.Operand = @finally.HandlerEnd = processor.EmitNop();
                 injector.Return(processor);
+
+                /// IL を最適化します。
+                method.OptimizeIL();
             }
-
-            /// 例外ハンドラーを追加します。
-            {
-                var handlers = method.Body.ExceptionHandlers;
-
-                /// Catch ハンドラーを追加します。
-                var catchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
-                {
-                    CatchType    = module.ImportReference(typeof(Exception)),
-                    TryStart     = tryStart,
-                    TryEnd       = catchStart,
-                    HandlerStart = catchStart,
-                    HandlerEnd   = catchEnd,
-                };
-                handlers.Add(catchHandler);
-
-                /// Finally ハンドラーを追加します。
-                var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-                {
-                    TryStart     = tryStart,
-                    TryEnd       = finallyStart,
-                    HandlerStart = finallyStart,
-                    HandlerEnd   = finallyEnd,
-                };
-                handlers.Add(finallyHandler);
-            }
-
-            method.OptimizeIL();
         }
 
         #endregion
