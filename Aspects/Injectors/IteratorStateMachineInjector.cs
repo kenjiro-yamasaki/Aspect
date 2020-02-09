@@ -112,6 +112,24 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
         }
 
+        /// <summary>
+        /// Current フィールドに値を設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        public void SetCurrentField(ILProcessor processor)
+        {
+            processor.Emit(OpCodes.Ldarg_0);
+
+            processor.Emit(OpCodes.Dup);
+            processor.Emit(OpCodes.Ldfld, AspectArgsField);
+            processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetGetMethod()));
+            if (CurrentField.FieldType.IsValueType)
+            {
+                processor.Emit(OpCodes.Unbox_Any, CurrentField.FieldType);
+            }
+            processor.Emit(OpCodes.Stfld, CurrentField);
+        }
+
         #endregion
     }
 }

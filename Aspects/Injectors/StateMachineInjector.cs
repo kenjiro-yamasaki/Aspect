@@ -33,6 +33,31 @@ namespace SoftCube.Aspects
         /// </summary>
         public ModuleDefinition Module { get; }
 
+        /// <summary>
+        /// Arguments の型。
+        /// </summary>
+        public Type ArgumentsType
+        {
+            get
+            {
+                var parameters = TargetMethod.Parameters;
+                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+                return parameters.Count switch
+                {
+                    0 => typeof(Arguments),
+                    1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                    2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                    3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                    4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                    5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                    6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                    7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                    8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                    _ => typeof(ArgumentsArray)
+                };
+            }
+        }
+
         #region ステートマシン
 
         /// <summary>
@@ -67,7 +92,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// Args フィールド。
         /// </summary>
-        public FieldDefinition ArgsField { get; }
+        public FieldDefinition ArgumentsField { get; }
 
         /// <summary>
         /// ResumeFlag フィールド。
@@ -115,7 +140,7 @@ namespace SoftCube.Aspects
             StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
             AspectField      = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
             AspectArgsField  = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(typeof(MethodExecutionArgs)));
-            ArgsField        = CreateField("*args*",       FieldAttributes.Private, Module.ImportReference(typeof(Arguments)));
+            ArgumentsField   = CreateField("*arguments*",  FieldAttributes.Private, Module.ImportReference(ArgumentsType));
             ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
             Constructor      = StateMachineType.Methods.Single(m => m.Name == ".ctor");
@@ -200,20 +225,6 @@ namespace SoftCube.Aspects
                 var parameters = TargetMethod.Parameters;
                 var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
 
-                var argumentsType = parameters.Count switch
-                {
-                    0 => typeof(Arguments),
-                    1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                    2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                    3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                    4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                    5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                    6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                    7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                    8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                    _ => typeof(ArgumentsArray)
-                };
-
                 if (parameters.Count <= 8)
                 {
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
@@ -222,7 +233,7 @@ namespace SoftCube.Aspects
                         processor.Emit(insert, OpCodes.Ldarg_0);
                         processor.Emit(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                     }
-                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
+                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
                 }
                 else
                 {
@@ -241,15 +252,66 @@ namespace SoftCube.Aspects
                         }
                         processor.Emit(insert, OpCodes.Stelem_Ref);
                     }
-                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                    processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                 }
             }
-            processor.Emit(insert, OpCodes.Stfld, ArgsField);
+            processor.Emit(insert, OpCodes.Stfld, ArgumentsField);
 
             processor.Emit(insert, OpCodes.Ldarg_0);
-            processor.Emit(insert, OpCodes.Ldfld, ArgsField);
+            processor.Emit(insert, OpCodes.Ldfld, ArgumentsField);
             processor.Emit(insert, OpCodes.Newobj, Module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
             processor.Emit(insert, OpCodes.Stfld, AspectArgsField);
+        }
+
+        /// <summary>
+        /// 引数フィールドを設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        public void SetArgumentFields(ILProcessor processor)
+        {
+            SetArgumentFields(processor, null);
+        }
+
+        /// <summary>
+        /// 引数フィールドを設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
+        public void SetArgumentFields(ILProcessor processor, Instruction insert)
+        {
+            var parameters = TargetMethod.Parameters;
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+
+            if (parameters.Count <= 8)
+            {
+                var propertyNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.Emit(insert, OpCodes.Ldarg_0);
+
+                    processor.Emit(insert, OpCodes.Dup);
+                    processor.Emit(insert, OpCodes.Ldfld, ArgumentsField);
+                    processor.Emit(OpCodes.Call, Module.ImportReference(ArgumentsType.GetProperty(propertyNames[parameterIndex]).GetGetMethod()));
+
+                    processor.Emit(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                }
+            }
+            else
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.Emit(insert, OpCodes.Ldarg_0);
+
+                    processor.Emit(insert, OpCodes.Dup);
+                    processor.Emit(insert, OpCodes.Ldfld, ArgumentsField);
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                    processor.Emit(OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+
+                    processor.Emit(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                }
+            }
         }
 
         /// <summary>
@@ -274,7 +336,6 @@ namespace SoftCube.Aspects
             processor.Emit(insert, OpCodes.Ldfld, AspectField);
             processor.Emit(insert, OpCodes.Ldarg_0);
             processor.Emit(insert, OpCodes.Ldfld, AspectArgsField);
-            //processor.Emit(insert, OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
 
             var aspectType = AspectType;
             while (true)

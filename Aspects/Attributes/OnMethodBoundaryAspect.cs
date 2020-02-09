@@ -192,8 +192,8 @@ namespace SoftCube.Aspects
                 /// {
                 ///     if (!resumeFlag)
                 ///     {
-                ///         args = new Arguments(...);
-                ///         aspectArgs = new MethodExecutionArgs(instance, args);
+                ///         arguments = new Arguments(...);
+                ///         aspectArgs = new MethodExecutionArgs(instance, arguments);
                 ///         aspect.OnEntry(aspectArgs);
                 ///         resumeFlag = true;
                 ///     }
@@ -228,7 +228,10 @@ namespace SoftCube.Aspects
                     branch[2].Operand = processor.EmitNop();
                     injector.InvokeEventHandler(processor, nameof(OnResume));
 
-                    branch[0].Operand = branch[1].Operand = branch[3].Operand = processor.EmitNop();
+                    branch[3].Operand = processor.EmitNop();
+                    injector.SetArgumentFields(processor);
+
+                    branch[0].Operand = branch[1].Operand = processor.EmitNop();
                 }
 
                 /// bool exit;
@@ -308,6 +311,7 @@ namespace SoftCube.Aspects
                     branch[6].Operand = processor.EmitNop();
                     injector.SetYieldValue(processor);
                     injector.InvokeEventHandler(processor, nameof(OnYield));
+                    injector.SetCurrentField(processor);
 
                     branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
                 }
