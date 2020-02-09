@@ -145,218 +145,250 @@ namespace SoftCube.Aspects
         /// <param name="injector">イテレーターステートマシンへの注入。</param>
         private void ReplaceMoveNextMethod(IteratorStateMachineInjector injector)
         {
-            var module         = injector.Module;
-            var moveNextMethod = injector.MoveNextMethod;
+            var module = injector.Module;
 
-            /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-            var originalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
-            foreach (var parameter in moveNextMethod.Parameters)
+            /// 新たなメソッドを生成し、MoveNext メソッドの内容を移動します。
+            injector.ReplaceMoveNext();
+
+            /// 元々の MoveNext メソッドを書き換えます。
             {
-                originalMoveNextMethod.Parameters.Add(parameter);
-            }
+                var moveNextMethod = injector.MoveNextMethod;
+                moveNextMethod.Body = new MethodBody(moveNextMethod);
 
-            originalMoveNextMethod.Body = moveNextMethod.Body;
+                /// ローカル変数を追加します。
+                var variables = moveNextMethod.Body.Variables;
 
-            foreach (var sequencePoint in moveNextMethod.DebugInformation.SequencePoints)
-            {
-                originalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
-            }
+                int exitVariable = variables.Count;
+                variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
-            injector.StateMachineType.Methods.Add(originalMoveNextMethod);
+                /// 例外ハンドラーを追加します。
+                var handlers = moveNextMethod.Body.ExceptionHandlers;
+                var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
+                var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
+                handlers.Add(@catch);
+                handlers.Add(@finally);
 
-            /// 元々のメソッドを書き換えます。
-            moveNextMethod.Body = new Mono.Cecil.Cil.MethodBody(moveNextMethod);
+                var processor = moveNextMethod.Body.GetILProcessor();
 
-            /// ローカル変数を追加します。
-            var variables = moveNextMethod.Body.Variables;
+                /// if (!exitFlag && isDisposing == 0)
+                /// {
+                ///     if (!resumeFlag)
+                ///     {
+                ///         args = new Arguments(...);
+                ///         aspectArgs = new MethodExecutionArgs(instance, args);
+                ///         aspect.OnEntry(aspectArgs);
+                ///         resumeFlag = true;
+                ///     }
+                ///     else
+                ///     {
+                ///         aspect.OnResume(aspectArgs);
+                ///     }
+                /// }
+                {
+                    var branch = new Instruction[4];
 
-            int resultVariable    = variables.Count;
-            int exceptionVariable = variables.Count + 1;
-            int exitFlagVariable  = variables.Count + 2;
+                    /// if (!exitFlag && isDisposing == 0)
+                    /// {
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
+                    branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
-            variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
-            variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
+                    branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-            ///
-            var processor = moveNextMethod.Body.GetILProcessor();
-            {
-                var branch = new Instruction[5];
+                    ///     if (!resumeFlag)
+                    ///     {
+                    ///         args  = new Arguments(...);
+                    ///         aspectArgs = new MethodExecutionArgs(instance, args);
+                    ///         aspect.OnEntry(aspectArgs);
+                    ///         resumeFlag = true;
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
+                    branch[2] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
-                branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
+                    injector.CreateAspectArgsInstance(processor);
+                    injector.InvokeEventHandler(processor, nameof(OnEntry));
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
-                branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldc_I4_1);
+                    processor.Emit(OpCodes.Stfld, injector.ResumeFlagField);
+                    branch[3] = processor.EmitBranch(OpCodes.Br_S);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
-                branch[2] = processor.EmitBranch(OpCodes.Brtrue_S);
+                    ///     }
+                    ///     else
+                    ///     {
+                    ///         aspect.OnResume(aspectArgs);
+                    branch[2].Operand = processor.EmitNop();
+                    injector.InvokeEventHandler(processor, nameof(OnResume));
 
-                /// <see cref="OnEntry"/> を呼びだします。
-                injector.CreateAspectArgsInstance(processor);
-                injector.InvokeEventHandler(processor, nameof(OnEntry));
+                    ///     }
+                    /// }
+                    branch[0].Operand = branch[1].Operand = branch[3].Operand = processor.EmitNop();
+                }
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
-                branch[3] = processor.EmitBranch(OpCodes.Brtrue_S);
+                /// bool exit;
+                /// try
+                /// {
+                ///     exit = true;
+                ///     bool result;
+                ///     if (isDisposing != 2)
+                ///     {
+                ///         result = MoveNext<Original>();
+                ///     }
+                ///     exit = isDisposing != 0 || !result;
+                ///     if (!exitFlag && resumeFlag)
+                ///     {
+                ///         if (exit)
+                ///         {
+                ///             aspect.OnSuccess(aspectArgs);
+                ///         }
+                ///         else
+                ///         {
+                ///             aspectArgs.YieldValue = <> 2__current;
+                ///             aspect.OnYield(aspectArgs);
+                ///         }
+                ///     }
+                Instruction leave;
+                {
+                    var branch = new Instruction[8];
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, injector.ResumeFlagField);
-                branch[4] = processor.EmitBranch(OpCodes.Br_S);
+                    /// bool exit;
+                    /// try
+                    /// {
+                    ///     exit = true;
+                    @catch.TryStart = @finally.TryStart = processor.EmitNop();
 
-                /// <see cref="OnResume"/> を呼びだします。
-                branch[2].Operand = branch[3].Operand = processor.EmitNop();
-                injector.InvokeEventHandler(processor, nameof(OnResume));
+                    processor.Emit(OpCodes.Ldc_I4_1);
+                    processor.Emit(OpCodes.Stloc, exitVariable);
 
-                branch[0].Operand = branch[1].Operand = branch[4].Operand = processor.EmitNop();
-            }
+                    ///     if (isDisposing != 2)
+                    ///     {
+                    ///         result = MoveNext<Original>();
+                    int resultVariable = variables.Count;
+                    variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
-            /// try {
-            Instruction tryStart;
-            Instruction leave;
-            {
-                var branch = new Instruction[8];
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
+                    processor.Emit(OpCodes.Ldc_I4_2);
+                    branch[0] = processor.EmitBranch(OpCodes.Beq_S);
 
-                tryStart =  processor.EmitNop();
-                processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stloc, exitFlagVariable);
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Call, injector.OriginalMoveNextMethod);
+                    processor.Emit(OpCodes.Stloc, resultVariable);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
-                processor.Emit(OpCodes.Ldc_I4_2);
-                branch[0] = processor.EmitBranch(OpCodes.Beq_S);
+                    ///     }
+                    ///     exit = isDisposing != 0 || !result;
+                    branch[0].Operand = processor.EmitNop();
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
+                    branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, originalMoveNextMethod);
-                processor.Emit(OpCodes.Stloc, resultVariable);
+                    processor.Emit(OpCodes.Ldloc, resultVariable);
+                    branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
 
-                branch[0].Operand = processor.EmitNop();
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
-                branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
+                    processor.Emit(OpCodes.Ldc_I4_0);
+                    processor.Emit(OpCodes.Stloc, exitVariable);
+                    branch[3] = processor.EmitBranch(OpCodes.Br_S);
 
-                processor.Emit(OpCodes.Ldloc, resultVariable);
-                branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
+                    branch[1].Operand = branch[2].Operand = processor.EmitNop();
+                    processor.Emit(OpCodes.Ldc_I4_1);
+                    processor.Emit(OpCodes.Stloc, exitVariable);
 
-                processor.Emit(OpCodes.Ldc_I4_0);
-                processor.Emit(OpCodes.Stloc, exitFlagVariable);
-                branch[3] = processor.EmitBranch(OpCodes.Br_S);
+                    ///     if (!exitFlag && resumeFlag)
+                    ///     {
+                    branch[3].Operand = processor.EmitNop();
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
+                    branch[4] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-                branch[1].Operand = branch[2].Operand = processor.EmitNop();
-                processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stloc, exitFlagVariable);
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
+                    branch[5] = processor.EmitBranch(OpCodes.Brfalse_S);
 
-                branch[3].Operand = processor.EmitNop();
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
-                branch[4] = processor.EmitBranch(OpCodes.Brtrue_S);
+                    ///         if (exit)
+                    ///         {
+                    ///             aspect.OnSuccess(aspectArgs);
+                    processor.Emit(OpCodes.Ldloc, exitVariable);
+                    branch[6] = processor.EmitBranch(OpCodes.Brfalse_S);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
-                branch[5] = processor.EmitBranch(OpCodes.Brfalse_S);
+                    injector.InvokeEventHandler(processor, nameof(OnSuccess));
+                    branch[7] = processor.EmitBranch(OpCodes.Br_S);
 
-                processor.Emit(OpCodes.Ldloc, exitFlagVariable);
-                branch[6] = processor.EmitBranch(OpCodes.Brfalse_S);
+                    ///         }
+                    ///         else
+                    ///         {
+                    ///             aspectArgs.YieldValue = <> 2__current;
+                    ///             aspect.OnYield(aspectArgs);
+                    branch[6].Operand = processor.EmitNop();
+                    injector.SetYieldValue(processor);
+                    injector.InvokeEventHandler(processor, nameof(OnYield));
 
-                injector.InvokeEventHandler(processor, nameof(OnSuccess));
-                branch[7] = processor.EmitBranch(OpCodes.Br_S);
+                    ///         }
+                    ///     }
+                    branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
+                }
 
-                /// <see cref="OnYield"/> を呼びだします。
-                branch[6].Operand = processor.EmitNop();
-                injector.SetYieldValue(processor);
-                injector.InvokeEventHandler(processor, nameof(OnYield));
-
-                branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
-            }
-
-            /// } catch (Exception exception) {
-            Instruction catchStart;
-            {
-                /// <see cref="OnException"/> を呼びだします。
-                catchStart = processor.EmitNop();
-                processor.Emit(OpCodes.Stloc, exceptionVariable);
-                injector.SetException(processor, exceptionVariable);
+                /// }
+                /// catch (Exception exception)
+                /// {
+                ///     aspectArgs.Exception = exception;
+                ///     aspect.OnException(aspectArgs);
+                ///     throw;
+                @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
+                injector.SetException(processor);
                 injector.InvokeEventHandler(processor, nameof(OnException));
                 processor.Emit(OpCodes.Rethrow);
-            }
 
-            /// } finally {
-            Instruction catchEnd;
-            Instruction finallyStart;
-            {
-                var branch = new Instruction[3];
+                /// }
+                /// finally
+                /// {
+                ///     if (!exitFlag && resumeFlag && exit)
+                ///     {
+                ///         exitFlag = true;
+                ///         aspect.OnExit(aspectArgs);
+                ///     }
+                {
+                    var branch = new Instruction[3];
 
-                catchEnd = finallyStart = processor.EmitNop();
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
-                branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
+                    @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
+                    branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
-                branch[1] = processor.EmitBranch(OpCodes.Brfalse_S);
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
+                    branch[1] = processor.EmitBranch(OpCodes.Brfalse_S);
 
-                processor.Emit(OpCodes.Ldloc, exitFlagVariable);
-                branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
+                    processor.Emit(OpCodes.Ldloc, exitVariable);
+                    branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
 
-                /// ExitFlag を true にします。
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Ldc_I4_1);
-                processor.Emit(OpCodes.Stfld, injector.ExitFlagField);
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Ldc_I4_1);
+                    processor.Emit(OpCodes.Stfld, injector.ExitFlagField);
 
-                /// <see cref="OnExit"/> を呼びだします。
-                injector.InvokeEventHandler(processor, nameof(OnExit));
+                    injector.InvokeEventHandler(processor, nameof(OnExit));
 
-                branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitNop();
-                processor.Emit(OpCodes.Endfinally);
-            }
+                    branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitNop();
+                    processor.Emit(OpCodes.Endfinally);
+                }
 
-            ///
-            Instruction finallyEnd;
-            {
+                /// }
+                /// return !exit;
                 int resultIndex = variables.Count;
                 variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
 
-                leave.Operand = finallyEnd = processor.EmitNop();
-                processor.Emit(OpCodes.Ldloc, exitFlagVariable);
+                leave.Operand = @finally.HandlerEnd = processor.EmitNop();
+                processor.Emit(OpCodes.Ldloc, exitVariable);
                 processor.Emit(OpCodes.Ldc_I4_0);
                 processor.Emit(OpCodes.Ceq);
                 processor.Emit(OpCodes.Stloc, resultIndex);
                 processor.Emit(OpCodes.Ldloc, resultIndex);
                 processor.Emit(OpCodes.Ret);
+
+                /// IL を最適化します。
+                moveNextMethod.OptimizeIL();
             }
-
-            /// 例外ハンドラーを追加します。
-            {
-                var handlers = moveNextMethod.Body.ExceptionHandlers;
-
-                /// Catch ハンドラーを追加します。
-                var catchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
-                {
-                    CatchType    = module.ImportReference(typeof(Exception)),
-                    TryStart     = tryStart,
-                    TryEnd       = catchStart,
-                    HandlerStart = catchStart,
-                    HandlerEnd   = catchEnd,
-                };
-                handlers.Add(catchHandler);
-
-                /// Finally ハンドラーを追加します。
-                var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-                {
-                    TryStart     = tryStart,
-                    TryEnd       = finallyStart,
-                    HandlerStart = finallyStart,
-                    HandlerEnd   = finallyEnd,
-                };
-                handlers.Add(finallyHandler);
-            }
-
-            /// IL を最適化します。
-            moveNextMethod.OptimizeIL();
         }
 
         /// <summary>
@@ -459,9 +491,7 @@ namespace SoftCube.Aspects
 
             /// ローカル変数を追加します。
             var variables = moveNextMethod.Body.Variables;
-            int resultVariable    = 1;
-            int exceptionVariable = variables.Count;
-            variables.Add(new VariableDefinition(module.ImportReference(typeof(Exception))));
+            int resultVariable = 1;
 
             /// IL を書き換えます。
             var processor    = moveNextMethod.Body.GetILProcessor();
@@ -504,7 +534,7 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[2];
                 var insert = leave;
 
-                var leaveTarget = processor.Emit(insert, OpCodes.Ldarg_0);                    // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
+                var leaveTarget = processor.Emit(insert, OpCodes.Ldarg_0);                          // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
                 processor.Emit(insert, OpCodes.Ldfld, injector.StateField);
                 processor.Emit(insert, OpCodes.Ldc_I4, -1);
                 branch[0] = processor.EmitBranch(insert, OpCodes.Beq);
@@ -536,8 +566,8 @@ namespace SoftCube.Aspects
                 var insert = outerCatchStart;
 
                 /// <see cref="OnException"/> を呼び出します。
-                innerCatchStart = processor.Emit(insert, OpCodes.Stloc, exceptionVariable);
-                injector.SetException(processor, insert, exceptionVariable);
+                innerCatchStart = processor.Emit(insert, OpCodes.Nop);
+                injector.SetException(processor, insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnException));
                 processor.Emit(insert, OpCodes.Rethrow);
             }

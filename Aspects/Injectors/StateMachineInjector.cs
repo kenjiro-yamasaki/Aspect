@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using SoftCube.Asserts;
 using System;
 using System.Linq;
 
@@ -87,6 +88,11 @@ namespace SoftCube.Aspects
         /// </summary>
         public MethodDefinition MoveNextMethod { get; }
 
+        /// <summary>
+        /// MoveNext メソッドの内容を移動したメソッド。
+        /// </summary>
+        public MethodDefinition OriginalMoveNextMethod { get; private set; }
+
         #endregion
 
         #endregion
@@ -119,6 +125,31 @@ namespace SoftCube.Aspects
         #endregion
 
         #region メソッド
+
+        /// <summary>
+        /// 新たなメソッドを生成し、MoveNext メソッドの内容を移動します。
+        /// </summary>
+        public void ReplaceMoveNext()
+        {
+            Assert.Null(OriginalMoveNextMethod);
+
+            var moveNextMethod = MoveNextMethod;
+
+            OriginalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
+            foreach (var parameter in moveNextMethod.Parameters)
+            {
+                OriginalMoveNextMethod.Parameters.Add(parameter);
+            }
+
+            OriginalMoveNextMethod.Body = moveNextMethod.Body;
+
+            foreach (var sequencePoint in moveNextMethod.DebugInformation.SequencePoints)
+            {
+                OriginalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
+
+            StateMachineType.Methods.Add(OriginalMoveNextMethod);
+        }
 
         /// <summary>
         /// Aspect フィールドのインスタンスを生成します。
@@ -243,7 +274,23 @@ namespace SoftCube.Aspects
             processor.Emit(insert, OpCodes.Ldfld, AspectField);
             processor.Emit(insert, OpCodes.Ldarg_0);
             processor.Emit(insert, OpCodes.Ldfld, AspectArgsField);
-            processor.Emit(insert, OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
+            //processor.Emit(insert, OpCodes.Callvirt, AspectType.Methods.Single(m => m.Name == eventHandlerName));
+
+            var aspectType = AspectType;
+            while (true)
+            {
+                var eventHandler = aspectType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);
+                if (eventHandler != null)
+                {
+                    processor.Emit(insert, OpCodes.Callvirt, Module.ImportReference(eventHandler));
+                    break;
+                }
+                else
+                {
+                    Assert.NotNull(aspectType.BaseType);
+                    aspectType = aspectType.BaseType.Resolve();
+                }
+            }
         }
 
         /// <summary>
@@ -251,9 +298,9 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="exceptionVariable">例外のローカル変数。</param>
-        public void SetException(ILProcessor processor, int exceptionVariable)
+        public void SetException(ILProcessor processor)
         {
-            SetException(processor, null, exceptionVariable);
+            SetException(processor, null);
         }
 
         /// <summary>
@@ -262,8 +309,14 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         /// <param name="exceptionVariable">例外のローカル変数。</param>
-        public void SetException(ILProcessor processor, Instruction insert, int exceptionVariable)
+        public void SetException(ILProcessor processor, Instruction insert)
         {
+            var variables = processor.Body.Variables;
+            int exceptionVariable = variables.Count;
+            variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
+
+            processor.Emit(insert, OpCodes.Stloc, exceptionVariable);
+
             processor.Emit(insert, OpCodes.Ldarg_0);
             processor.Emit(insert, OpCodes.Ldfld, AspectArgsField);
             processor.Emit(insert, OpCodes.Ldloc, exceptionVariable);

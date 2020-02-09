@@ -1,4 +1,5 @@
-﻿using SoftCube.Logging;
+﻿using SoftCube.Asserts;
+using SoftCube.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -19,12 +20,11 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var result = program.引数が1つ("a");
-            Logger.Trace(result);
+            var result = program.引数が2つ("a", "b");
+            Logger.Trace(ArgumentFormatter.Format(result));
 
             Console.Read();
         }
-
 
         public class ChangeArg1Aspect : OnMethodBoundaryAspect
         {
@@ -39,16 +39,10 @@ namespace SoftCube.Aspects
         }
 
         [ChangeArg1Aspect]
-        public string 引数が1つ(string arg1)
+        public IEnumerable<string> 引数が2つ(string arg1, string arg2)
         {
-            return arg1;
+            yield return arg1;
+            yield return arg2;
         }
-
-        //[Fact]
-        //public void 引数が1つ_正しくアスペクトが適用される()
-        //{
-        //    var result = 引数が1つ("a");
-        //    Assert.Equal("A", result);
-        //}
     }
 }
