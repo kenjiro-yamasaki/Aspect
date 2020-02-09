@@ -3,6 +3,7 @@ using SoftCube.Profiling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -2935,6 +2936,244 @@ namespace SoftCube.Aspects
                 #endregion
 
                 #endregion
+            }
+
+            public class 引数の変更
+            {
+                private class ChangeArgAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            var argument = args.Arguments[argumentIndex] as string;
+                            args.Arguments[argumentIndex] = argument.ToUpper();
+                        }
+                    }
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1)
+                {
+                    yield return arg1;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                    yield return arg8;
+                }
+
+                [ChangeArgAspect]
+                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                    yield return arg8;
+                    yield return arg9;
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が1つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a").ToList();
+
+                    Assert.Equal("A", result[0]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が2つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が3つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b", "c").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                    Assert.Equal("C", result[2]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が4つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b", "c", "d").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                    Assert.Equal("C", result[2]);
+                    Assert.Equal("D", result[3]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が5つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b", "c", "d", "e").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                    Assert.Equal("C", result[2]);
+                    Assert.Equal("D", result[3]);
+                    Assert.Equal("E", result[4]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が6つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                    Assert.Equal("C", result[2]);
+                    Assert.Equal("D", result[3]);
+                    Assert.Equal("E", result[4]);
+                    Assert.Equal("F", result[5]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が7つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                    Assert.Equal("C", result[2]);
+                    Assert.Equal("D", result[3]);
+                    Assert.Equal("E", result[4]);
+                    Assert.Equal("F", result[5]);
+                    Assert.Equal("G", result[6]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が8つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                    Assert.Equal("C", result[2]);
+                    Assert.Equal("D", result[3]);
+                    Assert.Equal("E", result[4]);
+                    Assert.Equal("F", result[5]);
+                    Assert.Equal("G", result[6]);
+                    Assert.Equal("H", result[7]);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が9つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h", "i").ToList();
+
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                    Assert.Equal("C", result[2]);
+                    Assert.Equal("D", result[3]);
+                    Assert.Equal("E", result[4]);
+                    Assert.Equal("F", result[5]);
+                    Assert.Equal("G", result[6]);
+                    Assert.Equal("H", result[7]);
+                    Assert.Equal("I", result[8]);
+                }
+            }
+
+            public class 戻り値の変更
+            {
+                private class ChangeReturnValueAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        var yieldValue = args.YieldValue as string;
+                        args.YieldValue = yieldValue.ToUpper();
+                    }
+                }
+
+                [ChangeReturnValueAspect]
+                private IEnumerable<string> 戻り値を大文字に変更(string arg1)
+                {
+                    yield return arg1;
+                }
+
+                [Fact]
+                public void 戻り値を大文字に変更_正しくアスペクトが適用される()
+                {
+                    var result = 戻り値を大文字に変更("a").ToList();
+                    Assert.Equal("A", result[0]);
+                }
             }
         }
 
