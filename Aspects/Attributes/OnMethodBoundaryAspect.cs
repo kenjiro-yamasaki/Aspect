@@ -93,42 +93,60 @@ namespace SoftCube.Aspects
                 handlers.Add(@catch);
                 handlers.Add(@finally);
 
-                /// aspect ローカル変数のインスタンスを生成します。
-                /// aspectArgs ローカル変数のインスタンスを生成します。
-                /// aspectArgs.Exception にメソッド情報を設定します。
-                /// aspect.OnEntry を呼びだします。
-                injector.CreateAspectVariable(processor);
-                injector.CreateArgumentsVariable(processor);
-                injector.CreateAspectArgsVariable<MethodExecutionArgs>(processor);
-                injector.SetMethod(processor);
-                injector.InvokeEventHandler(processor, nameof(OnEntry));
+                /// var aspect = new Aspect();
+                /// var arguments = new Arguments(...);
+                /// var aspectArgs = new MethodExecutionArgs(this, arguments);
+                /// aspectArgs.Method = MethodBase.GetCurrentMethod();
+                /// aspect.OnEntry(aspectArgs);
+                {
+                    injector.CreateAspectVariable(processor);
+                    injector.CreateArgumentsVariable(processor);
+                    injector.CreateAspectArgsVariable<MethodExecutionArgs>(processor);
+                    injector.SetMethod(processor);
+                    injector.InvokeEventHandler(processor, nameof(OnEntry));
+                }
 
-                /// try {
-                ///     元々のメソッドを呼びだします。
-                ///     aspect.OnSuccess を呼びだします。
-                @catch.TryStart = @finally.TryStart = processor.EmitNop();
-                injector.InvokeOriginalMethod(processor);
-                injector.InvokeEventHandler(processor, nameof(OnSuccess));
-                var leave = processor.EmitLeave(OpCodes.Leave);
-
-                /// } catch (Exception exception) {
-                ///     aspectArgs.Exception に例外を設定します。
-                ///     aspect.OnException を呼びだします。
-                @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-                injector.SetException(processor);
-                injector.InvokeEventHandler(processor, nameof(OnException));
-                processor.Emit(OpCodes.Rethrow);
-
-                /// } finally {
-                ///     aspect.OnExit を呼びだします。
-                @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                injector.InvokeEventHandler(processor, nameof(OnExit));
-                processor.Emit(OpCodes.Endfinally);
+                /// try
+                /// {
+                ///     aspectArgs.ReturnValue = OriginalMethod(...);
+                ///     aspect.OnSuccess(aspectArgs);
+                Instruction leave;
+                {
+                    @catch.TryStart = @finally.TryStart = processor.EmitNop();
+                    injector.InvokeOriginalMethod(processor);
+                    injector.InvokeEventHandler(processor, nameof(OnSuccess));
+                    leave = processor.EmitLeave(OpCodes.Leave);
+                }
 
                 /// }
-                /// リターンコードを追加します。
-                leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                injector.Return(processor);
+                /// catch (Exception ex)
+                /// {
+                ///     aspectArgs.Exception = ex;
+                ///     aspect.OnException(aspectArgs);
+                ///     throw;
+                {
+                    @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
+                    injector.SetException(processor);
+                    injector.InvokeEventHandler(processor, nameof(OnException));
+                    processor.Emit(OpCodes.Rethrow);
+                }
+
+                /// }
+                /// finally
+                /// {
+                ///     aspect.OnExit(aspectArgs);
+                {
+                    @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
+                    injector.InvokeEventHandler(processor, nameof(OnExit));
+                    processor.Emit(OpCodes.Endfinally);
+                }
+
+                /// }
+                /// return (TResult)aspectArgs.ReturnValue;
+                {
+                    leave.Operand = @finally.HandlerEnd = processor.EmitNop();
+                    injector.Return(processor);
+                }
 
                 /// IL を最適化します。
                 method.OptimizeIL();

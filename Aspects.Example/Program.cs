@@ -20,7 +20,7 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var result = program.引数が2つ("a", "b");
+            var result = program.引数が2つ("a");
             Logger.Trace(ArgumentFormatter.Format(result));
 
             Console.Read();
@@ -39,10 +39,16 @@ namespace SoftCube.Aspects
         }
 
         [ChangeArg1Aspect]
-        public IEnumerable<string> 引数が2つ(string arg1, string arg2)
+        public string 引数が2つ(string arg1)
         {
-            yield return arg1;
-            yield return arg2;
+            return arg1;
         }
+
+        //[ChangeArg1Aspect]
+        //public IEnumerable<string> 引数が2つ(string arg1, string arg2)
+        //{
+        //    yield return arg1;
+        //    yield return arg2;
+        //}
     }
 }
