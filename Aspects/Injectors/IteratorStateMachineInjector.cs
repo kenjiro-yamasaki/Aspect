@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using SoftCube.Asserts;
 using System;
 using System.Linq;
 
@@ -43,6 +44,11 @@ namespace SoftCube.Aspects
         /// </summary>
         public MethodDefinition DisposeMethod => StateMachineType.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
 
+        /// <summary>
+        /// Dispose メソッドの内容を移動したメソッド。
+        /// </summary>
+        public MethodDefinition OriginalDisposeMethod { get; private set; }
+
         #endregion
 
         #endregion
@@ -64,6 +70,30 @@ namespace SoftCube.Aspects
         #endregion
 
         #region メソッド
+
+        /// <summary>
+        /// 新たなメソッドを生成し、Dispose メソッドの内容を移動します。
+        /// </summary>
+        public void ReplaceDispose()
+        {
+            Assert.NotNull(DisposeMethod);
+            Assert.Null(OriginalDisposeMethod);
+
+            /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
+            OriginalDisposeMethod = new MethodDefinition(DisposeMethod.Name + "<Original>", DisposeMethod.Attributes, DisposeMethod.ReturnType);
+            foreach (var parameter in DisposeMethod.Parameters)
+            {
+                OriginalDisposeMethod.Parameters.Add(parameter);
+            }
+
+            OriginalDisposeMethod.Body = DisposeMethod.Body;
+            foreach (var sequencePoint in DisposeMethod.DebugInformation.SequencePoints)
+            {
+                OriginalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
+
+            StateMachineType.Methods.Add(OriginalDisposeMethod);
+        }
 
         /// <summary>
         /// <see cref="MethodExecutionArgs.YieldValue"/> に値を設定します。
