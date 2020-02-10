@@ -533,7 +533,7 @@ namespace SoftCube.Aspects
                 processor.Insert(insert, OpCodes.Stfld, injector.ResumeFlagField);
                 branch[1] = processor.InsertBranch(insert, OpCodes.Br_S);
 
-                branch[0].Operand = processor.Insert(insert, OpCodes.Nop);
+                branch[0].Operand = processor.InsertNop(insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnResume));
 
                 branch[1].Operand = processor.InsertNop(insert);
@@ -566,7 +566,7 @@ namespace SoftCube.Aspects
                 branch[1] = processor.InsertBranch(insert, OpCodes.Br_S);
                 branch[1].Operand = leave;
 
-                branch[0].Operand = processor.Insert(insert, OpCodes.Nop);
+                branch[0].Operand = processor.InsertNop(insert);
                 injector.SetReturnValue(processor, insert, resultVariable);
                 injector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
                 injector.SetReturnVariable(processor, insert, resultVariable);

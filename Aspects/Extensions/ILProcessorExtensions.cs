@@ -76,8 +76,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
             var instruction = processor.Create(opcode);
             if (insert != null)
@@ -88,7 +87,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -98,8 +96,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -110,7 +107,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -120,8 +116,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -132,7 +127,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -142,8 +136,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -154,7 +147,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -164,8 +156,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -176,7 +167,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -186,8 +176,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -198,7 +187,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -208,8 +196,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -220,7 +207,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -230,8 +216,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -242,7 +227,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -252,8 +236,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -264,7 +247,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -274,8 +256,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -286,7 +267,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -296,8 +276,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -308,7 +287,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -318,8 +296,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -330,7 +307,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -340,8 +316,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -352,7 +327,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -362,8 +336,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -374,7 +347,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -384,8 +356,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -396,7 +367,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
@@ -406,8 +376,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        /// <returns>挿入された命令。</returns>
-        public static Instruction Insert(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
+        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -418,7 +387,6 @@ namespace SoftCube.Aspects
             {
                 processor.Append(instruction);
             }
-            return instruction;
         }
 
         /// <summary>
