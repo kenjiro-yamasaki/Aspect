@@ -1812,7 +1812,9 @@ namespace SoftCube.Aspects
 
             public class 引数の変更
             {
-                private class ChangeArgAspect : OnMethodBoundaryAspect
+                #region 参照型
+
+                private class ToUpperAspect : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
@@ -1824,55 +1826,55 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private string 引数を大文字に変更(string arg1)
                 {
                     return arg1;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string) 引数を大文字に変更(string arg1, string arg2)
                 {
                     return (arg1, arg2);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3)
                 {
                     return (arg1, arg2, arg3);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4)
                 {
                     return (arg1, arg2, arg3, arg4);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5)
                 {
                     return (arg1, arg2, arg3, arg4, arg5);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
                 {
                     return (arg1, arg2, arg3, arg4, arg5, arg6);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
                 {
                     return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string, string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
                 {
                     return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private (string, string, string, string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
                 {
                     return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
@@ -1976,11 +1978,184 @@ namespace SoftCube.Aspects
                     Assert.Equal("H", result8);
                     Assert.Equal("I", result9);
                 }
+
+                #endregion
+
+                #region 値型
+
+                private class IncrementAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            var argument = (int)args.Arguments[argumentIndex];
+                            args.Arguments[argumentIndex] = argument + 1;
+                        }
+                    }
+                }
+
+                [IncrementAspect]
+                private int 引数をインクリメント(int arg1)
+                {
+                    return arg1;
+                }
+
+                [IncrementAspect]
+                private (int, int) 引数をインクリメント(int arg1, int arg2)
+                {
+                    return (arg1, arg2);
+                }
+
+                [IncrementAspect]
+                private (int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3)
+                {
+                    return (arg1, arg2, arg3);
+                }
+
+                [IncrementAspect]
+                private (int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4)
+                {
+                    return (arg1, arg2, arg3, arg4);
+                }
+
+                [IncrementAspect]
+                private (int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5);
+                }
+
+                [IncrementAspect]
+                private (int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6);
+                }
+
+                [IncrementAspect]
+                private (int, int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                }
+
+                [IncrementAspect]
+                private (int, int, int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                }
+
+                [IncrementAspect]
+                private (int, int, int, int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9)
+                {
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1);
+                    Assert.Equal(2, result);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2) = 引数をインクリメント(1, 2);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3) = 引数をインクリメント(1, 2, 3);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4) = 引数をインクリメント(1, 2, 3, 4);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5) = 引数をインクリメント(1, 2, 3, 4, 5);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6) = 引数をインクリメント(1, 2, 3, 4, 5, 6);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6, result7) = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6, result7, result8) = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                    Assert.Equal(9, result8);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
+                {
+                    var (result1, result2, result3, result4, result5, result6, result7, result8, result9) = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8, 9);
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                    Assert.Equal(9, result8);
+                    Assert.Equal(10, result9);
+                }
+
+                #endregion
             }
 
             public class 戻り値の変更
             {
-                private class ChangeReturnValueAspect : OnMethodBoundaryAspect
+                #region 参照型
+
+                private class ToUpperAspect : OnMethodBoundaryAspect
                 {
                     public override void OnExit(MethodExecutionArgs args)
                     {
@@ -1989,7 +2164,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [ChangeReturnValueAspect]
+                [ToUpperAspect]
                 private string 戻り値を大文字に変更(string arg1)
                 {
                     return arg1;
@@ -2001,6 +2176,34 @@ namespace SoftCube.Aspects
                     var result = 戻り値を大文字に変更("a");
                     Assert.Equal("A", result);
                 }
+
+                #endregion
+
+                #region 値型
+
+                private class IncrementAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnExit(MethodExecutionArgs args)
+                    {
+                        var returnValue = (int)args.ReturnValue;
+                        args.ReturnValue = returnValue + 1;
+                    }
+                }
+
+                [IncrementAspect]
+                private int 戻り値をインクリメント(int arg1)
+                {
+                    return arg1;
+                }
+
+                [Fact]
+                public void 戻り値をインクリメント_正しくアスペクトが適用される()
+                {
+                    var result = 戻り値をインクリメント(1);
+                    Assert.Equal(2, result);
+                }
+
+                #endregion
             }
         }
 
@@ -2940,7 +3143,9 @@ namespace SoftCube.Aspects
 
             public class 引数の変更
             {
-                private class ChangeArgAspect : OnMethodBoundaryAspect
+                #region 参照型
+
+                private class ToUpperAspect : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
@@ -2952,20 +3157,20 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1)
                 {
                     yield return arg1;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2)
                 {
                     yield return arg1;
                     yield return arg2;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3)
                 {
                     yield return arg1;
@@ -2973,7 +3178,7 @@ namespace SoftCube.Aspects
                     yield return arg3;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4)
                 {
                     yield return arg1;
@@ -2982,7 +3187,7 @@ namespace SoftCube.Aspects
                     yield return arg4;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5)
                 {
                     yield return arg1;
@@ -2992,7 +3197,7 @@ namespace SoftCube.Aspects
                     yield return arg5;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
                 {
                     yield return arg1;
@@ -3003,7 +3208,7 @@ namespace SoftCube.Aspects
                     yield return arg6;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
                 {
                     yield return arg1;
@@ -3015,7 +3220,7 @@ namespace SoftCube.Aspects
                     yield return arg7;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
                 {
                     yield return arg1;
@@ -3028,7 +3233,7 @@ namespace SoftCube.Aspects
                     yield return arg8;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
                 {
                     yield return arg1;
@@ -3149,6 +3354,222 @@ namespace SoftCube.Aspects
                     Assert.Equal("H", result[7]);
                     Assert.Equal("I", result[8]);
                 }
+
+                #endregion
+
+                #region 値型
+
+                private class IncrementAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            var argument = (int)args.Arguments[argumentIndex];
+                            args.Arguments[argumentIndex] = argument + 1;
+                        }
+                    }
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1)
+                {
+                    yield return arg1;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                    yield return arg8;
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9)
+                {
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                    yield return arg8;
+                    yield return arg9;
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1).ToList();
+
+                    Assert.Equal(2, result[0]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2, 3).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                    Assert.Equal(4, result[2]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2, 3, 4).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                    Assert.Equal(4, result[2]);
+                    Assert.Equal(5, result[3]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2, 3, 4, 5).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                    Assert.Equal(4, result[2]);
+                    Assert.Equal(5, result[3]);
+                    Assert.Equal(6, result[4]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                    Assert.Equal(4, result[2]);
+                    Assert.Equal(5, result[3]);
+                    Assert.Equal(6, result[4]);
+                    Assert.Equal(7, result[5]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                    Assert.Equal(4, result[2]);
+                    Assert.Equal(5, result[3]);
+                    Assert.Equal(6, result[4]);
+                    Assert.Equal(7, result[5]);
+                    Assert.Equal(8, result[6]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                    Assert.Equal(4, result[2]);
+                    Assert.Equal(5, result[3]);
+                    Assert.Equal(6, result[4]);
+                    Assert.Equal(7, result[5]);
+                    Assert.Equal(8, result[6]);
+                    Assert.Equal(9, result[7]);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
+                {
+                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8, 9).ToList();
+
+                    Assert.Equal(2, result[0]);
+                    Assert.Equal(3, result[1]);
+                    Assert.Equal(4, result[2]);
+                    Assert.Equal(5, result[3]);
+                    Assert.Equal(6, result[4]);
+                    Assert.Equal(7, result[5]);
+                    Assert.Equal(8, result[6]);
+                    Assert.Equal(9, result[7]);
+                    Assert.Equal(10, result[8]);
+                }
+
+                #endregion
             }
 
             public class 戻り値の変更

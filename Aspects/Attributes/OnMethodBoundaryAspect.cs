@@ -201,6 +201,9 @@ namespace SoftCube.Aspects
                 ///     {
                 ///         aspect.OnResume(aspectArgs);
                 ///     }
+                ///     arg0 = arguments.Arg0;
+                ///     arg1 = arguments.Arg1;
+                ///     ...
                 /// }
                 {
                     var branch = new Instruction[4];
@@ -254,6 +257,7 @@ namespace SoftCube.Aspects
                 ///         {
                 ///             aspectArgs.YieldValue = <> 2__current;
                 ///             aspect.OnYield(aspectArgs);
+                ///             <>2__current = (TResult)aspectArgs.YieldValue;
                 ///         }
                 ///     }
                 Instruction leave;
@@ -508,6 +512,8 @@ namespace SoftCube.Aspects
             ///     {
             ///         aspect.OnResume(aspectArgs);
             ///     }
+            ///     arg0 = arguments.Arg0;
+            ///     arg1 = arguments.Arg1;
             ///     try
             ///     {
             {
@@ -541,8 +547,9 @@ namespace SoftCube.Aspects
             ///         }
             ///         else
             ///         {
-            ///             aspectArgs.ReturnValue = text;
+            ///             aspectArgs.ReturnValue = result;
             ///             aspect.OnSuccess(aspectArgs);
+            ///             result = (TResult)aspectArgs.ReturnValue;
             ///         }
             var leave = outerCatch.HandlerStart.Previous;
             {

@@ -235,9 +235,16 @@ namespace SoftCube.Aspects
             {
                 for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
                 {
+                    var parameter = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
                     processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                     processor.Emit(OpCodes.Ldc_I4, parameterIndex);
                     processor.Emit(OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+                    if (parameterType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Unbox_Any, parameterType);
+                    }
                 }
             }
 
