@@ -20,33 +20,25 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var result = program.引数をインクリメント(1);
+            var result = program.引数をインクリメント("a");
 
-            Logger.Trace(result.ToString());
+            Logger.Trace(result);
 
             Console.Read();
         }
 
-        private class IncrementAspect : OnMethodBoundaryAspect
+        private class IncrementAspect : MethodInterceptionAspect
         {
-            public override void OnEntry(MethodExecutionArgs args)
+
+            public override void OnInvoke(MethodInterceptionArgs args)
             {
-                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                {
-                    var argument = (int)args.Arguments[argumentIndex];
-                    args.Arguments[argumentIndex] = argument + 1;
-                }
+                args.Proceed();
             }
         }
 
         [IncrementAspect]
-        private async Task<int> 引数をインクリメント(int arg1)
+        private string 引数をインクリメント(string arg1)
         {
-            await Task.Run(() =>
-            {
-                Thread.Sleep(10);
-            });
-
             return arg1;
         }
     }

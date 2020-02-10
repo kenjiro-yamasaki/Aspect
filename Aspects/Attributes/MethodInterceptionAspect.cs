@@ -30,55 +30,49 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">注入対象の属性。</param>
-        protected sealed override void OnInject(MethodDefinition method, CustomAttribute attribute)
+        /// <param name="method">メソッド。</param>
+        /// <param name="aspect">アスペクト。</param>
+        protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
-            /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
-            method.Log();
+            var injector = new MethodInjector(method, aspect);
 
             /// 
-            CreateDerivedMethodInterceptionArgs(method);
-            ReplaceMethod(method, attribute);
-            OverrideInvokeMethod(method);
-            OverrideProceedMethod(method);
+            CreateDerivedMethodInterceptionArgs(injector);
+            ReplaceMethod(injector);
+            OverrideInvokeMethod(injector);
+            OverrideProceedMethod(injector);
 
             /// IL コードを最適化します。
             method.OptimizeIL();
-
-            /// 書き換え後の IL コードをログ出力します (デバッグ用、削除可)。
-            method.Log();
         }
 
         /// <summary>
         /// <see cref="MethodInterceptionArgs"/> の派生クラスを生成します。
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
+        /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
         /// <see cref="MethodInterceptionArgs"/> の派生クラスを生成し、注入対象のメソッドの定義クラスのネスト型とします。
         /// </remarks>
-        private void CreateDerivedMethodInterceptionArgs(MethodDefinition method)
+        private void CreateDerivedMethodInterceptionArgs(MethodInjector injector)
         {
+            var method        = injector.TargetMethod;
             var declaringType = method.DeclaringType;
             var module        = declaringType.Module.Assembly.MainModule;
             var @namespace    = declaringType.Namespace;
 
-            /// 基底クラス (MethodInterceptionArgs) の情報を取得します。
-            var methodInterceptionArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
-            var methodInterceptionArgsType          = methodInterceptionArgsTypeReference.Resolve();
-            var invokeMethod                        = methodInterceptionArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Invoke));
+            /// MethodInterceptionArgs の派生クラスを追加します。
+            var aspectArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
+            var aspectArgsType          = aspectArgsTypeReference.Resolve();
+            var derivedAspectArgsType = new TypeDefinition(@namespace, method.Name + "+" + nameof(MethodInterceptionArgs), Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference);
+            derivedAspectArgsType.IsNestedPrivate = true;
+            declaringType.NestedTypes.Add(derivedAspectArgsType);
 
-            /// 派生クラス (メソッド名+MethodInterceptionArgs) を追加します。
-            var derivedMethodInterceptionArgsType = new TypeDefinition(@namespace, method.Name + "+" + nameof(MethodInterceptionArgs), Mono.Cecil.TypeAttributes.Class, methodInterceptionArgsTypeReference);
-            derivedMethodInterceptionArgsType.IsNestedPrivate = true;
-            declaringType.NestedTypes.Add(derivedMethodInterceptionArgsType);
-
-            /// 派生クラスのコンストラクターを追加します。
+            /// MethodInterceptionArgs の派生クラスにコンストラクターを追加します。
             var methodAttributes = Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName;
             var constructor = new MethodDefinition(".ctor", methodAttributes, module.TypeSystem.Void);
 
             var instanceParameter  = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, module.TypeSystem.Object);
-            var argumentsParameter = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, module.ImportReference(typeof(Arguments)));
+            var argumentsParameter = new ParameterDefinition("arguments", Mono.Cecil.ParameterAttributes.None, module.ImportReference(typeof(Arguments)));
             constructor.Parameters.Add(instanceParameter);
             constructor.Parameters.Add(argumentsParameter);
 
@@ -88,21 +82,23 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Ldarg_2);
             processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object), typeof(Arguments) })));
             processor.Emit(OpCodes.Ret);
-            derivedMethodInterceptionArgsType.Methods.Add(constructor);
+
+            derivedAspectArgsType.Methods.Add(constructor);
         }
 
         /// <summary>
         /// 注入対象のメソッドを書き換えます。
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">注入対象の属性。</param>
+        /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
         /// 新たなメソッド (メソッド?) を生成し、元々のメソッドの内容を移動します。
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼び出す前に <see cref="MethodInterceptionArgs"/> の派生クラスを生成してください。
         /// </remarks>
-        private void ReplaceMethod(MethodDefinition method, CustomAttribute attribute)
+        private void ReplaceMethod(MethodInjector injector)
         {
+            var method        = injector.TargetMethod;
+            var aspect        = injector.Aspect;
             var module        = method.DeclaringType.Module.Assembly.MainModule;
             var attributes    = method.Attributes;
             var declaringType = method.DeclaringType;
@@ -129,7 +125,7 @@ namespace SoftCube.Aspects
 
             /// 属性をローカル変数にストアします。
             var processor      = method.Body.GetILProcessor();
-            var attributeIndex = processor.Emit(attribute);
+            var attributeIndex = processor.Emit(aspect);
 
             /// イベントデータを生成し、ローカル変数にストアします。
             var variables      = method.Body.Variables;
@@ -190,13 +186,14 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"/> をオーバーライドします。
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
+        /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
         /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"/> をオーバーライドして、メソッド名?を呼び出すコードに書き換えます。
         /// このメソッドを呼び出す前に注入対象のメソッドを書き換えてください。
         /// </remarks>
-        private void OverrideInvokeMethod(MethodDefinition method)
+        private void OverrideInvokeMethod(MethodInjector injector)
         {
+            var method        = injector.TargetMethod;
             var module        = method.Module;
             var declaringType = method.DeclaringType;
             var movedMethod   = declaringType.Methods.Single(m => m.Name == method.Name + "?");
@@ -264,9 +261,10 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="MethodInterceptionArgs.Proceed"/> をオーバーライドします。
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        private void OverrideProceedMethod(MethodDefinition method)
+        /// <param name="injector">メソッドへの注入。</param>
+        private void OverrideProceedMethod(MethodInjector injector)
         {
+            var method        = injector.TargetMethod;
             var module        = method.Module;
             var declaringType = method.DeclaringType;
             var movedMethod   = declaringType.Methods.Single(m => m.Name == method.Name + "?");
