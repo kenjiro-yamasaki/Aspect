@@ -20,8 +20,15 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var result = program.引数が2つ("a", "b", "c", "d", "e", "f", "g", "h");
-            Logger.Trace(ArgumentFormatter.Format(result));
+            var task = program.引数が2つ("a");
+
+            Logger.Trace("B");
+
+            task.Wait();
+
+
+
+            Logger.Trace(ArgumentFormatter.Format(task.Result));
 
             Console.Read();
         }
@@ -39,16 +46,15 @@ namespace SoftCube.Aspects
         }
 
         [ChangeArg1Aspect]
-        public IEnumerable<string> 引数が2つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
+        public async Task<string> 引数が2つ(string arg1)
         {
-            yield return arg1;
-            yield return arg2;
-            yield return arg3;
-            yield return arg4;
-            yield return arg5;
-            yield return arg6;
-            yield return arg7;
-            yield return arg8;
+            await Task.Run(() =>
+            {
+                Thread.Sleep(10);
+                Logger.Trace(arg1);
+            });
+
+            return arg1;
         }
     }
 }

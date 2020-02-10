@@ -46,14 +46,14 @@ namespace SoftCube.Aspects
             {
                 var returnType = genericReturnType.GenericArguments[0];
 
-                processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldfld, AspectArgsField);
-                processor.Emit(insert, OpCodes.Ldloc, returnVariable);
+                processor.Insert(insert, OpCodes.Ldarg_0);
+                processor.Insert(insert, OpCodes.Ldfld, AspectArgsField);
+                processor.Insert(insert, OpCodes.Ldloc, returnVariable);
                 if (returnType.IsValueType)
                 {
-                    processor.Emit(insert, OpCodes.Box, returnType);
+                    processor.Insert(insert, OpCodes.Box, returnType);
                 }
-                processor.Emit(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
+                processor.Insert(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
             }
         }
 

@@ -472,69 +472,99 @@ namespace SoftCube.Aspects
         {
             var module         = injector.Module;
             var moveNextMethod = injector.MoveNextMethod;
+            var processor      = moveNextMethod.Body.GetILProcessor();
+            var instructions   = moveNextMethod.Body.Instructions;
 
             /// ローカル変数を追加します。
             var variables = moveNextMethod.Body.Variables;
             int resultVariable = 1;
 
-            /// IL を書き換えます。
-            var processor    = moveNextMethod.Body.GetILProcessor();
-            var instructions = moveNextMethod.Body.Instructions;
-            var handlers     = moveNextMethod.Body.ExceptionHandlers;
+            /// 例外ハンドラーを追加します。
+            /// 内側の例外ハンドラーが先になるように並び変えます。
+            /// この順番を間違えるとランタイムエラーが発生します。
+            var handlers = moveNextMethod.Body.ExceptionHandlers;
 
-            var outerCatchHandler = handlers[0];
-            var outerCatchStart   = outerCatchHandler.HandlerStart;
-            var outerCatchEnd     = outerCatchHandler.HandlerEnd;
-            var innerTryStart     = outerCatchHandler.TryStart;
+            var outerCatch      = handlers[0];
+            var innerCatch      = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
+            var innerFinally    = new ExceptionHandler(ExceptionHandlerType.Finally);
+            innerCatch.TryStart = innerFinally.TryStart = outerCatch.TryStart;
+
+            handlers.Clear();
+            handlers.Add(innerCatch);
+            handlers.Add(innerFinally);
+            handlers.Add(outerCatch);
+
+            /// try
+            /// {
+            ///     if (!resumeFlag)
+            ///     {
+            ///         var instance = <> 4__this;
+            ///         arguments = new Arguments(...);
+            ///         aspectArgs = new MethodExecutionArgs(instance, arguments);
+            ///         aspect.OnEntry(aspectArgs);
+            ///         resumeFlag = true;
+            ///     }
+            ///     else
+            ///     {
+            ///         aspect.OnResume(aspectArgs);
+            ///     }
+            ///     try
+            ///     {
             {
                 var branch = new Instruction[2];
-                var insert = innerTryStart;
+                var insert = innerCatch.TryStart;
 
-                outerCatchHandler.TryStart = processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldfld, injector.ResumeFlagField);
-                branch[0] = processor.EmitBranch(insert, OpCodes.Brtrue_S);
+                outerCatch.TryStart = processor.InsertNop(insert);
 
-                /// AspectArgs フィールドのインスタンスを生成します。
+                processor.Insert(insert, OpCodes.Ldarg_0);
+                processor.Insert(insert, OpCodes.Ldfld, injector.ResumeFlagField);
+                branch[0] = processor.InsertBranch(insert, OpCodes.Brtrue_S);
+
                 injector.CreateAspectArgsInstance(processor, insert);
-
-                /// <see cref="OnEntry"/> を呼びだします。
                 injector.InvokeEventHandler(processor, insert, nameof(OnEntry));
+                processor.Insert(insert, OpCodes.Ldarg_0);
+                processor.Insert(insert, OpCodes.Ldc_I4_1);
+                processor.Insert(insert, OpCodes.Stfld, injector.ResumeFlagField);
+                branch[1] = processor.InsertBranch(insert, OpCodes.Br_S);
 
-                processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldc_I4_1);
-                processor.Emit(insert, OpCodes.Stfld, injector.ResumeFlagField);
-                branch[1] = processor.EmitBranch(insert, OpCodes.Br_S);
-
-                /// <see cref="OnResume"/> を呼びだします。
-                branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
+                branch[0].Operand = processor.Insert(insert, OpCodes.Nop);
                 injector.InvokeEventHandler(processor, insert, nameof(OnResume));
 
-                branch[1].Operand = processor.Emit(insert, OpCodes.Nop);
+                branch[1].Operand = processor.InsertNop(insert);
             }
 
-            ///
-            var leave = outerCatchHandler.HandlerStart.Previous;
+            ///         IL_XXXX: // leaveTarget
+            ///         if (<> 1__state != -1)
+            ///         {
+            ///             aspect.OnYield(aspectArgs);
+            ///         }
+            ///         else
+            ///         {
+            ///             aspectArgs.ReturnValue = text;
+            ///             aspect.OnSuccess(aspectArgs);
+            ///         }
+            var leave = outerCatch.HandlerStart.Previous;
             {
-                var branch = new Instruction[2];
                 var insert = leave;
+                var branch = new Instruction[2];
 
-                var leaveTarget = processor.Emit(insert, OpCodes.Ldarg_0);                          // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
-                processor.Emit(insert, OpCodes.Ldfld, injector.StateField);
-                processor.Emit(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.EmitBranch(insert, OpCodes.Beq);
+                var leaveTarget = processor.InsertNop(insert);                                      // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
+                processor.Insert(insert, OpCodes.Ldarg_0);
+                processor.Insert(insert, OpCodes.Ldfld, injector.StateField);
+                processor.Insert(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.InsertBranch(insert, OpCodes.Beq);
 
-                /// <see cref="OnYield"/> を呼びだします。
                 injector.InvokeEventHandler(processor, insert, nameof(OnYield));
-                branch[1] = processor.Emit(insert, OpCodes.Br_S, insert);
+                branch[1] = processor.InsertBranch(insert, OpCodes.Br_S);
+                branch[1].Operand = leave;
 
-                /// <see cref="OnSuccess"/> を呼びだします。
-                branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
+                branch[0].Operand = processor.Insert(insert, OpCodes.Nop);
                 injector.SetReturnValue(processor, insert, resultVariable);
                 injector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
 
                 /// try 内の Leave 命令の転送先を書き換えます。
-                /// この書き換えにより OnYield と OnSuccess の呼び出し処理に転送します。
-                for (var instruction = innerTryStart; instruction != leaveTarget; instruction = instruction.Next)
+                /// この書き換えにより OnYield と OnSuccess の呼びだし処理に転送します。
+                for (var instruction = innerCatch.TryStart; instruction != leaveTarget; instruction = instruction.Next)
                 {
                     if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
                     {
@@ -544,78 +574,66 @@ namespace SoftCube.Aspects
                 }
             }
 
-            /// } catch (Exception exception) {
-            Instruction innerCatchStart;
+            ///     catch (Exception exception)
+            ///     {
+            ///         aspectArgs.Exception = exception;
+            ///         aspect.OnException(aspectArgs);
+            ///         throw;
+            ///     }
             {
-                var insert = outerCatchStart;
+                var insert = outerCatch.HandlerStart;
 
-                /// <see cref="OnException"/> を呼び出します。
-                innerCatchStart = processor.Emit(insert, OpCodes.Nop);
+                innerCatch.TryEnd = innerCatch.HandlerStart = processor.InsertNop(insert);
                 injector.SetException(processor, insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnException));
-                processor.Emit(insert, OpCodes.Rethrow);
+                processor.Insert(insert, OpCodes.Rethrow);
             }
 
-            /// } finally {
-            Instruction innerCatchEnd;
-            Instruction innerFinallyStart;
-            Instruction innerFinallyEnd;
+            ///     finally
+            ///     {
+            ///         if (<>1__state == -1)
+            ///         {
+            ///             aspect.OnExit(aspectArgs);
+            ///         }
+            ///     }
             {
+                var insert = outerCatch.HandlerStart;
                 var branch = new Instruction[2];
-                var insert = outerCatchStart;
 
-                innerCatchEnd = innerFinallyStart = processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldfld, injector.StateField);
-                processor.Emit(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.EmitBranch(insert, OpCodes.Beq);
-                branch[1] = processor.EmitBranch(insert, OpCodes.Br);
+                innerCatch.HandlerEnd = innerFinally.TryEnd = innerFinally.HandlerStart = processor.InsertNop(insert);
+                processor.Insert(insert, OpCodes.Ldarg_0);
+                processor.Insert(insert, OpCodes.Ldfld, injector.StateField);
+                processor.Insert(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.InsertBranch(insert, OpCodes.Beq);
+                branch[1] = processor.InsertBranch(insert, OpCodes.Br);
 
-                /// <see cref="OnExit"/> を呼び出します。
-                branch[0].Operand = processor.Emit(insert, OpCodes.Nop);
+                branch[0].Operand = processor.InsertNop(insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnExit));
 
-                branch[1].Operand = processor.Emit(insert, OpCodes.Endfinally);
-                innerFinallyEnd = insert;
+                branch[1].Operand = processor.InsertNop(insert);
+                processor.Insert(insert, OpCodes.Endfinally);
+                innerFinally.HandlerEnd = insert;
             }
 
+            /// }
+            /// catch (Exception exception)
+            /// {
+            ///     ...
+            /// }
+            /// if (<> 1__state == -1)
+            /// {
+            ///     ...
+            /// }
             {
-                var insert = outerCatchEnd;
+                var insert = outerCatch.HandlerEnd;
 
-                leave.Operand = handlers[0].HandlerEnd = processor.Emit(insert, OpCodes.Ldarg_0);
-                processor.Emit(insert, OpCodes.Ldfld, injector.StateField);
-                processor.Emit(insert, OpCodes.Ldc_I4, -1);
-                processor.Emit(insert, OpCodes.Beq, insert);
+                leave.Operand = outerCatch.HandlerEnd = processor.InsertNop(insert);
+                processor.Insert(insert, OpCodes.Ldarg_0);
+                processor.Insert(insert, OpCodes.Ldfld, injector.StateField);
+                processor.Insert(insert, OpCodes.Ldc_I4, -1);
+                processor.Insert(insert, OpCodes.Beq, insert);
 
-                processor.Emit(insert, OpCodes.Br, instructions.Last());
-            }
-
-            /// 例外ハンドラーを追加します。
-            {
-                /// Catch ハンドラーを追加します。
-                var innerCatchHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
-                {
-                    CatchType    = module.ImportReference(typeof(Exception)),
-                    TryStart     = innerTryStart,
-                    TryEnd       = innerCatchStart,
-                    HandlerStart = innerCatchStart,
-                    HandlerEnd   = innerCatchEnd,
-                };
-
-                /// Finally ハンドラーを追加します。
-                var innerFinallryHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-                {
-                    TryStart     = innerTryStart,
-                    TryEnd       = innerFinallyStart,
-                    HandlerStart = innerFinallyStart,
-                    HandlerEnd   = innerFinallyEnd,
-                };
-
-                /// 内側の例外ハンドラーが先になるように並び変えます。
-                /// この順番を間違えるとランタイムエラーが発生します。
-                handlers.Clear();
-                handlers.Add(innerCatchHandler);
-                handlers.Add(innerFinallryHandler);
-                handlers.Add(outerCatchHandler);
+                processor.Insert(insert, OpCodes.Br, instructions.Last());
             }
 
             /// IL を最適化します。
