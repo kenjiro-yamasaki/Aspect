@@ -279,7 +279,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         public void SetArgumentFields(ILProcessor processor, Instruction insert)
         {
-            var parameters = TargetMethod.Parameters;
+            var parameters     = TargetMethod.Parameters;
             var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
 
             if (parameters.Count <= 8)
@@ -292,7 +292,7 @@ namespace SoftCube.Aspects
 
                     processor.Insert(insert, OpCodes.Dup);
                     processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
-                    processor.Emit(OpCodes.Call, Module.ImportReference(ArgumentsType.GetProperty(propertyNames[parameterIndex]).GetGetMethod()));
+                    processor.Insert(insert, OpCodes.Call, Module.ImportReference(ArgumentsType.GetProperty(propertyNames[parameterIndex]).GetGetMethod()));
 
                     processor.Insert(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                 }
@@ -306,8 +306,8 @@ namespace SoftCube.Aspects
 
                     processor.Insert(insert, OpCodes.Dup);
                     processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
-                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+                    processor.Insert(insert, OpCodes.Ldc_I4, parameterIndex);
+                    processor.Insert(insert, OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
 
                     processor.Insert(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                 }

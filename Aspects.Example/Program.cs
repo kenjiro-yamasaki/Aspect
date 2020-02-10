@@ -20,20 +20,14 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var task = program.引数が2つ("a");
-
-            Logger.Trace("B");
-
+            var task = program.引数を大文字に変更("a");
             task.Wait();
 
-
-
-            Logger.Trace(ArgumentFormatter.Format(task.Result));
-
+            Logger.Trace(task.Result);
             Console.Read();
         }
 
-        public class ChangeArg1Aspect : OnMethodBoundaryAspect
+        private class ChangeArgAspect : OnMethodBoundaryAspect
         {
             public override void OnEntry(MethodExecutionArgs args)
             {
@@ -45,13 +39,12 @@ namespace SoftCube.Aspects
             }
         }
 
-        [ChangeArg1Aspect]
-        public async Task<string> 引数が2つ(string arg1)
+        [ChangeArgAspect]
+        private async Task<string> 引数を大文字に変更(string arg1)
         {
             await Task.Run(() =>
             {
                 Thread.Sleep(10);
-                Logger.Trace(arg1);
             });
 
             return arg1;

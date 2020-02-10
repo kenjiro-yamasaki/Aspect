@@ -531,6 +531,7 @@ namespace SoftCube.Aspects
                 injector.InvokeEventHandler(processor, insert, nameof(OnResume));
 
                 branch[1].Operand = processor.InsertNop(insert);
+                injector.SetArgumentFields(processor, insert);
             }
 
             ///         IL_XXXX: // leaveTarget
@@ -574,6 +575,7 @@ namespace SoftCube.Aspects
                 }
             }
 
+            ///     }
             ///     catch (Exception exception)
             ///     {
             ///         aspectArgs.Exception = exception;

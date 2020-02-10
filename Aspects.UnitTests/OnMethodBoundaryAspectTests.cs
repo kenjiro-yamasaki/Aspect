@@ -4193,6 +4193,253 @@ namespace SoftCube.Aspects
 
                 #endregion
             }
+
+            public class 引数の変更
+            {
+                private class ChangeArgAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            var argument = args.Arguments[argumentIndex] as string;
+                            args.Arguments[argumentIndex] = argument.ToUpper();
+                        }
+                    }
+                }
+
+                [ChangeArgAspect]
+                private async Task<string> 引数を大文字に変更(string arg1)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return arg1;
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string)> 引数を大文字に変更(string arg1, string arg2)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2);
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3);
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4);
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5);
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6);
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string, string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                }
+
+                [ChangeArgAspect]
+                private async Task<(string, string, string, string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が1つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a");
+                    task.Wait();
+
+                    Assert.Equal("A", task.Result);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が2つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b");
+                    task.Wait();
+
+                    var (result1, result2) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が3つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b", "c");
+                    task.Wait();
+
+                    var (result1, result2, result3) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が4つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b", "c", "d");
+                    task.Wait();
+
+                    var (result1, result2, result3, result4) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が5つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b", "c", "d", "e");
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が6つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b", "c", "d", "e", "f");
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が7つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g");
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6, result7) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が8つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h");
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6, result7, result8) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                }
+
+                [Fact]
+                public void 引数を大文字に変更_引数が9つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h", "i");
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6, result7, result8, result9) = task.Result;
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                    Assert.Equal("I", result9);
+                }
+            }
         }
     }
 }
