@@ -35,9 +35,6 @@ namespace SoftCube.Aspects
         /// <param name="aspect">アスペクト。</param>
         protected override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
-            /// 書き換え前の IL コードをログ出力します (デバッグ用、削除可)。
-            method.Log();
-
             var iteratorStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
             var asyncStateMachineAttribute    = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
 
@@ -62,9 +59,6 @@ namespace SoftCube.Aspects
 
                 ReplaceMethod(injector);
             }
-
-            /// 書き換え後の IL コードをログ出力します (デバッグ用、削除可)。
-            method.Log();
         }
 
         #region 通常のメソッド
