@@ -3153,7 +3153,9 @@ namespace SoftCube.Aspects
 
             public class 戻り値の変更
             {
-                private class ChangeReturnValueAspect : OnMethodBoundaryAspect
+                #region 参照型
+
+                private class ToUpperAspect : OnMethodBoundaryAspect
                 {
                     public override void OnYield(MethodExecutionArgs args)
                     {
@@ -3162,7 +3164,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [ChangeReturnValueAspect]
+                [ToUpperAspect]
                 private IEnumerable<string> 戻り値を大文字に変更(string arg1)
                 {
                     yield return arg1;
@@ -3174,6 +3176,34 @@ namespace SoftCube.Aspects
                     var result = 戻り値を大文字に変更("a").ToList();
                     Assert.Equal("A", result[0]);
                 }
+
+                #endregion
+
+                #region 値型
+
+                private class IncrementAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        var yieldValue = (int)args.YieldValue;
+                        args.YieldValue = yieldValue + 1;
+                    }
+                }
+
+                [IncrementAspect]
+                private IEnumerable<int> 戻り値をインクリメント(int arg1)
+                {
+                    yield return arg1;
+                }
+
+                [Fact]
+                public void 戻り値をインクリメント_正しくアスペクトが適用される()
+                {
+                    var result = 戻り値をインクリメント(1).ToList();
+                    Assert.Equal(2, result[0]);
+                }
+
+                #endregion
             }
         }
 
