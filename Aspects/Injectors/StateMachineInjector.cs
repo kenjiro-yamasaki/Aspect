@@ -288,12 +288,11 @@ namespace SoftCube.Aspects
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                 {
                     var parameter = parameters[parameterIndex];
-                    processor.Insert(insert, OpCodes.Ldarg_0);
 
+                    processor.Insert(insert, OpCodes.Ldarg_0);
                     processor.Insert(insert, OpCodes.Dup);
                     processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
                     processor.Insert(insert, OpCodes.Call, Module.ImportReference(ArgumentsType.GetProperty(propertyNames[parameterIndex]).GetGetMethod()));
-
                     processor.Insert(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                 }
             }
@@ -302,13 +301,17 @@ namespace SoftCube.Aspects
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                 {
                     var parameter = parameters[parameterIndex];
-                    processor.Insert(insert, OpCodes.Ldarg_0);
+                    var parameterType = parameter.ParameterType;
 
+                    processor.Insert(insert, OpCodes.Ldarg_0);
                     processor.Insert(insert, OpCodes.Dup);
                     processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
                     processor.Insert(insert, OpCodes.Ldc_I4, parameterIndex);
                     processor.Insert(insert, OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
-
+                    if (parameterType.IsValueType)
+                    {
+                        processor.Insert(insert, OpCodes.Unbox_Any, parameterType);
+                    }
                     processor.Insert(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                 }
             }

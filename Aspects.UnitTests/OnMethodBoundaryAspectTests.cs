@@ -4196,7 +4196,9 @@ namespace SoftCube.Aspects
 
             public class 引数の変更
             {
-                private class ChangeArgAspect : OnMethodBoundaryAspect
+                #region 参照型
+
+                private class ToUpperAspect : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
@@ -4208,7 +4210,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<string> 引数を大文字に変更(string arg1)
                 {
                     await Task.Run(() =>
@@ -4219,7 +4221,7 @@ namespace SoftCube.Aspects
                     return arg1;
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string)> 引数を大文字に変更(string arg1, string arg2)
                 {
                     await Task.Run(() =>
@@ -4230,7 +4232,7 @@ namespace SoftCube.Aspects
                     return (arg1, arg2);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3)
                 {
                     await Task.Run(() =>
@@ -4241,7 +4243,7 @@ namespace SoftCube.Aspects
                     return (arg1, arg2, arg3);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4)
                 {
                     await Task.Run(() =>
@@ -4252,7 +4254,7 @@ namespace SoftCube.Aspects
                     return (arg1, arg2, arg3, arg4);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5)
                 {
                     await Task.Run(() =>
@@ -4263,7 +4265,7 @@ namespace SoftCube.Aspects
                     return (arg1, arg2, arg3, arg4, arg5);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
                 {
                     await Task.Run(() =>
@@ -4274,7 +4276,7 @@ namespace SoftCube.Aspects
                     return (arg1, arg2, arg3, arg4, arg5, arg6);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
                 {
                     await Task.Run(() =>
@@ -4285,7 +4287,7 @@ namespace SoftCube.Aspects
                     return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string, string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
                 {
                     await Task.Run(() =>
@@ -4296,7 +4298,7 @@ namespace SoftCube.Aspects
                     return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                 }
 
-                [ChangeArgAspect]
+                [ToUpperAspect]
                 private async Task<(string, string, string, string, string, string, string, string, string)> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
                 {
                     await Task.Run(() =>
@@ -4439,10 +4441,264 @@ namespace SoftCube.Aspects
                     Assert.Equal("H", result8);
                     Assert.Equal("I", result9);
                 }
+
+                #endregion
+
+                #region 値型
+
+                private class IncrementAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            var argument = (int)args.Arguments[argumentIndex];
+                            args.Arguments[argumentIndex] = argument + 1;
+                        }
+                    }
+                }
+
+                [IncrementAspect]
+                private async Task<int> 引数をインクリメント(int arg1)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return arg1;
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int)> 引数をインクリメント(int arg1, int arg2)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2);
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int, int)> 引数をインクリメント(int arg1, int arg2, int arg3)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3);
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int, int, int)> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4);
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int, int, int, int)> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5);
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int, int, int, int, int)> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6);
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int, int, int, int, int, int)> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int, int, int, int, int, int, int)> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                }
+
+                [IncrementAspect]
+                private async Task<(int, int, int, int, int, int, int, int, int)> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1);
+                    task.Wait();
+
+                    var result1 = task.Result;
+
+                    Assert.Equal(2, result1);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2);
+                    task.Wait();
+
+                    var (result1, result2) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2, 3);
+                    task.Wait();
+
+                    var (result1, result2, result3) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2, 3, 4);
+                    task.Wait();
+
+                    var (result1, result2, result3, result4) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2, 3, 4, 5);
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2, 3, 4, 5, 6);
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7);
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6, result7) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8);
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6, result7, result8) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                    Assert.Equal(9, result8);
+                }
+
+                [Fact]
+                public void 引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
+                {
+                    var task = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8, 9);
+                    task.Wait();
+
+                    var (result1, result2, result3, result4, result5, result6, result7, result8, result9) = task.Result;
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                    Assert.Equal(9, result8);
+                    Assert.Equal(10, result9);
+                }
+
+                #endregion
             }
 
             public class 戻り値の変更
             {
+                #region 参照型
+
                 private class ToUpperAspect : OnMethodBoundaryAspect
                 {
                     public override void OnSuccess(MethodExecutionArgs args)
@@ -4472,6 +4728,10 @@ namespace SoftCube.Aspects
                     Assert.Equal("A", task.Result);
                 }
 
+                #endregion
+
+                #region 値型
+
                 private class IncrementAspect : OnMethodBoundaryAspect
                 {
                     public override void OnSuccess(MethodExecutionArgs args)
@@ -4500,6 +4760,8 @@ namespace SoftCube.Aspects
 
                     Assert.Equal(2, task.Result);
                 }
+
+                #endregion
             }
         }
     }
