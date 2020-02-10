@@ -562,6 +562,7 @@ namespace SoftCube.Aspects
                 branch[0].Operand = processor.Insert(insert, OpCodes.Nop);
                 injector.SetReturnValue(processor, insert, resultVariable);
                 injector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
+                injector.SetReturnVariable(processor, insert, resultVariable);
 
                 /// try 内の Leave 命令の転送先を書き換えます。
                 /// この書き換えにより OnYield と OnSuccess の呼びだし処理に転送します。

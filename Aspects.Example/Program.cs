@@ -20,27 +20,24 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var task = program.引数を大文字に変更("a");
+            var task = program.戻り値をインクリメント(1);
             task.Wait();
 
-            Logger.Trace(task.Result);
+            Logger.Trace(task.Result.ToString());
             Console.Read();
         }
 
-        private class ChangeArgAspect : OnMethodBoundaryAspect
+        private class IncrementAspect : OnMethodBoundaryAspect
         {
-            public override void OnEntry(MethodExecutionArgs args)
+            public override void OnSuccess(MethodExecutionArgs args)
             {
-                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                {
-                    var argument = args.Arguments[argumentIndex] as string;
-                    args.Arguments[argumentIndex] = argument.ToUpper();
-                }
+                var returnValue = (int)args.ReturnValue;
+                args.ReturnValue = returnValue + 1;
             }
         }
 
-        [ChangeArgAspect]
-        private async Task<string> 引数を大文字に変更(string arg1)
+        [IncrementAspect]
+        private async Task<int> 戻り値をインクリメント(int arg1)
         {
             await Task.Run(() =>
             {
@@ -49,5 +46,41 @@ namespace SoftCube.Aspects
 
             return arg1;
         }
+
+                //[Fact]
+                //public void 戻り値をインクリメント_正しくアスペクトが適用される()
+                //{
+                //    var task = 戻り値をインクリメント(1);
+                //    task.Wait();
+
+                //    Assert.Equal(2, task.Result);
+                //}
+
+
+
+
+
+        //private class ChangeArgAspect : OnMethodBoundaryAspect
+        //{
+        //    public override void OnEntry(MethodExecutionArgs args)
+        //    {
+        //        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+        //        {
+        //            var argument = args.Arguments[argumentIndex] as string;
+        //            args.Arguments[argumentIndex] = argument.ToUpper();
+        //        }
+        //    }
+        //}
+
+        //[ChangeArgAspect]
+        //private async Task<string> 引数を大文字に変更(string arg1)
+        //{
+        //    await Task.Run(() =>
+        //    {
+        //        Thread.Sleep(10);
+        //    });
+
+        //    return arg1;
+        //}
     }
 }

@@ -4440,6 +4440,67 @@ namespace SoftCube.Aspects
                     Assert.Equal("I", result9);
                 }
             }
+
+            public class 戻り値の変更
+            {
+                private class ToUpperAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnSuccess(MethodExecutionArgs args)
+                    {
+                        var returnValue = args.ReturnValue as string;
+                        args.ReturnValue = returnValue.ToUpper();
+                    }
+                }
+
+                [ToUpperAspect]
+                private async Task<string> 戻り値を大文字に変更(string arg1)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return arg1;
+                }
+
+                [Fact]
+                public void 戻り値を大文字に変更_正しくアスペクトが適用される()
+                {
+                    var task = 戻り値を大文字に変更("a");
+                    task.Wait();
+
+                    Assert.Equal("A", task.Result);
+                }
+
+                private class IncrementAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnSuccess(MethodExecutionArgs args)
+                    {
+                        var returnValue = (int)args.ReturnValue;
+                        args.ReturnValue = returnValue + 1;
+                    }
+                }
+
+                [IncrementAspect]
+                private async Task<int> 戻り値をインクリメント(int arg1)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return arg1;
+                }
+
+                [Fact]
+                public void 戻り値をインクリメント_正しくアスペクトが適用される()
+                {
+                    var task = 戻り値をインクリメント(1);
+                    task.Wait();
+
+                    Assert.Equal(2, task.Result);
+                }
+            }
         }
     }
 }
