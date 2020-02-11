@@ -10,7 +10,6 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッド境界アスペクト。
     /// </summary>
-    [Serializable]
     public abstract class OnMethodBoundaryAspect : MethodLevelAspect
     {
         #region コンストラクター

@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using System;
 using System.Linq;
 using System.Reflection;
 
@@ -9,7 +8,6 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプトアスペクト。
     /// </summary>
-    [Serializable]
     public abstract class MethodInterceptionAspect : MethodLevelAspect
     {
         #region コンストラクター

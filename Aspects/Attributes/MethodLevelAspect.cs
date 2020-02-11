@@ -6,7 +6,6 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドレベルアスペクト。
     /// </summary>
-    [Serializable]
     public abstract class MethodLevelAspect : Attribute
     {
         #region コンストラクター

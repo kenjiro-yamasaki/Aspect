@@ -12,7 +12,6 @@ namespace SoftCube.Aspects
     /// <c>null</c> を渡された場合、<see cref="ArgumentNullException"/> を投げます。
     /// </remarks>
     [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
-    [Serializable]
     public class NotNullAspect : ParameterLevelAspect
     {
         #region コンストラクター
