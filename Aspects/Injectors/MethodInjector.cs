@@ -186,18 +186,19 @@ namespace SoftCube.Aspects
         /// aspectArgs ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        public void CreateAspectArgsVariable<TAspectArgs>(ILProcessor processor)
+        /// <param name="aspectArgsType">AspectArgs の型参照。</param>
+        public void CreateAspectArgsVariable(ILProcessor processor, TypeReference aspectArgsType)
         {
             Assert.Equal(AspectArgsVariable, -1);
             Assert.NotEqual(ArgumentsVariable, -1);
             var variables = TargetMethod.Body.Variables;
             AspectArgsVariable = variables.Count();
-            variables.Add(new VariableDefinition(Module.ImportReference(typeof(TAspectArgs))));
+            variables.Add(new VariableDefinition(aspectArgsType));
 
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
 
-            processor.Emit(OpCodes.Newobj, Module.ImportReference(typeof(TAspectArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+            processor.Emit(OpCodes.Newobj, Module.ImportReference(aspectArgsType.Resolve().Methods.Single(m => m.Name == ".ctor")));
             processor.Emit(OpCodes.Stloc, AspectArgsVariable);
         }
 

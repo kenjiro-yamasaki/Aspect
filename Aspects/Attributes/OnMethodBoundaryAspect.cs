@@ -87,15 +87,15 @@ namespace SoftCube.Aspects
                 handlers.Add(@catch);
                 handlers.Add(@finally);
 
-                /// var aspect = new Aspect();
-                /// var arguments = new Arguments(...);
+                /// var aspect     = new Aspect();
+                /// var arguments  = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnEntry(aspectArgs);
                 {
                     injector.CreateAspectVariable(processor);
                     injector.CreateArgumentsVariable(processor);
-                    injector.CreateAspectArgsVariable<MethodExecutionArgs>(processor);
+                    injector.CreateAspectArgsVariable(processor, module.ImportReference(typeof(MethodExecutionArgs)));
                     injector.SetMethod(processor);
                     injector.InvokeEventHandler(processor, nameof(OnEntry));
                 }

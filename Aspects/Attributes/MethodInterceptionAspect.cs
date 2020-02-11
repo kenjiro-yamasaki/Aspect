@@ -97,76 +97,29 @@ namespace SoftCube.Aspects
         /// </remarks>
         private void ReplaceMethod(MethodInjector injector)
         {
-            var method        = injector.TargetMethod;
-            var aspect        = injector.Aspect;
-            var module        = method.DeclaringType.Module.Assembly.MainModule;
-            var attributes    = method.Attributes;
-            var declaringType = method.DeclaringType;
-            var returnType    = method.ReturnType;
-
             /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
             injector.ReplaceMethod();
 
-            /// 元々のメソッドの内容を、新たなメソッド (メソッド?) を呼び出すコードに書き換えます。
-            method.Body = new Mono.Cecil.Cil.MethodBody(method);
-
-            /// 属性をローカル変数にストアします。
-            var processor      = method.Body.GetILProcessor();
-            var attributeIndex = processor.Emit(aspect);
-
-            /// イベントデータを生成し、ローカル変数にストアします。
-            var variables      = method.Body.Variables;
-            var eventArgsIndex = variables.Count();
-            variables.Add(new VariableDefinition(module.ImportReference(typeof(MethodInterceptionArgs))));
-
-            var derivedMethodInterceptionArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
-            processor.Emit(OpCodes.Ldarg_0);
+            /// 元々のメソッドを書き換えます。
             {
-                /// パラメーターコレクションを生成し、ロードします。
-                var parameters = method.Parameters;
-                processor.Emit(OpCodes.Ldc_I4, parameters.Count);
-                processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-                    processor.Emit(OpCodes.Dup);
-                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    if (parameter.ParameterType.IsValueType)
-                    {
-                        processor.Emit(OpCodes.Box, parameter.ParameterType);
-                    }
-                    processor.Emit(OpCodes.Stelem_Ref);
-                }
-                processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(ArgumentsArray).GetConstructor(new Type[] { typeof(object[]) })));
-            }
-            processor.Emit(OpCodes.Newobj, derivedMethodInterceptionArgsType.Methods.Single(m => m.Name == ".ctor"));
-            processor.Emit(OpCodes.Stloc, eventArgsIndex);
+                var method = injector.TargetMethod;
+                method.Body = new Mono.Cecil.Cil.MethodBody(method);
+                var declaringType = method.DeclaringType;
+                var derivedAspectArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
+                var processor = method.Body.GetILProcessor();
 
-            /// メソッド情報をイベントデータに設定します。
-            processor.Emit(OpCodes.Ldloc, eventArgsIndex);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
-            processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Method)).GetSetMethod()));
-
-            /// OnInvoke を呼び出します。
-            processor.Emit(OpCodes.Ldloc, attributeIndex);
-            processor.Emit(OpCodes.Ldloc, eventArgsIndex);
-            processor.Emit(OpCodes.Callvirt, module.ImportReference(GetType().GetMethod(nameof(OnInvoke))));
-
-            /// 戻り値を戻します。
-            if (method.HasReturnValue())
-            {
-                processor.Emit(OpCodes.Ldloc, eventArgsIndex);
-                processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetGetMethod()));
-                if (returnType.IsValueType)
-                {
-                    processor.Emit(OpCodes.Unbox_Any, returnType);
-                }
-                processor.Emit(OpCodes.Ret);
-            }
-            else
-            {
-                processor.Emit(OpCodes.Ret);
+                /// var aspect = new Aspect();
+                /// var arguments = new Arguments(...);
+                /// var aspectArgs = new MethodExecutionArgs(this, arguments);
+                /// aspectArgs.Method = MethodBase.GetCurrentMethod();
+                /// aspect.OnEntry(aspectArgs);
+                /// return (TResult)aspectArgs.ReturnValue;
+                injector.CreateAspectVariable(processor);
+                injector.CreateArgumentsVariable(processor);
+                injector.CreateAspectArgsVariable(processor, derivedAspectArgsType);
+                injector.SetMethod(processor);
+                injector.InvokeEventHandler(processor, nameof(OnInvoke));
+                injector.Return(processor);
             }
         }
 
