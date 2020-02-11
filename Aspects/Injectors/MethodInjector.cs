@@ -125,7 +125,6 @@ namespace SoftCube.Aspects
             }
 
             TargetMethod.DeclaringType.Methods.Add(OriginalMethod);
-        
         }
 
         /// <summary>

@@ -104,21 +104,8 @@ namespace SoftCube.Aspects
             var declaringType = method.DeclaringType;
             var returnType    = method.ReturnType;
 
-            /// 新たなメソッド (メソッド?) を生成し、元々のメソッドの内容を移動します。
-            var movedMethod = new MethodDefinition(method.Name + "?", attributes, returnType);
-            foreach (var parameter in method.Parameters)
-            {
-                movedMethod.Parameters.Add(parameter);
-            }
-
-            movedMethod.Body = method.Body;
-
-            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
-            {
-                movedMethod.DebugInformation.SequencePoints.Add(sequencePoint);
-            }
-
-            declaringType.Methods.Add(movedMethod);
+            /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
+            injector.ReplaceMethod();
 
             /// 元々のメソッドの内容を、新たなメソッド (メソッド?) を呼び出すコードに書き換えます。
             method.Body = new Mono.Cecil.Cil.MethodBody(method);
@@ -193,10 +180,10 @@ namespace SoftCube.Aspects
         /// </remarks>
         private void OverrideInvokeMethod(MethodInjector injector)
         {
-            var method        = injector.TargetMethod;
-            var module        = method.Module;
-            var declaringType = method.DeclaringType;
-            var movedMethod   = declaringType.Methods.Single(m => m.Name == method.Name + "?");
+            var method         = injector.TargetMethod;
+            var module         = method.Module;
+            var declaringType  = method.DeclaringType;
+            var originalMethod = injector.OriginalMethod;
 
             /// Invoke メソッドをオーバーライドします。
             var methodInterceptionArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
@@ -219,9 +206,9 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
 
-            for (int parameterIndex = 0; parameterIndex < movedMethod.Parameters.Count; parameterIndex++)
+            for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
             {
-                var parameter = movedMethod.Parameters[parameterIndex];
+                var parameter = originalMethod.Parameters[parameterIndex];
 
                 processor.Emit(OpCodes.Ldarg_1);
                 processor.Emit(OpCodes.Ldc_I4, parameterIndex);
@@ -237,18 +224,18 @@ namespace SoftCube.Aspects
             }
 
             /// メソッド?を呼び出します。
-            processor.Emit(OpCodes.Callvirt, movedMethod);
+            processor.Emit(OpCodes.Callvirt, originalMethod);
 
             ///
-            if (movedMethod.HasReturnValue())
+            if (originalMethod.HasReturnValue())
             {
-                if (movedMethod.ReturnType.IsValueType)
+                if (originalMethod.ReturnType.IsValueType)
                 {
-                    processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+                    processor.Emit(OpCodes.Box, originalMethod.ReturnType);
                 }
                 else
                 {
-                    processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
+                    processor.Emit(OpCodes.Castclass, originalMethod.ReturnType);
                 }
             }
             else
@@ -264,10 +251,10 @@ namespace SoftCube.Aspects
         /// <param name="injector">メソッドへの注入。</param>
         private void OverrideProceedMethod(MethodInjector injector)
         {
-            var method        = injector.TargetMethod;
-            var module        = method.Module;
-            var declaringType = method.DeclaringType;
-            var movedMethod   = declaringType.Methods.Single(m => m.Name == method.Name + "?");
+            var method         = injector.TargetMethod;
+            var module         = method.Module;
+            var declaringType  = method.DeclaringType;
+            var originalMethod = injector.OriginalMethod;
 
             /// Invoke メソッドをオーバーライドします。
             var methodInterceptionArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
@@ -282,16 +269,16 @@ namespace SoftCube.Aspects
             /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"> のパラメーターからメソッド?へのパラメーターをロードします。
             var processor = overridenProceedMethod.Body.GetILProcessor();
 
-            if (movedMethod.HasReturnValue())
+            if (originalMethod.HasReturnValue())
             {
                 processor.Emit(OpCodes.Ldarg_0);
             }
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
 
-            for (int parameterIndex = 0; parameterIndex < movedMethod.Parameters.Count; parameterIndex++)
+            for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
             {
-                var parameter = movedMethod.Parameters[parameterIndex];
+                var parameter = originalMethod.Parameters[parameterIndex];
 
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
@@ -308,18 +295,18 @@ namespace SoftCube.Aspects
             }
 
             /// メソッド?を呼び出します。
-            processor.Emit(OpCodes.Callvirt, movedMethod);
+            processor.Emit(OpCodes.Callvirt, originalMethod);
 
             /// <see cref="MethodExecutionArgs.ReturnValue"/> へメソッド?の戻り値をストアします。
-            if (movedMethod.HasReturnValue())
+            if (originalMethod.HasReturnValue())
             {
-                if (movedMethod.ReturnType.IsValueType)
+                if (originalMethod.ReturnType.IsValueType)
                 {
-                    processor.Emit(OpCodes.Box, movedMethod.ReturnType);
+                    processor.Emit(OpCodes.Box, originalMethod.ReturnType);
                 }
                 else
                 {
-                    processor.Emit(OpCodes.Castclass, movedMethod.ReturnType);
+                    processor.Emit(OpCodes.Castclass, originalMethod.ReturnType);
                 }
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
             }
