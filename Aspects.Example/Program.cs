@@ -1,7 +1,5 @@
-﻿using SoftCube.Asserts;
-using SoftCube.Logging;
+﻿using SoftCube.Logging;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,25 +18,40 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var result = program.引数をインクリメント("a");
+            var task = program.引数をインクリメント("4");
+            Logger.Trace("1");
+            task.Wait();
 
-            Logger.Trace(result);
+            Logger.Trace(task.Result);
 
             Console.Read();
         }
 
-        private class IncrementAspect : MethodInterceptionAspect
+        [Serializable]
+        public class IncrementAspect : MethodInterceptionAspect
         {
+            //public override void OnInvoke(MethodInterceptionArgs args)
+            //{
+            //    args.Proceed();
+            //    Logger.Trace("3");
+            //}
 
-            public override void OnInvoke(MethodInterceptionArgs args)
+            public override async Task OnInvokeAsync(MethodInterceptionArgs args)
             {
-                args.Proceed();
+                await args.ProceedAsync();
+                Logger.Trace("3");
             }
         }
 
         [IncrementAspect]
-        private string 引数をインクリメント(string arg1)
+        private async Task<string> 引数をインクリメント(string arg1)
         {
+            await Task.Run(() =>
+            {
+                Thread.Sleep(100);
+            });
+
+            Logger.Trace("2");
             return arg1;
         }
     }
