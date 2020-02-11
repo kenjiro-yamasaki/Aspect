@@ -36,14 +36,10 @@ namespace SoftCube.Aspects
         {
             var injector = new MethodInjector(method, aspect);
 
-            /// 
             CreateDerivedAspectArgs(injector);
             ReplaceMethod(injector);
             OverrideInvokeMethod(injector);
             OverrideProceedMethod(injector);
-
-            /// IL コードを最適化します。
-            method.OptimizeIL();
         }
 
         /// <summary>
@@ -63,13 +59,13 @@ namespace SoftCube.Aspects
             /// MethodInterceptionArgs の派生クラスを追加します。
             var aspectArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsType          = aspectArgsTypeReference.Resolve();
-            var derivedAspectArgsType = new TypeDefinition(@namespace, method.Name + "+" + nameof(MethodInterceptionArgs), Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference);
-            derivedAspectArgsType.IsNestedPrivate = true;
+            var derivedAspectArgsType   = new TypeDefinition(@namespace, method.Name + "+" + nameof(MethodInterceptionArgs), Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference) { IsNestedPrivate = true };
+
             declaringType.NestedTypes.Add(derivedAspectArgsType);
 
             /// MethodInterceptionArgs の派生クラスにコンストラクターを追加します。
             var methodAttributes = Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName;
-            var constructor = new MethodDefinition(".ctor", methodAttributes, module.TypeSystem.Void);
+            var constructor      = new MethodDefinition(".ctor", methodAttributes, module.TypeSystem.Void);
 
             var instanceParameter  = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, module.TypeSystem.Object);
             var argumentsParameter = new ParameterDefinition("arguments", Mono.Cecil.ParameterAttributes.None, module.ImportReference(typeof(Arguments)));
