@@ -37,7 +37,7 @@ namespace SoftCube.Aspects
             var injector = new MethodInjector(method, aspect);
 
             /// 
-            CreateDerivedMethodInterceptionArgs(injector);
+            CreateDerivedAspectArgs(injector);
             ReplaceMethod(injector);
             OverrideInvokeMethod(injector);
             OverrideProceedMethod(injector);
@@ -53,7 +53,7 @@ namespace SoftCube.Aspects
         /// <remarks>
         /// <see cref="MethodInterceptionArgs"/> の派生クラスを生成し、注入対象のメソッドの定義クラスのネスト型とします。
         /// </remarks>
-        private void CreateDerivedMethodInterceptionArgs(MethodInjector injector)
+        private void CreateDerivedAspectArgs(MethodInjector injector)
         {
             var method        = injector.TargetMethod;
             var declaringType = method.DeclaringType;
@@ -93,7 +93,7 @@ namespace SoftCube.Aspects
         /// <remarks>
         /// 新たなメソッド (メソッド?) を生成し、元々のメソッドの内容を移動します。
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
-        /// このメソッドを呼び出す前に <see cref="MethodInterceptionArgs"/> の派生クラスを生成してください。
+        /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
         private void ReplaceMethod(MethodInjector injector)
         {
@@ -128,8 +128,8 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
-        /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"/> をオーバーライドして、メソッド名?を呼び出すコードに書き換えます。
-        /// このメソッドを呼び出す前に注入対象のメソッドを書き換えてください。
+        /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
+        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
         private void OverrideInvokeMethod(MethodInjector injector)
         {
@@ -138,70 +138,69 @@ namespace SoftCube.Aspects
             var declaringType  = method.DeclaringType;
             var originalMethod = injector.OriginalMethod;
 
-            /// Invoke メソッドをオーバーライドします。
-            var methodInterceptionArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
-            var methodInterceptionArgsType          = methodInterceptionArgsTypeReference.Resolve();
-            var derivedMethodInterceptionArgsType   = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
-
+            /// Invoke メソッドのオーバーライドを追加します。
+            var aspectArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
+            var aspectArgsType          = aspectArgsTypeReference.Resolve();
+            var derivedAspectArgsType   = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
             var argumentsTypeReferernce = module.ImportReference(typeof(Arguments));
-            var parameterType = new ParameterDefinition(argumentsTypeReferernce);
-            parameterType.Name = "arguments";
+            var invokeMethod            = aspectArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Invoke));
+            var overridenInvokeMethod   = new MethodDefinition(invokeMethod.Name, (invokeMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), invokeMethod.ReturnType);
 
-            var invokeMethod = methodInterceptionArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Invoke));
-            var overridenInvokeMethod = new MethodDefinition(invokeMethod.Name, (invokeMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), invokeMethod.ReturnType);
-            overridenInvokeMethod.Parameters.Add(parameterType);
+            overridenInvokeMethod.Parameters.Add(new ParameterDefinition(argumentsTypeReferernce) { Name = "arguments" });
+            derivedAspectArgsType.Methods.Add(overridenInvokeMethod);
 
-            derivedMethodInterceptionArgsType.Methods.Add(overridenInvokeMethod);
-
-            /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"> のパラメーターからメソッド?へのパラメーターをロードします。
-            var processor = overridenInvokeMethod.Body.GetILProcessor();
-
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
-
-            for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
+            /// Invoke メソッドのオーバーライドを実装します。
             {
-                var parameter = originalMethod.Parameters[parameterIndex];
+                var processor = overridenInvokeMethod.Body.GetILProcessor();
 
-                processor.Emit(OpCodes.Ldarg_1);
-                processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
-                if (parameter.ParameterType.IsValueType)
+                /// public override object Invoke(Arguments arguments)
+                /// {
+                ///     return ((TInstance)base.Instance).OriginalMethod((TArg0)arguments[0], (TArg1)arguments[1], ...);
+                /// }
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
-                    processor.Emit(OpCodes.Unbox_Any, parameter.ParameterType);
+                    var parameter     = originalMethod.Parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    processor.Emit(OpCodes.Ldarg_1);
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                    if (parameterType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Unbox_Any, parameterType);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Castclass, parameterType);
+                    }
+                }
+                processor.Emit(OpCodes.Callvirt, originalMethod);
+
+                if (originalMethod.HasReturnValue())
+                {
+                    if (originalMethod.ReturnType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Box, originalMethod.ReturnType);
+                    }
                 }
                 else
                 {
-                    processor.Emit(OpCodes.Castclass, parameter.ParameterType);
+                    processor.Emit(OpCodes.Ldnull);
                 }
+                processor.Emit(OpCodes.Ret);
             }
-
-            /// メソッド?を呼び出します。
-            processor.Emit(OpCodes.Callvirt, originalMethod);
-
-            ///
-            if (originalMethod.HasReturnValue())
-            {
-                if (originalMethod.ReturnType.IsValueType)
-                {
-                    processor.Emit(OpCodes.Box, originalMethod.ReturnType);
-                }
-                else
-                {
-                    processor.Emit(OpCodes.Castclass, originalMethod.ReturnType);
-                }
-            }
-            else
-            {
-                processor.Emit(OpCodes.Ldnull);
-            }
-            processor.Emit(OpCodes.Ret);
         }
 
         /// <summary>
         /// <see cref="MethodInterceptionArgs.Proceed"/> をオーバーライドします。
         /// </summary>
         /// <param name="injector">メソッドへの注入。</param>
+        /// <remarks>
+        /// <see cref="MethodInterceptionArgs.Proceed()"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
+        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodInjector)"/> を呼びだしてください。
+        /// </remarks>
         private void OverrideProceedMethod(MethodInjector injector)
         {
             var method         = injector.TargetMethod;
@@ -209,63 +208,61 @@ namespace SoftCube.Aspects
             var declaringType  = method.DeclaringType;
             var originalMethod = injector.OriginalMethod;
 
-            /// Invoke メソッドをオーバーライドします。
-            var methodInterceptionArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
-            var methodInterceptionArgsType          = methodInterceptionArgsTypeReference.Resolve();
-            var derivedMethodInterceptionArgsType   = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
+            /// Proceed メソッドのオーバーライドを追加します。
+            var aspectArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
+            var aspectArgsType          = aspectArgsTypeReference.Resolve();
+            var derivedAspectArgsType   = declaringType.NestedTypes.Single(nt => nt.Name == method.Name + "+" + nameof(MethodInterceptionArgs));
+            var proceedMethod           = aspectArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Proceed));
+            var overridenProceedMethod  = new MethodDefinition(proceedMethod.Name, (proceedMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), proceedMethod.ReturnType);
 
-            var proceedMethod = methodInterceptionArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.Proceed));
-            var overridenProceedMethod = new MethodDefinition(proceedMethod.Name, (proceedMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), proceedMethod.ReturnType);
+            derivedAspectArgsType.Methods.Add(overridenProceedMethod);
 
-            derivedMethodInterceptionArgsType.Methods.Add(overridenProceedMethod);
-
-            /// <see cref="MethodInterceptionArgs.Invoke(Arguments)"> のパラメーターからメソッド?へのパラメーターをロードします。
-            var processor = overridenProceedMethod.Body.GetILProcessor();
-
-            if (originalMethod.HasReturnValue())
+            /// Proceed メソッドのオーバーライドを実装します。
             {
-                processor.Emit(OpCodes.Ldarg_0);
-            }
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                var processor = overridenProceedMethod.Body.GetILProcessor();
 
-            for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
-            {
-                var parameter = originalMethod.Parameters[parameterIndex];
+                /// public override void Proceed()
+                /// {
+                ///     base.ReturnType = ((TInstance)base.Instance).OriginalMethod((TArg0)base.Arguments[0], (TArg1)base.Arguments[1], ...);
+                /// }
+                if (originalMethod.HasReturnValue())
+                {
+                    processor.Emit(OpCodes.Ldarg_0);
+                }
 
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
-                processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
-                if (parameter.ParameterType.IsValueType)
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
-                    processor.Emit(OpCodes.Unbox_Any, parameter.ParameterType);
+                    var parameter     = originalMethod.Parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                    if (parameterType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Unbox_Any, parameterType);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Castclass, parameterType);
+                    }
                 }
-                else
+                processor.Emit(OpCodes.Callvirt, originalMethod);
+
+                if (originalMethod.HasReturnValue())
                 {
-                    processor.Emit(OpCodes.Castclass, parameter.ParameterType);
+                    if (originalMethod.ReturnType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Box, originalMethod.ReturnType);
+                    }
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
                 }
+
+                processor.Emit(OpCodes.Ret);
             }
-
-            /// メソッド?を呼び出します。
-            processor.Emit(OpCodes.Callvirt, originalMethod);
-
-            /// <see cref="MethodExecutionArgs.ReturnValue"/> へメソッド?の戻り値をストアします。
-            if (originalMethod.HasReturnValue())
-            {
-                if (originalMethod.ReturnType.IsValueType)
-                {
-                    processor.Emit(OpCodes.Box, originalMethod.ReturnType);
-                }
-                else
-                {
-                    processor.Emit(OpCodes.Castclass, originalMethod.ReturnType);
-                }
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
-            }
-
-            /// リターンします。
-            processor.Emit(OpCodes.Ret);
         }
 
         #endregion
