@@ -16,18 +16,18 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="typeReference">型参照。</param>
         /// <returns><see cref="Type"/>。</returns>
-        internal static Type ToSystemType(this TypeReference typeReference)
+        internal static Type ToSystemType(this TypeReference typeReference, bool removePointer = false)
         {
             if (typeReference is GenericInstanceType genericInstanceType)
             {
                 var elementType   = genericInstanceType.ElementType.ToSystemType();
-                var typeArguments = genericInstanceType.GenericArguments.Select(ga => ga.ToSystemType()).ToArray();
+                var typeArguments = genericInstanceType.GenericArguments.Select(ga => ga.ToSystemType(removePointer : true)).ToArray();
 
                 return  elementType.MakeGenericType(typeArguments);
             }
             else
             {
-                var typeFullName = typeReference.FullName.Replace("/", "+");
+                var typeFullName = removePointer ? typeReference.FullName.Replace("/", "+").Replace("&", "") : typeReference.FullName.Replace("/", "+");
                 {
                     if (Type.GetType(typeFullName) is Type result)
                     {

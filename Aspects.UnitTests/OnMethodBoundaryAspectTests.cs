@@ -2205,6 +2205,34 @@ namespace SoftCube.Aspects
 
                 #endregion
             }
+
+
+            public class ポインタ
+            {
+                #region 値型
+
+                //private class IncrementAspect : OnMethodBoundaryAspect
+                //{
+                //}
+
+                //[IncrementAspect]
+                //private void @out(out int arg1)
+                //{
+                //    arg1 = 1;
+                //}
+
+                //[Fact]
+                //public void out_正しくアスペクトが適用される()
+                //{
+                //    int result;
+
+                //    @out(out result);
+
+                //    Assert.Equal(1, result);
+                //}
+
+                #endregion
+            }
         }
 
         public class イテレーターメソッド

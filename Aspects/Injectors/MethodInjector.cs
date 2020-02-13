@@ -47,7 +47,7 @@ namespace SoftCube.Aspects
             get
             {
                 var parameters = TargetMethod.Parameters;
-                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
                 return parameters.Count switch
                 {
                     0 => typeof(Arguments),
@@ -148,7 +148,7 @@ namespace SoftCube.Aspects
             ArgumentsVariable = variables.Count();
 
             var parameters = TargetMethod.Parameters;
-            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
             variables.Add(new VariableDefinition(Module.ImportReference(ArgumentsType)));
 
             if (parameters.Count <= 8)
@@ -157,6 +157,12 @@ namespace SoftCube.Aspects
                 {
                     var parameter = parameters[parameterIndex];
                     processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    ////////////////////////////////////////////////////////////////////////////////
+                    if (parameter.ParameterType.IsByReference)
+                    {
+                        processor.Emit(OpCodes.Ldind_I4);
+                    }
+                    ////////////////////////////////////////////////////////////////////////////////
                 }
                 processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
                 processor.Emit(OpCodes.Stloc, ArgumentsVariable);
@@ -227,8 +233,18 @@ namespace SoftCube.Aspects
 
                 for (int parameterIndex = 0; parameterIndex < OriginalMethod.Parameters.Count; parameterIndex++)
                 {
+                    var parameter = OriginalMethod.Parameters[parameterIndex];
                     processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
-                    processor.Emit(OpCodes.Call, Module.ImportReference(ArgumentsType.GetProperty(propertyNames[parameterIndex]).GetGetMethod()));
+                    ////////////////////////////////////////////////////////////////////////////////
+                    if (parameter.ParameterType.IsByReference)
+                    {
+                        processor.Emit(OpCodes.Ldflda, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
+                    }
+                    ////////////////////////////////////////////////////////////////////////////////
                 }
             }
             else
@@ -325,6 +341,55 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
             processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod()));
         }
+
+
+        public void SetPointerArguments(ILProcessor processor)
+        {
+            var parameters     = TargetMethod.Parameters;
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
+
+            if (parameters.Count <= 8)
+            {
+                var propertyNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
+
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    ////////////////////////////////////////////////////////////////////////////////
+                    if (parameter.ParameterType.IsByReference)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
+                        processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
+                        processor.Emit(OpCodes.Stind_I4);
+                    }
+                    ////////////////////////////////////////////////////////////////////////////////
+                }
+                //processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
+                //processor.Emit(OpCodes.Stloc, ArgumentsVariable);
+            }
+            else
+            {
+                //processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+                //processor.Emit(OpCodes.Newarr, Module.ImportReference(typeof(object)));
+                //for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                //{
+                //    var parameter = parameters[parameterIndex];
+                //    processor.Emit(OpCodes.Dup);
+                //    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                //    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                //    if (parameter.ParameterType.IsValueType)
+                //    {
+                //        processor.Emit(OpCodes.Box, parameter.ParameterType);
+                //    }
+                //    processor.Emit(OpCodes.Stelem_Ref);
+                //}
+                //processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                //processor.Emit(OpCodes.Stloc, ArgumentsVariable);
+            }
+        
+        }
+
 
         /// <summary>
         /// aspectArgs.Exception に例外を設定します。

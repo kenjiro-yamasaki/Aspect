@@ -18,41 +18,53 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var task = program.引数をインクリメント("4");
-            Logger.Trace("1");
-            task.Wait();
-
-            Logger.Trace(task.Result);
+            int result = 1;
+            program.@out(out result);
+            Logger.Trace(result.ToString());
 
             Console.Read();
         }
 
-        [Serializable]
-        public class IncrementAspect : MethodInterceptionAspect
-        {
-            //public override void OnInvoke(MethodInterceptionArgs args)
-            //{
-            //    args.Proceed();
-            //    Logger.Trace("3");
-            //}
+        //private class IncrementAspect : OnMethodBoundaryAspect
+        //{
+        //    public override void OnEntry(MethodExecutionArgs args)
+        //    {
+        //        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+        //        {
+        //            var argument = (int)args.Arguments[argumentIndex];
+        //            args.Arguments[argumentIndex] = argument + 1;
+        //        }
+        //    }
+        //}
 
-            public override async Task OnInvokeAsync(MethodInterceptionArgs args)
+        //[IncrementAspect]
+        //private async Task<int> 引数をインクリメント(int arg1)
+        //{
+        //    await Task.Run(() =>
+        //    {
+        //        Thread.Sleep(10);
+        //    });
+
+        //    return arg1;
+        //}
+
+
+
+
+
+        private class IncrementAspect : OnMethodBoundaryAspect
+        {
+            public override void OnSuccess(MethodExecutionArgs args)
             {
-                await args.ProceedAsync();
-                Logger.Trace("3");
+                var value = (int)args.Arguments.GetArgument(0);
+                args.Arguments.SetArgument(0, value + 1);
             }
         }
 
         [IncrementAspect]
-        private async Task<string> 引数をインクリメント(string arg1)
+        private void @out(out int arg1)
         {
-            await Task.Run(() =>
-            {
-                Thread.Sleep(100);
-            });
-
-            Logger.Trace("2");
-            return arg1;
+            arg1 = 1;
         }
     }
 }

@@ -106,7 +106,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         #endregion
 
@@ -176,12 +176,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; set; }
+        public TArg1 Arg1;
 
         #endregion
 
@@ -261,17 +261,17 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; set; }
+        public TArg1 Arg1;
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; set; }
+        public TArg2 Arg2;
 
         #endregion
 
@@ -361,22 +361,22 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; set; }
+        public TArg1 Arg1;
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; set; }
+        public TArg2 Arg2;
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; set; }
+        public TArg3 Arg3;
 
         #endregion
 
@@ -476,27 +476,27 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; set; }
+        public TArg1 Arg1;
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; set; }
+        public TArg2 Arg2;
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; set; }
+        public TArg3 Arg3;
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; set; }
+        public TArg4 Arg4;
 
         #endregion
 
@@ -606,32 +606,32 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; set; }
+        public TArg1 Arg1;
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; set; }
+        public TArg2 Arg2;
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; set; }
+        public TArg3 Arg3;
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; set; }
+        public TArg4 Arg4;
 
         /// <summary>
         /// 第 5 引数。
         /// </summary>
-        public TArg5 Arg5 { get; set; }
+        public TArg5 Arg5;
 
         #endregion
 
@@ -751,37 +751,37 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; set; }
+        public TArg1 Arg1;
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; set; }
+        public TArg2 Arg2;
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; set; }
+        public TArg3 Arg3;
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; set; }
+        public TArg4 Arg4;
 
         /// <summary>
         /// 第 5 引数。
         /// </summary>
-        public TArg5 Arg5 { get; set; }
+        public TArg5 Arg5;
 
         /// <summary>
         /// 第 6 引数。
         /// </summary>
-        public TArg6 Arg6 { get; set; }
+        public TArg6 Arg6;
 
         #endregion
 
@@ -911,42 +911,42 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 第 0 引数。
         /// </summary>
-        public TArg0 Arg0 { get; set; }
+        public TArg0 Arg0;
 
         /// <summary>
         /// 第 1 引数。
         /// </summary>
-        public TArg1 Arg1 { get; set; }
+        public TArg1 Arg1;
 
         /// <summary>
         /// 第 2 引数。
         /// </summary>
-        public TArg2 Arg2 { get; set; }
+        public TArg2 Arg2;
 
         /// <summary>
         /// 第 3 引数。
         /// </summary>
-        public TArg3 Arg3 { get; set; }
+        public TArg3 Arg3;
 
         /// <summary>
         /// 第 4 引数。
         /// </summary>
-        public TArg4 Arg4 { get; set; }
+        public TArg4 Arg4;
 
         /// <summary>
         /// 第 5 引数。
         /// </summary>
-        public TArg5 Arg5 { get; set; }
+        public TArg5 Arg5;
 
         /// <summary>
         /// 第 6 引数。
         /// </summary>
-        public TArg6 Arg6 { get; set; }
+        public TArg6 Arg6;
 
         /// <summary>
         /// 第 7 引数。
         /// </summary>
-        public TArg7 Arg7 { get; set; }
+        public TArg7 Arg7;
 
         #endregion
 

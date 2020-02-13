@@ -292,7 +292,8 @@ namespace SoftCube.Aspects
                     processor.Insert(insert, OpCodes.Ldarg_0);
                     processor.Insert(insert, OpCodes.Dup);
                     processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
-                    processor.Insert(insert, OpCodes.Call, Module.ImportReference(ArgumentsType.GetProperty(propertyNames[parameterIndex]).GetGetMethod()));
+
+                    processor.Insert(insert, OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
                     processor.Insert(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                 }
             }
