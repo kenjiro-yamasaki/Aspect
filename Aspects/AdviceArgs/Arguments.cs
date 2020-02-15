@@ -1087,7 +1087,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="arguments">引数配列。</param>
-        public ArgumentsArray(params object[] arguments)
+        public ArgumentsArray(object[] arguments)
             : base(arguments.Length)
         {
             Arguments = arguments;

@@ -2206,9 +2206,515 @@ namespace SoftCube.Aspects
                 #endregion
             }
 
-
             public class ポインタ
             {
+                #region 参照型
+
+                private class ToUpperAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnSuccess(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            var value = (string)args.Arguments.GetArgument(argumentIndex);
+                            args.Arguments.SetArgument(argumentIndex, value.ToUpper());
+                        }
+                    }
+                }
+
+                #region ref
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6, ref string arg7)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6, ref string arg7, ref string arg8)
+                {
+                }
+
+                [ToUpperAspect]
+                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6, ref string arg7, ref string arg8, ref string arg9)
+                {
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が1つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+
+                    入出力引数を大文字に変換(ref result1);
+
+                    Assert.Equal("A", result1);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が2つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+
+                    入出力引数を大文字に変換(ref result1, ref result2);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が3つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3 = "c";
+
+                    入出力引数を大文字に変換(ref result1, ref result2, ref result3);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が4つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3 = "c";
+                    string result4 = "d";
+
+                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が5つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3 = "c";
+                    string result4 = "d";
+                    string result5 = "e";
+
+                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が6つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3 = "c";
+                    string result4 = "d";
+                    string result5 = "e";
+                    string result6 = "f";
+
+                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が7つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3 = "c";
+                    string result4 = "d";
+                    string result5 = "e";
+                    string result6 = "f";
+                    string result7 = "g";
+
+                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が8つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3 = "c";
+                    string result4 = "d";
+                    string result5 = "e";
+                    string result6 = "f";
+                    string result7 = "g";
+                    string result8 = "h";
+
+                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                }
+
+                [Fact]
+                public void 入出力引数を大文字に変換_引数が9つ_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3 = "c";
+                    string result4 = "d";
+                    string result5 = "e";
+                    string result6 = "f";
+                    string result7 = "g";
+                    string result8 = "h";
+                    string result9 = "i";
+
+                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8, ref result9);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                    Assert.Equal("I", result9);
+                }
+
+                #endregion
+
+                #region out
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1)
+                {
+                    arg1 = "a";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                    arg3 = "c";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                    arg3 = "c";
+                    arg4 = "d";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                    arg3 = "c";
+                    arg4 = "d";
+                    arg5 = "e";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                    arg3 = "c";
+                    arg4 = "d";
+                    arg5 = "e";
+                    arg6 = "f";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6, out string arg7)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                    arg3 = "c";
+                    arg4 = "d";
+                    arg5 = "e";
+                    arg6 = "f";
+                    arg7 = "g";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6, out string arg7, out string arg8)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                    arg3 = "c";
+                    arg4 = "d";
+                    arg5 = "e";
+                    arg6 = "f";
+                    arg7 = "g";
+                    arg8 = "h";
+                }
+
+                [ToUpperAspect]
+                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6, out string arg7, out string arg8, out string arg9)
+                {
+                    arg1 = "a";
+                    arg2 = "b";
+                    arg3 = "c";
+                    arg4 = "d";
+                    arg5 = "e";
+                    arg6 = "f";
+                    arg7 = "g";
+                    arg8 = "h";
+                    arg9 = "i";
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が1つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+
+                    出力引数を大文字に変換(out result1);
+
+                    Assert.Equal("A", result1);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が2つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+
+                    出力引数を大文字に変換(out result1, out result2);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が3つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+                    string result3;
+
+                    出力引数を大文字に変換(out result1, out result2, out result3);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が4つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+                    string result3;
+                    string result4;
+
+                    出力引数を大文字に変換(out result1, out result2, out result3, out result4);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が5つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+                    string result3;
+                    string result4;
+                    string result5;
+
+                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が6つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+                    string result3;
+                    string result4;
+                    string result5;
+                    string result6;
+
+                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が7つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+                    string result3;
+                    string result4;
+                    string result5;
+                    string result6;
+                    string result7;
+
+                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6, out result7);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が8つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+                    string result3;
+                    string result4;
+                    string result5;
+                    string result6;
+                    string result7;
+                    string result8;
+
+                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                }
+
+                [Fact]
+                public void 出力引数を大文字に変換_引数が9つ_正しくアスペクトが適用される()
+                {
+                    string result1;
+                    string result2;
+                    string result3;
+                    string result4;
+                    string result5;
+                    string result6;
+                    string result7;
+                    string result8;
+                    string result9;
+
+                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8, out result9);
+
+                    Assert.Equal("A", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                    Assert.Equal("D", result4);
+                    Assert.Equal("E", result5);
+                    Assert.Equal("F", result6);
+                    Assert.Equal("G", result7);
+                    Assert.Equal("H", result8);
+                    Assert.Equal("I", result9);
+                }
+
+                #endregion
+
+                #region mix
+
+                [ToUpperAspect]
+                private void 混合引数を大文字に変換(string arg1, ref string arg2, out string arg3)
+                {
+                    arg3 = "c";
+                }
+
+                [Fact]
+                public void 混合引数を大文字に変換_正しくアスペクトが適用される()
+                {
+                    string result1 = "a";
+                    string result2 = "b";
+                    string result3;
+
+                    混合引数を大文字に変換(result1, ref result2, out result3);
+
+                    Assert.Equal("a", result1);
+                    Assert.Equal("B", result2);
+                    Assert.Equal("C", result3);
+                }
+
+                #endregion
+
+                #endregion
+
                 #region 値型
 
                 private class IncrementAspect : OnMethodBoundaryAspect
@@ -2223,7 +2729,218 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                #region 出力引数
+                #region ref
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7, ref int arg8)
+                {
+                }
+
+                [IncrementAspect]
+                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7, ref int arg8, ref int arg9)
+                {
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+
+                    入出力引数をインクリメント(ref result1);
+
+                    Assert.Equal(2, result1);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+
+                    入出力引数をインクリメント(ref result1, ref result2);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3 = 3;
+
+                    入出力引数をインクリメント(ref result1, ref result2, ref result3);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3 = 3;
+                    int result4 = 4;
+
+                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3 = 3;
+                    int result4 = 4;
+                    int result5 = 5;
+
+                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3 = 3;
+                    int result4 = 4;
+                    int result5 = 5;
+                    int result6 = 6;
+
+                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3 = 3;
+                    int result4 = 4;
+                    int result5 = 5;
+                    int result6 = 6;
+                    int result7 = 7;
+
+                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3 = 3;
+                    int result4 = 4;
+                    int result5 = 5;
+                    int result6 = 6;
+                    int result7 = 7;
+                    int result8 = 8;
+
+                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                    Assert.Equal(9, result8);
+                }
+
+                [Fact]
+                public void 入出力引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3 = 3;
+                    int result4 = 4;
+                    int result5 = 5;
+                    int result6 = 6;
+                    int result7 = 7;
+                    int result8 = 8;
+                    int result9 = 9;
+
+                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8, ref result9);
+
+                    Assert.Equal(2, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal(6, result5);
+                    Assert.Equal(7, result6);
+                    Assert.Equal(8, result7);
+                    Assert.Equal(9, result8);
+                    Assert.Equal(10, result9);
+                }
+
+                #endregion
+
+                #region out
 
                 [IncrementAspect]
                 private void 出力引数をインクリメント(out int arg1)
@@ -2451,206 +3168,20 @@ namespace SoftCube.Aspects
                     Assert.Equal(9, result8);
                 }
 
-                //[Fact]
-                //public void 引数をインクリメント_出力引数が9つ_正しくアスペクトが適用される()
-                //{
-                //    int result1;
-                //    int result2;
-                //    int result3;
-                //    int result4;
-                //    int result5;
-                //    int result6;
-                //    int result7;
-                //    int result8;
-                //    int result9;
-
-                //    引数をインクリメント(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8, out result9);
-
-                //    Assert.Equal(2, result1);
-                //    Assert.Equal(3, result2);
-                //    Assert.Equal(4, result3);
-                //    Assert.Equal(5, result4);
-                //    Assert.Equal(6, result5);
-                //    Assert.Equal(7, result6);
-                //    Assert.Equal(8, result7);
-                //    Assert.Equal(9, result8);
-                //    Assert.Equal(10, result9);
-                //}
-
-                #endregion
-
-                #region 入出力引数
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7, ref int arg8)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7, ref int arg8, ref int arg9)
-                {
-                }
-
                 [Fact]
-                public void 入出力引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
+                public void 出力引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
                 {
-                    int result1 = 1;
+                    int result1;
+                    int result2;
+                    int result3;
+                    int result4;
+                    int result5;
+                    int result6;
+                    int result7;
+                    int result8;
+                    int result9;
 
-                    入出力引数をインクリメント(ref result1);
-
-                    Assert.Equal(2, result1);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-
-                    入出力引数をインクリメント(ref result1, ref result2);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-                    int result6 = 6;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-                    int result6 = 6;
-                    int result7 = 7;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-                    int result6 = 6;
-                    int result7 = 7;
-                    int result8 = 8;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8);
+                    出力引数をインクリメント(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8, out result9);
 
                     Assert.Equal(2, result1);
                     Assert.Equal(3, result2);
@@ -2660,33 +3191,32 @@ namespace SoftCube.Aspects
                     Assert.Equal(7, result6);
                     Assert.Equal(8, result7);
                     Assert.Equal(9, result8);
+                    Assert.Equal(10, result9);
                 }
 
-                //[Fact]
-                //public void 引数をインクリメント_入出力引数が9つ_正しくアスペクトが適用される()
-                //{
-                //    int result1;
-                //    int result2;
-                //    int result3;
-                //    int result4;
-                //    int result5;
-                //    int result6;
-                //    int result7;
-                //    int result8;
-                //    int result9;
+                #endregion
 
-                //    引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8, ref result9);
+                #region mix
 
-                //    Assert.Equal(2, result1);
-                //    Assert.Equal(3, result2);
-                //    Assert.Equal(4, result3);
-                //    Assert.Equal(5, result4);
-                //    Assert.Equal(6, result5);
-                //    Assert.Equal(7, result6);
-                //    Assert.Equal(8, result7);
-                //    Assert.Equal(9, result8);
-                //    Assert.Equal(10, result9);
-                //}
+                [IncrementAspect]
+                private void 混合引数をインクリメント(int arg1, ref int arg2, out int arg3)
+                {
+                    arg3 = 3;
+                }
+
+                [Fact]
+                public void 混合引数をインクリメント_正しくアスペクトが適用される()
+                {
+                    int result1 = 1;
+                    int result2 = 2;
+                    int result3;
+
+                    混合引数をインクリメント(result1, ref result2, out result3);
+
+                    Assert.Equal(1, result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal(4, result3);
+                }
 
                 #endregion
 
