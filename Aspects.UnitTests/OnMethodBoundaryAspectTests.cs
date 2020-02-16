@@ -27,7 +27,7 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        public class 通常のメソッド
+        public class メソッド
         {
             public class イベントハンドラーの呼びだし順序
             {
@@ -99,7 +99,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class OnEntry
+            public class AspectArgs
             {
                 private static object Instance;
 
@@ -122,19 +122,6 @@ namespace SoftCube.Aspects
                     メソッド();
 
                     Assert.Same(this, Instance);
-                }
-
-                [OnEntrySpy]
-                private static void 静的メソッド()
-                {
-                }
-
-                [Fact]
-                public void 静的メソッド_正しくアスペクトが適用される()
-                {
-                    静的メソッド();
-
-                    Assert.Null(Instance);
                 }
             }
 
@@ -511,847 +498,443 @@ namespace SoftCube.Aspects
                     Assert.Equal("A", result);
                 }
             }
+        }
 
-            public class 制御文
+        public class 静的メソッド
+        {
+            public class イベントハンドラーの呼びだし順序
             {
-                #region if文
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private bool If戻り値あり(bool condition)
+                private class EventLogger : OnMethodBoundaryAspect
                 {
-                    if (condition)
+                    public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Logger.Trace("A");
-                        return true;
+                        Logger.Trace("OnEntry");
                     }
 
-                    Logger.Trace("B");
-                    return false;
+                    public override void OnSuccess(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnSuccess");
+                    }
+
+                    public override void OnException(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnException");
+                    }
+
+                    public override void OnExit(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnExit");
+                    }
+
+                    public override void OnResume(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnResume");
+                    }
+
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnYield");
+                    }
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private bool If戻り値あり_Else(bool condition)
+                [EventLogger]
+                private static void 正常()
                 {
-                    if (condition)
+                    Logger.Trace("正常");
+                }
+
+                [EventLogger]
+                private static void 例外()
+                {
+                    Logger.Trace("例外");
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 正常_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    正常();
+
+                    Assert.Equal($"OnEntry 正常 OnSuccess OnExit ", appender.ToString());
+                }
+
+                [Fact]
+                public void 例外_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var exception = Record.Exception(() => 例外());
+
+                    Assert.IsType<InvalidOperationException>(exception);
+                    Assert.Equal($"OnEntry 例外 OnException OnExit ", appender.ToString());
+                }
+            }
+
+            public class AspectArgs
+            {
+                private static object Instance;
+
+                private class OnEntrySpy : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Logger.Trace("A");
-                        return true;
-                    }
-                    else
-                    {
-                        Logger.Trace("B");
-                        return false;
+                        Instance = args.Instance;
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private (bool, bool) If戻り値あり_Nest(bool condition0, bool condition1)
+                [OnEntrySpy]
+                private static void メソッド()
                 {
-                    if (condition0)
+                }
+
+                [Fact]
+                public void メソッド_正しくアスペクトが適用される()
+                {
+                    メソッド();
+
+                    Assert.Null(Instance);
+                }
+            }
+
+            public class 引数
+            {
+                private class ChangeArguments : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
                     {
-                        if (condition1)
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
                         {
-                            Logger.Trace("A");
-                            return (true, true);
-                        }
-                        else
-                        {
-                            Logger.Trace("B");
-                            return (true, false);
-                        }
-                    }
-                    else
-                    {
-                        if (condition1)
-                        {
-                            Logger.Trace("C");
-                            return (false, true);
-                        }
-                        else
-                        {
-                            Logger.Trace("D");
-                            return (false, false);
+                            switch (args.Arguments[argumentIndex])
+                            {
+                                case int argument:
+                                    args.Arguments[argumentIndex] = argument + 1;
+                                    break;
+
+                                case string argument:
+                                    args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                                    break;
+
+                                case null:
+                                    break;
+
+                                default:
+                                    throw new NotSupportedException();
+                            }
                         }
                     }
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void If戻り値なし(bool condition)
-                {
-                    if (condition)
-                    {
-                        Logger.Trace("A");
-                        return;
-                    }
+                #region 引数1つ
 
-                    Logger.Trace("B");
+                [ChangeArguments]
+                private static int 引数を変更(int arg0)
+                {
+                    return arg0;
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void If戻り値なし_Else(bool condition)
+                [Fact]
+                public void 引数を変更_引数1つ_正しくアスペクトが適用される()
                 {
-                    if (condition)
-                    {
-                        Logger.Trace("A");
-                        return;
-                    }
-                    else
-                    {
-                        Logger.Trace("B");
-                        return;
-                    }
-                }
+                    var arg0 = 0;
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void If戻り値なし_Nest(bool condition0, bool condition1)
-                {
-                    if (condition0)
-                    {
-                        if (condition1)
-                        {
-                            Logger.Trace("A");
-                            return;
-                        }
-                        else
-                        {
-                            Logger.Trace("B");
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        if (condition1)
-                        {
-                            Logger.Trace("C");
-                            return;
-                        }
-                        else
-                        {
-                            Logger.Trace("D");
-                            return;
-                        }
-                    }
-                }
+                    var result = 引数を変更(arg0);
 
-                [Theory]
-                [InlineData(true, "A")]
-                [InlineData(false, "B")]
-                public void If戻り値あり_正しくアスペクトが適用される(bool condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = If戻り値あり(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                [Theory]
-                [InlineData(true, "A")]
-                [InlineData(false, "B")]
-                public void If戻り値あり_Else_正しくアスペクトが適用される(bool condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = If戻り値あり_Else(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                [Theory]
-                [InlineData(true, true, "A")]
-                [InlineData(true, false, "B")]
-                [InlineData(false, true, "C")]
-                [InlineData(false, false, "D")]
-                public void If戻り値あり_Nest_正しくアスペクトが適用される(bool condition0, bool condition1, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = If戻り値あり_Nest(condition0, condition1);
-
-                        Assert.Equal($"OnEntry {condition0} {condition1} {log} OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                [Theory]
-                [InlineData(true, "A")]
-                [InlineData(false, "B")]
-                public void If戻り値なし_正しくアスペクトが適用される(bool condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        If戻り値なし(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Theory]
-                [InlineData(true, "A")]
-                [InlineData(false, "B")]
-                public void If戻り値なし_Else_正しくアスペクトが適用される(bool condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        If戻り値なし_Else(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Theory]
-                [InlineData(true, true, "A")]
-                [InlineData(true, false, "B")]
-                [InlineData(false, true, "C")]
-                [InlineData(false, false, "D")]
-                public void If戻り値なし_Nest_正しくアスペクトが適用される(bool condition0, bool condition1, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        If戻り値なし_Nest(condition0, condition1);
-
-                        Assert.Equal($"OnEntry {condition0} {condition1} {log} OnSuccess null OnExit ", appender.ToString());
-                    }
+                    Assert.Equal(1, result);
                 }
 
                 #endregion
 
-                #region switch文
+                #region 引数2つ
 
-                public enum Enum
+                [ChangeArguments]
+                private static (int, string) 引数を変更(int arg0, string arg1)
                 {
-                    A,
-                    B,
-                    C,
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void Switch戻り値なし_Break(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            break;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            break;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            break;
-
-                        default:
-                            Logger.Trace("D");
-                            break;
-                    }
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                [InlineData((Enum)3, "D")]
-                public void Switch戻り値なし_Break_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        Switch戻り値なし_Break(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void Switch戻り値なし_Return(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            return;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            return;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            return;
-
-                        default:
-                            Logger.Trace("D");
-                            return;
-                    }
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                [InlineData((Enum)3, "D")]
-                public void Switch戻り値なし_Return_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        Switch戻り値なし_Return(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void Switch戻り値なし_BreakWithDefaultThrow(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            break;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            break;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            break;
-
-                        default:
-                            Logger.Trace("D");
-                            throw new NotSupportedException("D");
-                    }
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                public void Switch戻り値なし_BreakWithDefaultThrow_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        Switch戻り値なし_BreakWithDefaultThrow(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
-                    }
+                    return (arg0, arg1);
                 }
 
                 [Fact]
-                public void Switch戻り値なし_BreakWithDefaultThrow_default_正しくアスペクトが適用される()
+                public void 引数を変更_引数2つ_正しくアスペクトが適用される()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var condition = (Enum)3;
-                        var log = "D";
+                    var arg0 = 0;
+                    var arg1 = "1";
 
-                        var ex = Record.Exception(() => Switch戻り値なし_BreakWithDefaultThrow(condition));
+                    var (result0, result1) = 引数を変更(arg0, arg1);
 
-                        Assert.IsType<NotSupportedException>(ex);
-                        Assert.Equal($"OnEntry {condition} {log} OnException D OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void Switch戻り値なし_ReturnWithDefaultThrow(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            return;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            return;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            return;
-
-                        default:
-                            Logger.Trace("D");
-                            throw new NotSupportedException("D");
-                    }
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                public void Switch戻り値なし_ReturnWithDefaultThrow_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        Switch戻り値なし_ReturnWithDefaultThrow(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void Switch戻り値なし_ReturnWithDefaultThrow_default_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var condition = (Enum)3;
-                        var log = "D";
-
-                        var ex = Record.Exception(() => Switch戻り値なし_BreakWithDefaultThrow(condition));
-
-                        Assert.IsType<NotSupportedException>(ex);
-                        Assert.Equal($"OnEntry {condition} {log} OnException D OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private Enum Switch戻り値あり_Break(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            break;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            break;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            break;
-
-                        default:
-                            Logger.Trace("D");
-                            break;
-                    }
-
-                    return condition;
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                [InlineData((Enum)3, "D")]
-                public void Switch戻り値あり_Break_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = Switch戻り値あり_Break(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private Enum Switch戻り値あり_Return(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            return condition;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            return condition;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            return condition;
-
-                        default:
-                            Logger.Trace("D");
-                            return condition;
-                    }
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                [InlineData((Enum)3, "D")]
-                public void Switch戻り値あり_Return_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = Switch戻り値あり_Return(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private Enum Switch戻り値あり_BreakWithDefaultThrow(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            break;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            break;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            break;
-
-                        default:
-                            Logger.Trace("D");
-                            throw new NotSupportedException("D");
-                    }
-
-                    return condition;
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                public void Switch戻り値あり_BreakWithDefaultThrow_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = Switch戻り値あり_BreakWithDefaultThrow(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void Switch戻り値あり_BreakWithDefaultThrow_default_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var condition = (Enum)3;
-                        var log = "D";
-
-                        var ex = Record.Exception(() => Switch戻り値あり_BreakWithDefaultThrow(condition));
-
-                        Assert.IsType<NotSupportedException>(ex);
-                        Assert.Equal($"OnEntry {condition} {log} OnException {log} OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private Enum Switch戻り値あり_ReturnWithDefaultThrow(Enum condition)
-                {
-                    switch (condition)
-                    {
-                        case Enum.A:
-                            Logger.Trace("A");
-                            return condition;
-
-                        case Enum.B:
-                            Logger.Trace("B");
-                            return condition;
-
-                        case Enum.C:
-                            Logger.Trace("C");
-                            return condition;
-
-                        default:
-                            Logger.Trace("D");
-                            throw new NotSupportedException("D");
-                    }
-                }
-
-                [Theory]
-                [InlineData(Enum.A, "A")]
-                [InlineData(Enum.B, "B")]
-                [InlineData(Enum.C, "C")]
-                public void Switch戻り値あり_ReturnWithDefaultThrow_正しくアスペクトが適用される(Enum condition, string log)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = Switch戻り値あり_ReturnWithDefaultThrow(condition);
-
-                        Assert.Equal($"OnEntry {condition} {log} OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void Switch戻り値あり_ReturnWithDefaultThrow_default_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var condition = (Enum)3;
-                        var log = "D";
-
-                        var ex = Record.Exception(() => Switch戻り値あり_BreakWithDefaultThrow(condition));
-
-                        Assert.IsType<NotSupportedException>(ex);
-                        Assert.Equal($"OnEntry {condition} {log} OnException D OnExit ", appender.ToString());
-                    }
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
                 }
 
                 #endregion
 
-                #region 特殊制御
+                #region 引数3つ
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void Throw()
+                [ChangeArguments]
+                private static (int, string, int) 引数を変更(int arg0, string arg1, in int arg2)
                 {
-                    throw new Exception("A");
+                    return (arg0, arg1, arg2);
                 }
 
                 [Fact]
-                public void Throw_正しくアスペクトが適用される()
+                public void 引数を変更_引数3つ_正しくアスペクトが適用される()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
 
-                        var ex = Record.Exception(() => Throw());
+                    var (result0, result1, result2) = 引数を変更(arg0, arg1, arg2);
 
-                        Assert.IsType<Exception>(ex);
-                        Assert.Equal($"OnEntry OnException A OnExit ", appender.ToString());
-                    }
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void ThrowIfTrue(bool condition)
+                #endregion
+
+                #region 引数4つ
+
+                [ChangeArguments]
+                private static (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3)
                 {
-                    if (condition)
-                    {
-                        throw new Exception("A");
-                    }
-
-                    Logger.Trace("B");
-                    return;
-                }
-
-                [Fact]
-                public void ThrowIfTrue_true_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var ex = Record.Exception(() => ThrowIfTrue(true));
-
-                        Assert.IsType<Exception>(ex);
-                        Assert.Equal($"OnEntry True OnException A OnExit ", appender.ToString());
-                    }
+                    return (arg0, arg1, arg2, arg3);
                 }
 
                 [Fact]
-                public void ThrowIfTrue_false_正しくアスペクトが適用される()
+                public void 引数を変更_引数4つ_正しくアスペクトが適用される()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
 
-                        ThrowIfTrue(false);
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3);
 
-                        Assert.Equal($"OnEntry False B OnSuccess null OnExit ", appender.ToString());
-                    }
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void ThrowIfFalse(bool condition)
+                #endregion
+
+                #region 引数5つ
+
+                [ChangeArguments]
+                private static (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4)
                 {
-                    if (condition)
-                    {
-                        Logger.Trace("A");
-                        return;
-                    }
-
-                    throw new Exception("B");
-                }
-
-                [Fact]
-                public void ThrowIfFalse_true_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        ThrowIfFalse(true);
-
-                        Assert.Equal($"OnEntry True A OnSuccess null OnExit ", appender.ToString());
-                    }
+                    return (arg0, arg1, arg2, arg3);
                 }
 
                 [Fact]
-                public void ThrowIfFalse_false_正しくアスペクトが適用される()
+                public void 引数を変更_引数5つ_正しくアスペクトが適用される()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
 
-                        var ex = Record.Exception(() => ThrowIfFalse(false));
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4);
 
-                        Assert.IsType<Exception>(ex);
-                        Assert.Equal($"OnEntry False OnException B OnExit ", appender.ToString());
-                    }
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void TryCatch()
+                #endregion
+
+                #region 引数6つ
+
+                [ChangeArguments]
+                private static (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5)
                 {
-                    try
-                    {
-                        throw new Exception("A");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Trace(ex.Message);
-                    }
-                }
-
-                [Fact]
-                public void TryCatch_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        TryCatch();
-
-                        Assert.Equal($"OnEntry A OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void TryCatchRethrow()
-                {
-                    try
-                    {
-                        throw new Exception("A");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Trace(ex.Message);
-                        throw ex;
-                    }
+                    return (arg0, arg1, arg2, arg3);
                 }
 
                 [Fact]
-                public void TryCatchRethrow_正しくアスペクトが適用される()
+                public void 引数を変更_引数6つ_正しくアスペクトが適用される()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
 
-                        var ex = Record.Exception(() => TryCatchRethrow());
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5);
 
-                        Assert.IsType<Exception>(ex);
-                        Assert.Equal($"OnEntry A OnException A OnExit ", appender.ToString());
-                    }
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void TryCatchFinally()
+                #endregion
+
+                #region 引数7つ
+
+                [ChangeArguments]
+                private static (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6)
                 {
-                    try
-                    {
-                        throw new Exception("A");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Trace(ex.Message);
-                        throw ex;
-                    }
-                    finally
-                    {
-                        Logger.Trace("B");
-                    }
-                }
-
-                [Fact]
-                public void TryCatchFinally_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var ex = Record.Exception(() => TryCatchFinally());
-
-                        Assert.IsType<Exception>(ex);
-                        Assert.Equal($"OnEntry A B OnException A OnExit ", appender.ToString());
-                    }
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void Using()
-                {
-                    using (var transaction = Profiler.Start("Temp"))
-                    {
-                        Logger.Trace("A");
-                    }
+                    arg6 = 7;
+                    return (arg0, arg1, arg2, arg3);
                 }
 
                 [Fact]
-                public void Using_正しくアスペクトが適用される()
+                public void 引数を変更_引数7つ_正しくアスペクトが適用される()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    int arg6;
 
-                        Using();
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6);
 
-                        Assert.Equal($"OnEntry A OnSuccess null OnExit ", appender.ToString());
-                    }
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7,   arg6);
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void Lock()
+                #endregion
+
+                #region 引数8つ
+
+                [ChangeArguments]
+                private static (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7)
                 {
-                    lock (LockObject)
-                    {
-                        Logger.Trace("A");
-                    }
+                    arg6 = 7;
+                    arg7 = "8";
+                    return (arg0, arg1, arg2, arg3);
                 }
 
                 [Fact]
-                public void Lock_正しくアスペクトが適用される()
+                public void 引数を変更_引数8つ_正しくアスペクトが適用される()
                 {
-                    lock (LockObject)
+                    var    arg0 = 0;
+                    var    arg1 = "1";
+                    var    arg2 = 2;
+                    var    arg3 = "3";
+                    var    arg4 = 4;
+                    var    arg5 = "5";
+                    int    arg6;
+                    string arg7;
+
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7,   arg6);
+                    Assert.Equal("8", arg7);
+                }
+
+                #endregion
+
+                #region 引数9つ
+
+                [ChangeArguments]
+                private static (int, string, int, string, int) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7, int arg8)
+                {
+                    arg6 = 7;
+                    arg7 = "8";
+                    return (arg0, arg1, arg2, arg3, arg8);
+                }
+
+                [Fact]
+                public void 引数を変更_引数9つ_正しくアスペクトが適用される()
+                {
+                    var    arg0 = 0;
+                    var    arg1 = "1";
+                    var    arg2 = 2;
+                    var    arg3 = "3";
+                    var    arg4 = 4;
+                    var    arg5 = "5";
+                    int    arg6;
+                    string arg7;
+                    int    arg8 = 8;
+
+                    var (result0, result1, result2, result3, result8) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7, arg8);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7,   arg6);
+                    Assert.Equal("8", arg7);
+                    Assert.Equal(9,   result8);
+                }
+
+                #endregion
+            }
+
+            public class 戻り値
+            {
+                #region 参照型
+
+                private class ToUpper : OnMethodBoundaryAspect
+                {
+                    public override void OnSuccess(MethodExecutionArgs args)
                     {
-                        var appender = CreateAppender();
-
-                        Lock();
-
-                        Assert.Equal($"OnEntry A OnSuccess null OnExit ", appender.ToString());
+                        var returnValue = args.ReturnValue as string;
+                        args.ReturnValue = returnValue.ToUpper();
                     }
+                }
+
+                [ToUpper]
+                private static string 戻り値を大文字に変更(string arg1)
+                {
+                    return arg1;
+                }
+
+                [Fact]
+                public void 戻り値を大文字に変更_正しくアスペクトが適用される()
+                {
+                    var result = 戻り値を大文字に変更("a");
+
+                    Assert.Equal("A", result);
+                }
+
+                #endregion
+
+                #region 値型
+
+                private class Increment : OnMethodBoundaryAspect
+                {
+                    public override void OnSuccess(MethodExecutionArgs args)
+                    {
+                        var returnValue = (int)args.ReturnValue;
+                        args.ReturnValue = returnValue + 1;
+                    }
+                }
+
+                [Increment]
+                private static int 戻り値をインクリメント(int arg1)
+                {
+                    return arg1;
+                }
+
+                [Fact]
+                public void 戻り値をインクリメント_正しくアスペクトが適用される()
+                {
+                    var result = 戻り値をインクリメント(1);
+                    Assert.Equal(2, result);
                 }
 
                 #endregion
