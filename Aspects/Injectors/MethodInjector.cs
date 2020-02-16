@@ -164,7 +164,14 @@ namespace SoftCube.Aspects
                     var parameter     = parameters[parameterIndex];
                     var parameterType = parameter.ParameterType;
 
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    if (TargetMethod.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
                     if (parameterType.IsByReference)
                     {
                         processor.Emit(OpCodes.Ldind_I4);
@@ -188,7 +195,16 @@ namespace SoftCube.Aspects
 
                     processor.Emit(OpCodes.Dup);
                     processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+
+                    if (TargetMethod.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else 
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
+
                     if (parameterType.IsByReference)
                     {
                         var elementType = parameterType.GetElementType();
@@ -229,7 +245,14 @@ namespace SoftCube.Aspects
             AspectArgsVariable = variables.Count();
             variables.Add(new VariableDefinition(aspectArgsType));
 
-            processor.Emit(OpCodes.Ldarg_0);
+            if (TargetMethod.IsStatic)
+            {
+                processor.Emit(OpCodes.Ldnull);
+            }
+            else
+            {
+                processor.Emit(OpCodes.Ldarg_0);
+            }
             processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
 
             processor.Emit(OpCodes.Newobj, Module.ImportReference(aspectArgsType.Resolve().Methods.Single(m => m.Name == ".ctor")));
@@ -255,15 +278,25 @@ namespace SoftCube.Aspects
 
             /// 引数をスタックにロードします。
             /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
-            processor.Emit(OpCodes.Ldarg_0);
+            if (!TargetMethod.IsStatic)
+            {
+                processor.Emit(OpCodes.Ldarg_0);
+            }
 
             var parameters = TargetMethod.Parameters;
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
             {
-                processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                if (TargetMethod.IsStatic)
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                }
             }
 
-            processor.Emit(OpCodes.Callvirt, OriginalMethod);
+            processor.Emit(OpCodes.Call, OriginalMethod);
 
             /// 戻り値を AspectArgs.ReturnValue に設定します。
             if (OriginalMethod.HasReturnValue())
@@ -361,7 +394,14 @@ namespace SoftCube.Aspects
                     {
                         var elementType = parameterType.GetElementType();
 
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
 
                         processor.Emit(OpCodes.Ldloc, ObjectsVariable);
                         processor.Emit(OpCodes.Ldc_I4, parameterIndex);
@@ -382,7 +422,14 @@ namespace SoftCube.Aspects
                         {
                             processor.Emit(OpCodes.Unbox_Any, parameterType);
                         }
-                        processor.Emit(OpCodes.Starg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex + 1);
+                        }
                     }
                 }
             }
@@ -397,7 +444,14 @@ namespace SoftCube.Aspects
 
                     if (parameterType.IsByReference)
                     {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
                         processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
                         processor.Emit(OpCodes.Stind_I4);
@@ -406,7 +460,14 @@ namespace SoftCube.Aspects
                     {
                         processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
-                        processor.Emit(OpCodes.Starg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex + 1);
+                        }
                     }
                 }
             }
@@ -432,7 +493,14 @@ namespace SoftCube.Aspects
 
                         processor.Emit(OpCodes.Ldloc, ObjectsVariable);
                         processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
                         processor.Emit(OpCodes.Ldind_I4);
                         if (elementType.IsValueType)
                         {
@@ -444,7 +512,14 @@ namespace SoftCube.Aspects
                     {
                         processor.Emit(OpCodes.Ldloc, ObjectsVariable);
                         processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
                         if (parameterType.IsValueType)
                         {
                             processor.Emit(OpCodes.Box, parameterType);
@@ -465,14 +540,28 @@ namespace SoftCube.Aspects
                     if (parameterType.IsByReference)
                     {
                         processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
                         processor.Emit(OpCodes.Ldind_I4);
                         processor.Emit(OpCodes.Stfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
                     }
                     else
                     {
                         processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        if (TargetMethod.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
                         processor.Emit(OpCodes.Stfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
                     }
                 }
@@ -491,7 +580,6 @@ namespace SoftCube.Aspects
 
             processor.Emit(OpCodes.Stloc, exceptionVariable);
 
-            processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             processor.Emit(OpCodes.Ldloc, exceptionVariable);
             processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));

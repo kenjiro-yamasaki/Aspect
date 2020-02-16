@@ -99,7 +99,6 @@ namespace SoftCube.Aspects
                 }
             }
 
-
             public class OnEntry
             {
                 private static object Instance;
@@ -138,9 +137,6 @@ namespace SoftCube.Aspects
                     Assert.Null(Instance);
                 }
             }
-
-
-
 
             public class 引数
             {
