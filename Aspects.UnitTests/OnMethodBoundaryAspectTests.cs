@@ -1,5 +1,4 @@
 ﻿using SoftCube.Logging;
-using SoftCube.Profiling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -67,13 +66,13 @@ namespace SoftCube.Aspects
                 [EventLogger]
                 private void 正常()
                 {
-                    Logger.Trace("正常");
+                    Logger.Trace("A");
                 }
 
                 [EventLogger]
                 private void 例外()
                 {
-                    Logger.Trace("例外");
+                    Logger.Trace("A");
                     throw new InvalidOperationException();
                 }
 
@@ -84,7 +83,7 @@ namespace SoftCube.Aspects
 
                     正常();
 
-                    Assert.Equal($"OnEntry 正常 OnSuccess OnExit ", appender.ToString());
+                    Assert.Equal($"OnEntry A OnSuccess OnExit ", appender.ToString());
                 }
 
                 [Fact]
@@ -95,7 +94,7 @@ namespace SoftCube.Aspects
                     var exception = Record.Exception(() => 例外());
 
                     Assert.IsType<InvalidOperationException>(exception);
-                    Assert.Equal($"OnEntry 例外 OnException OnExit ", appender.ToString());
+                    Assert.Equal($"OnEntry A OnException OnExit ", appender.ToString());
                 }
             }
 
@@ -540,13 +539,13 @@ namespace SoftCube.Aspects
                 [EventLogger]
                 private static void 正常()
                 {
-                    Logger.Trace("正常");
+                    Logger.Trace("A");
                 }
 
                 [EventLogger]
                 private static void 例外()
                 {
-                    Logger.Trace("例外");
+                    Logger.Trace("A");
                     throw new InvalidOperationException();
                 }
 
@@ -557,7 +556,7 @@ namespace SoftCube.Aspects
 
                     正常();
 
-                    Assert.Equal($"OnEntry 正常 OnSuccess OnExit ", appender.ToString());
+                    Assert.Equal($"OnEntry A OnSuccess OnExit ", appender.ToString());
                 }
 
                 [Fact]
@@ -568,7 +567,7 @@ namespace SoftCube.Aspects
                     var exception = Record.Exception(() => 例外());
 
                     Assert.IsType<InvalidOperationException>(exception);
-                    Assert.Equal($"OnEntry 例外 OnException OnExit ", appender.ToString());
+                    Assert.Equal($"OnEntry A OnException OnExit ", appender.ToString());
                 }
             }
 
@@ -943,1374 +942,469 @@ namespace SoftCube.Aspects
 
         public class イテレーターメソッド
         {
-            public class 署名
+            public class イベントハンドラーの呼びだし順序
             {
-                #region 引数の個数
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数なし()
+                private class EventLogger : OnMethodBoundaryAspect
                 {
-                    yield break;
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnEntry");
+                    }
+
+                    public override void OnSuccess(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnSuccess");
+                    }
+
+                    public override void OnException(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnException");
+                    }
+
+                    public override void OnExit(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnExit");
+                    }
+
+                    public override void OnResume(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnResume");
+                    }
+
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnYield");
+                    }
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が1つ(string arg1)
+                [EventLogger]
+                private IEnumerable<int> 正常()
                 {
-                    yield return arg1;
+                    Logger.Trace("A");
+                    yield return 0;
+                    Logger.Trace("B");
+                    yield return 1;
+                    Logger.Trace("C");
                 }
 
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が2つ(string arg1, string arg2)
+                [EventLogger]
+                private IEnumerable<int> 例外()
                 {
-                    yield return arg1;
-                    yield return arg2;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が3つ(string arg1, string arg2, string arg3)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が4つ(string arg1, string arg2, string arg3, string arg4)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が5つ(string arg1, string arg2, string arg3, string arg4, string arg5)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が6つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が7つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が8つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                    yield return arg8;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> 引数が9つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                    yield return arg8;
-                    yield return arg9;
+                    Logger.Trace("A");
+                    yield return 0;
+                    Logger.Trace("B");
+                    yield return 1;
+                    Logger.Trace("C");
+                    throw new InvalidOperationException();
                 }
 
                 [Fact]
-                public void 引数なし_正しくアスペクトが適用される()
+                public void 正常_イベントハンドラーが正しくよばれる()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
+                    var appender = CreateAppender();
 
-                        foreach (var @int in 引数なし())
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
+                    正常().ToList();
 
-                        Assert.Equal($"OnEntry OnSuccess OnExit ", appender.ToString());
-                    }
+                    Assert.Equal($"OnEntry A OnYield OnResume B OnYield OnResume C OnSuccess OnExit ", appender.ToString());
                 }
 
                 [Fact]
-                public void 引数が1つ_正しくアスペクトが適用される()
+                public void 例外_イベントハンドラーが正しくよばれる()
                 {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
+                    var appender = CreateAppender();
 
-                        foreach (var @int in 引数が1つ("a"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
+                    var exception = Record.Exception(() => 例外().ToList());
 
-                        Assert.Equal($"OnEntry \"a\" OnYield \"a\" a OnResume OnSuccess OnExit ", appender.ToString());
-                    }
+                    Assert.IsType<InvalidOperationException>(exception);
+                    Assert.Equal($"OnEntry A OnYield OnResume B OnYield OnResume C OnException OnExit ", appender.ToString());
                 }
-
-                [Fact]
-                public void 引数が2つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が2つ("a", "b"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が3つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が3つ("a", "b", "c"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が4つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が4つ("a", "b", "c", "d"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が5つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が5つ("a", "b", "c", "d", "e"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が6つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が6つ("a", "b", "c", "d", "e", "f"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が7つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が7つ("a", "b", "c", "d", "e", "f", "g"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が8つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が8つ("a", "b", "c", "d", "e", "f", "g", "h"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnYield \"h\" h OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が9つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var @int in 引数が9つ("a", "b", "c", "d", "e", "f", "g", "h", "i"))
-                        {
-                            Logger.Trace(@int.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" \"i\" OnYield \"a\" a OnResume OnYield \"b\" b OnResume OnYield \"c\" c OnResume OnYield \"d\" d OnResume OnYield \"e\" e OnResume OnYield \"f\" f OnResume OnYield \"g\" g OnResume OnYield \"h\" h OnResume OnYield \"i\" i OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region 引数と戻り値の型
-
-                #region int
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<int> @int(int arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void int_正しくアスペクトが適用される(int arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @int(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region short
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<short> @short(short arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void short_正しくアスペクトが適用される(short arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @short(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region long
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<long> @long(long arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void long_正しくアスペクトが適用される(long arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @long(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region sbyte
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<sbyte> @sbyte(sbyte arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void sbyte_正しくアスペクトが適用される(sbyte arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @sbyte(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region uint
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<uint> @uint(uint arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void uint_正しくアスペクトが適用される(uint arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @uint(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region ushort
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<ushort> @ushort(ushort arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void ushort_正しくアスペクトが適用される(ushort arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @ushort(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region ulong
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<ulong> @ulong(ulong arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void ulong_正しくアスペクトが適用される(ulong arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @ulong(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region byte
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<byte> @byte(byte arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void byte_正しくアスペクトが適用される(byte arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @byte(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region bool
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<bool> @bool(bool arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(true)]
-                [InlineData(false)]
-                public void bool_正しくアスペクトが適用される(bool arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @bool(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region double
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<double> @double(double arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0.0)]
-                [InlineData(0.5)]
-                [InlineData(1.0)]
-                [InlineData(100.0)]
-                [InlineData(-0.5)]
-                [InlineData(-1.0)]
-                [InlineData(-100.0)]
-                public void double_正しくアスペクトが適用される(double arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @double(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region float
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<float> @float(float arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0.0)]
-                [InlineData(0.5)]
-                [InlineData(1.0)]
-                [InlineData(100.0)]
-                [InlineData(-0.5)]
-                [InlineData(-1.0)]
-                [InlineData(-100.0)]
-                public void float_正しくアスペクトが適用される(float arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @float(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region decimal
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<decimal> @decimal(decimal arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData(0.0)]
-                [InlineData(0.5)]
-                [InlineData(1.0)]
-                [InlineData(100.0)]
-                [InlineData(-0.5)]
-                [InlineData(-1.0)]
-                [InlineData(-100.0)]
-                public void decimal_正しくアスペクトが適用される(decimal arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @decimal(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region char
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<char> @char(char arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData('a')]
-                [InlineData('あ')]
-                public void char_正しくアスペクトが適用される(char arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @char(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry '{arg}' OnYield '{arg}' {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region string
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<string> @string(string arg)
-                {
-                    yield return arg;
-                }
-
-                [Theory]
-                [InlineData("a")]
-                [InlineData("あ")]
-                public void string_正しくアスペクトが適用される(string arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        foreach (var result in @string(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry \"{arg}\" OnYield \"{arg}\" {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region class
-
-                public class Class
-                {
-                    public string Property { get; set; }
-
-                    public override string ToString() => Property;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<Class> @class(Class arg)
-                {
-                    yield return arg;
-                }
-
-                [Fact]
-                public void class_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var arg = new Class() { Property = "a" };
-
-                        foreach (var result in @class(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region struct
-
-                public struct Struct
-                {
-                    public string Property { get; set; }
-
-                    public override string ToString() => Property;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<Struct> @struct(Struct arg)
-                {
-                    yield return arg;
-                }
-
-                [Fact]
-                public void struct_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var arg = new Struct() { Property = "a" };
-
-                        foreach (var result in @struct(arg))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry {arg} OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region IEnumerable
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable IEnumerable(IEnumerable collection)
-                {
-                    foreach (var item in collection)
-                    {
-                        yield return item;
-                    }
-                }
-
-                [Fact]
-                public void IEnumerable_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        int arg = 7;
-
-                        foreach (var result in IEnumerable(new List<int>() { arg }))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry [{arg}] OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region IEnumerableT
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<int> IEnumerableT(IEnumerable<int> collection)
-                {
-                    foreach (var item in collection)
-                    {
-                        yield return item;
-                    }
-                }
-
-                [Fact]
-                public void IEnumerableT_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        int arg = 7;
-
-                        foreach (var result in IEnumerableT(new List<int>() { arg }))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry [{arg}] OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region ListT
-
-                [OnMethodBoundaryAspectLogger(MethodType.IteratorMethod)]
-                private IEnumerable<int> ListT(List<int> collection)
-                {
-                    foreach (var item in collection)
-                    {
-                        yield return item;
-                    }
-                }
-
-                [Fact]
-                public void ListT_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        int arg = 7;
-
-                        foreach (var result in ListT(new List<int>() { arg }))
-                        {
-                            Logger.Trace(result.ToString());
-                        }
-
-                        Assert.Equal($"OnEntry [{arg}] OnYield {arg} {arg} OnResume OnSuccess OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #endregion
             }
 
-            public class 引数の変更
+            public class AspectArgs
             {
-                #region 参照型
+                private static object Instance;
 
-                private class ToUpperAspect : OnMethodBoundaryAspect
+                private class OnEntrySpy : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        Instance = args.Instance;
+                    }
+                }
+
+                [OnEntrySpy]
+                private IEnumerable<int> メソッド()
+                {
+                    yield return 0;
+                    yield return 1;
+                }
+
+                [Fact]
+                public void メソッド_正しくアスペクトが適用される()
+                {
+                    メソッド().ToList();
+
+                    Assert.Same(this, Instance);
+                }
+            }
+
+            public class 引数
+            {
+                private class ChangeArguments : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
                         for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
                         {
-                            var argument = args.Arguments[argumentIndex] as string;
-                            args.Arguments[argumentIndex] = argument.ToUpper();
+                            switch (args.Arguments[argumentIndex])
+                            {
+                                case int argument:
+                                    args.Arguments[argumentIndex] = argument + 1;
+                                    break;
+
+                                case string argument:
+                                    args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                                    break;
+
+                                case null:
+                                    break;
+
+                                default:
+                                    throw new NotSupportedException();
+                            }
                         }
                     }
                 }
 
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1)
-                {
-                    yield return arg1;
-                }
+                #region 引数1つ
 
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2)
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0)
                 {
-                    yield return arg1;
-                    yield return arg2;
-                }
-
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                }
-
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                }
-
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                }
-
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                }
-
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                }
-
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                    yield return arg8;
-                }
-
-                [ToUpperAspect]
-                private IEnumerable<string> 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                    yield return arg8;
-                    yield return arg9;
+                    yield return arg0;
                 }
 
                 [Fact]
-                public void 引数を大文字に変更_引数が1つ_正しくアスペクトが適用される()
+                public void 引数を変更_引数1つ_正しくアスペクトが適用される()
                 {
-                    var result = 引数を大文字に変更("a").ToList();
+                    var arg0 = 0;
 
-                    Assert.Equal("A", result[0]);
-                }
+                    var result = 引数を変更(arg0).ToList();
 
-                [Fact]
-                public void 引数を大文字に変更_引数が2つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が3つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b", "c").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                    Assert.Equal("C", result[2]);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が4つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b", "c", "d").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                    Assert.Equal("C", result[2]);
-                    Assert.Equal("D", result[3]);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が5つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b", "c", "d", "e").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                    Assert.Equal("C", result[2]);
-                    Assert.Equal("D", result[3]);
-                    Assert.Equal("E", result[4]);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が6つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                    Assert.Equal("C", result[2]);
-                    Assert.Equal("D", result[3]);
-                    Assert.Equal("E", result[4]);
-                    Assert.Equal("F", result[5]);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が7つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                    Assert.Equal("C", result[2]);
-                    Assert.Equal("D", result[3]);
-                    Assert.Equal("E", result[4]);
-                    Assert.Equal("F", result[5]);
-                    Assert.Equal("G", result[6]);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が8つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                    Assert.Equal("C", result[2]);
-                    Assert.Equal("D", result[3]);
-                    Assert.Equal("E", result[4]);
-                    Assert.Equal("F", result[5]);
-                    Assert.Equal("G", result[6]);
-                    Assert.Equal("H", result[7]);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が9つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h", "i").ToList();
-
-                    Assert.Equal("A", result[0]);
-                    Assert.Equal("B", result[1]);
-                    Assert.Equal("C", result[2]);
-                    Assert.Equal("D", result[3]);
-                    Assert.Equal("E", result[4]);
-                    Assert.Equal("F", result[5]);
-                    Assert.Equal("G", result[6]);
-                    Assert.Equal("H", result[7]);
-                    Assert.Equal("I", result[8]);
+                    Assert.Single(result);
+                    Assert.Equal(1, result[0]);
                 }
 
                 #endregion
 
+                #region 引数2つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                }
+
+                [Fact]
+                public void 引数を変更_引数2つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+
+                    var result = 引数を変更(arg0, arg1).ToList();
+
+                    Assert.Equal(2, result.Count);
+                    Assert.Equal(1, result[0]);
+                    Assert.Equal("2", result[1]);
+                }
+
+                #endregion
+
+                #region 引数3つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                }
+
+                [Fact]
+                public void 引数を変更_引数3つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+
+                    var result = 引数を変更(arg0, arg1, arg2).ToList();
+
+                    Assert.Equal(3, result.Count);
+                    Assert.Equal(1, result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3, result[2]);
+                }
+
+                #endregion
+
+                #region 引数4つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                }
+
+                [Fact]
+                public void 引数を変更_引数4つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3).ToList();
+
+                    Assert.Equal(4,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                }
+
+                #endregion
+
+                #region 引数5つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                }
+
+                [Fact]
+                public void 引数を変更_引数5つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4).ToList();
+
+                    Assert.Equal(5,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                }
+
+                #endregion
+
+                #region 引数6つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                }
+
+                [Fact]
+                public void 引数を変更_引数6つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5).ToList();
+
+                    Assert.Equal(6,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                }
+
+                #endregion
+
+                #region 引数7つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                }
+
+                [Fact]
+                public void 引数を変更_引数7つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6).ToList();
+
+                    Assert.Equal(7,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                    Assert.Equal(7,   result[6]);
+                }
+
+                #endregion
+
+                #region 引数8つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6, string arg7)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                }
+
+                [Fact]
+                public void 引数を変更_引数8つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+                    var arg7 = "7";
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7).ToList();
+
+                    Assert.Equal(8,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                    Assert.Equal(7,   result[6]);
+                    Assert.Equal("8", result[7]);
+                }
+
+                #endregion
+
+                #region 引数9つ
+
+                [ChangeArguments]
+                private IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6, string arg7, int arg8)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                    yield return arg8;
+                }
+
+                [Fact]
+                public void 引数を変更_引数9つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+                    var arg7 = "7";
+                    var arg8 = 8;
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8).ToList();
+
+                    Assert.Equal(9,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                    Assert.Equal(7,   result[6]);
+                    Assert.Equal("8", result[7]);
+                    Assert.Equal(9,   result[8]);
+                }
+
+                #endregion
+            }
+
+            public class 戻り値
+            {
                 #region 値型
 
-                private class IncrementAspect : OnMethodBoundaryAspect
+                private class Increment : OnMethodBoundaryAspect
                 {
-                    public override void OnEntry(MethodExecutionArgs args)
+                    public override void OnYield(MethodExecutionArgs args)
                     {
-                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                        {
-                            var argument = (int)args.Arguments[argumentIndex];
-                            args.Arguments[argumentIndex] = argument + 1;
-                        }
+                        var yieldValue = (int)args.YieldValue;
+                        args.YieldValue = yieldValue + 1;
                     }
                 }
 
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1)
+                [Increment]
+                private IEnumerable<int> 戻り値をインクリメント(int arg1)
                 {
                     yield return arg1;
                 }
 
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                }
-
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                }
-
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                }
-
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                }
-
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                }
-
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                }
-
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                    yield return arg8;
-                }
-
-                [IncrementAspect]
-                private IEnumerable<int> 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9)
-                {
-                    yield return arg1;
-                    yield return arg2;
-                    yield return arg3;
-                    yield return arg4;
-                    yield return arg5;
-                    yield return arg6;
-                    yield return arg7;
-                    yield return arg8;
-                    yield return arg9;
-                }
-
                 [Fact]
-                public void 引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
+                public void 戻り値をインクリメント_正しくアスペクトが適用される()
                 {
-                    var result = 引数をインクリメント(1).ToList();
-
+                    var result = 戻り値をインクリメント(1).ToList();
                     Assert.Equal(2, result[0]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2, 3).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                    Assert.Equal(4, result[2]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2, 3, 4).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                    Assert.Equal(4, result[2]);
-                    Assert.Equal(5, result[3]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2, 3, 4, 5).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                    Assert.Equal(4, result[2]);
-                    Assert.Equal(5, result[3]);
-                    Assert.Equal(6, result[4]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                    Assert.Equal(4, result[2]);
-                    Assert.Equal(5, result[3]);
-                    Assert.Equal(6, result[4]);
-                    Assert.Equal(7, result[5]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                    Assert.Equal(4, result[2]);
-                    Assert.Equal(5, result[3]);
-                    Assert.Equal(6, result[4]);
-                    Assert.Equal(7, result[5]);
-                    Assert.Equal(8, result[6]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                    Assert.Equal(4, result[2]);
-                    Assert.Equal(5, result[3]);
-                    Assert.Equal(6, result[4]);
-                    Assert.Equal(7, result[5]);
-                    Assert.Equal(8, result[6]);
-                    Assert.Equal(9, result[7]);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8, 9).ToList();
-
-                    Assert.Equal(2, result[0]);
-                    Assert.Equal(3, result[1]);
-                    Assert.Equal(4, result[2]);
-                    Assert.Equal(5, result[3]);
-                    Assert.Equal(6, result[4]);
-                    Assert.Equal(7, result[5]);
-                    Assert.Equal(8, result[6]);
-                    Assert.Equal(9, result[7]);
-                    Assert.Equal(10, result[8]);
                 }
 
                 #endregion
-            }
 
-            public class 戻り値の変更
-            {
                 #region 参照型
 
-                private class ToUpperAspect : OnMethodBoundaryAspect
+                private class ToUpper : OnMethodBoundaryAspect
                 {
                     public override void OnYield(MethodExecutionArgs args)
                     {
@@ -2319,7 +1413,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [ToUpperAspect]
+                [ToUpper]
                 private IEnumerable<string> 戻り値を大文字に変更(string arg1)
                 {
                     yield return arg1;
@@ -2333,10 +1427,487 @@ namespace SoftCube.Aspects
                 }
 
                 #endregion
+            }
 
+            public class 仮想関数
+            {
+                private class ToUpperAspect : OnMethodBoundaryAspect
+                {
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        args.YieldValue = ((string)args.YieldValue).ToUpper();
+                    }
+                }
+
+                private abstract class Base
+                {
+                    public abstract IEnumerable<string> 戻り値を大文字に変更(string arg0, string arg1);
+                }
+
+                private class Derived : Base
+                {
+                    [ToUpperAspect]
+                    public override IEnumerable<string> 戻り値を大文字に変更(string arg0, string arg1)
+                    {
+                        yield return arg0;
+                        yield return arg1;
+                    }
+                }
+
+                [Fact]
+                public void 戻り値を大文字に変更_正しくアスペクトが適用される()
+                {
+                    var arg0 = "a";
+                    var arg1 = "b";
+
+                    var result = new Derived().戻り値を大文字に変更(arg0, arg1).ToList();
+
+                    Assert.Equal(2, result.Count);
+                    Assert.Equal("A", result[0]);
+                    Assert.Equal("B", result[1]);
+                }
+            }
+        }
+
+        public class 静的イテレーターメソッド
+        {
+            public class イベントハンドラーの呼びだし順序
+            {
+                private class EventLogger : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnEntry");
+                    }
+
+                    public override void OnSuccess(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnSuccess");
+                    }
+
+                    public override void OnException(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnException");
+                    }
+
+                    public override void OnExit(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnExit");
+                    }
+
+                    public override void OnResume(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnResume");
+                    }
+
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnYield");
+                    }
+                }
+
+                [EventLogger]
+                private static IEnumerable<int> 正常()
+                {
+                    Logger.Trace("A");
+                    yield return 0;
+                    Logger.Trace("B");
+                    yield return 1;
+                    Logger.Trace("C");
+                }
+
+                [EventLogger]
+                private static IEnumerable<int> 例外()
+                {
+                    Logger.Trace("A");
+                    yield return 0;
+                    Logger.Trace("B");
+                    yield return 1;
+                    Logger.Trace("C");
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 正常_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    正常().ToList();
+
+                    Assert.Equal($"OnEntry A OnYield OnResume B OnYield OnResume C OnSuccess OnExit ", appender.ToString());
+                }
+
+                [Fact]
+                public void 例外_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var exception = Record.Exception(() => 例外().ToList());
+
+                    Assert.IsType<InvalidOperationException>(exception);
+                    Assert.Equal($"OnEntry A OnYield OnResume B OnYield OnResume C OnException OnExit ", appender.ToString());
+                }
+            }
+
+            public class AspectArgs
+            {
+                private static object Instance;
+
+                private class OnEntrySpy : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        Instance = args.Instance;
+                    }
+                }
+
+                [OnEntrySpy]
+                private static IEnumerable<int> メソッド()
+                {
+                    yield return 0;
+                    yield return 1;
+                }
+
+                [Fact]
+                public void メソッド_正しくアスペクトが適用される()
+                {
+                    メソッド().ToList();
+
+                    Assert.Null(Instance);
+                }
+            }
+
+            public class 引数
+            {
+                private class ChangeArguments : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            switch (args.Arguments[argumentIndex])
+                            {
+                                case int argument:
+                                    args.Arguments[argumentIndex] = argument + 1;
+                                    break;
+
+                                case string argument:
+                                    args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                                    break;
+
+                                case null:
+                                    break;
+
+                                default:
+                                    throw new NotSupportedException();
+                            }
+                        }
+                    }
+                }
+
+                #region 引数1つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0)
+                {
+                    yield return arg0;
+                }
+
+                [Fact]
+                public void 引数を変更_引数1つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+
+                    var result = 引数を変更(arg0).ToList();
+
+                    Assert.Single(result);
+                    Assert.Equal(1, result[0]);
+                }
+
+                #endregion
+
+                #region 引数2つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                }
+
+                [Fact]
+                public void 引数を変更_引数2つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+
+                    var result = 引数を変更(arg0, arg1).ToList();
+
+                    Assert.Equal(2, result.Count);
+                    Assert.Equal(1, result[0]);
+                    Assert.Equal("2", result[1]);
+                }
+
+                #endregion
+
+                #region 引数3つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                }
+
+                [Fact]
+                public void 引数を変更_引数3つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+
+                    var result = 引数を変更(arg0, arg1, arg2).ToList();
+
+                    Assert.Equal(3, result.Count);
+                    Assert.Equal(1, result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3, result[2]);
+                }
+
+                #endregion
+
+                #region 引数4つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                }
+
+                [Fact]
+                public void 引数を変更_引数4つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3).ToList();
+
+                    Assert.Equal(4,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                }
+
+                #endregion
+
+                #region 引数5つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                }
+
+                [Fact]
+                public void 引数を変更_引数5つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4).ToList();
+
+                    Assert.Equal(5,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                }
+
+                #endregion
+
+                #region 引数6つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                }
+
+                [Fact]
+                public void 引数を変更_引数6つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5).ToList();
+
+                    Assert.Equal(6,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                }
+
+                #endregion
+
+                #region 引数7つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                }
+
+                [Fact]
+                public void 引数を変更_引数7つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6).ToList();
+
+                    Assert.Equal(7,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                    Assert.Equal(7,   result[6]);
+                }
+
+                #endregion
+
+                #region 引数8つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6, string arg7)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                }
+
+                [Fact]
+                public void 引数を変更_引数8つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+                    var arg7 = "7";
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7).ToList();
+
+                    Assert.Equal(8,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                    Assert.Equal(7,   result[6]);
+                    Assert.Equal("8", result[7]);
+                }
+
+                #endregion
+
+                #region 引数9つ
+
+                [ChangeArguments]
+                private static IEnumerable<object> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6, string arg7, int arg8)
+                {
+                    yield return arg0;
+                    yield return arg1;
+                    yield return arg2;
+                    yield return arg3;
+                    yield return arg4;
+                    yield return arg5;
+                    yield return arg6;
+                    yield return arg7;
+                    yield return arg8;
+                }
+
+                [Fact]
+                public void 引数を変更_引数9つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+                    var arg7 = "7";
+                    var arg8 = 8;
+
+                    var result = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8).ToList();
+
+                    Assert.Equal(9,   result.Count);
+                    Assert.Equal(1,   result[0]);
+                    Assert.Equal("2", result[1]);
+                    Assert.Equal(3,   result[2]);
+                    Assert.Equal("4", result[3]);
+                    Assert.Equal(5,   result[4]);
+                    Assert.Equal("6", result[5]);
+                    Assert.Equal(7,   result[6]);
+                    Assert.Equal("8", result[7]);
+                    Assert.Equal(9,   result[8]);
+                }
+
+                #endregion
+            }
+
+            public class 戻り値
+            {
                 #region 値型
 
-                private class IncrementAspect : OnMethodBoundaryAspect
+                private class Increment : OnMethodBoundaryAspect
                 {
                     public override void OnYield(MethodExecutionArgs args)
                     {
@@ -2345,8 +1916,8 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [IncrementAspect]
-                private IEnumerable<int> 戻り値をインクリメント(int arg1)
+                [Increment]
+                private static IEnumerable<int> 戻り値をインクリメント(int arg1)
                 {
                     yield return arg1;
                 }
@@ -2356,6 +1927,32 @@ namespace SoftCube.Aspects
                 {
                     var result = 戻り値をインクリメント(1).ToList();
                     Assert.Equal(2, result[0]);
+                }
+
+                #endregion
+
+                #region 参照型
+
+                private class ToUpper : OnMethodBoundaryAspect
+                {
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        var yieldValue = args.YieldValue as string;
+                        args.YieldValue = yieldValue.ToUpper();
+                    }
+                }
+
+                [ToUpper]
+                private static IEnumerable<string> 戻り値を大文字に変更(string arg1)
+                {
+                    yield return arg1;
+                }
+
+                [Fact]
+                public void 戻り値を大文字に変更_正しくアスペクトが適用される()
+                {
+                    var result = 戻り値を大文字に変更("a").ToList();
+                    Assert.Equal("A", result[0]);
                 }
 
                 #endregion

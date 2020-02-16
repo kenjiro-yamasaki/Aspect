@@ -1,5 +1,7 @@
 ﻿using SoftCube.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +18,7 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            静的メソッド();
+            var result = 静的メソッド("a").ToList();
 
 
             //var program = new Program();
@@ -49,8 +51,9 @@ namespace SoftCube.Aspects
         }
 
         [OnEntrySpy]
-        private static void 静的メソッド()
+        private static IEnumerable<string> 静的メソッド(string arg0)
         {
+            yield return arg0;
         }
 
 

@@ -214,12 +214,21 @@ namespace SoftCube.Aspects
         public void CreateAspectArgsInstance(ILProcessor processor, Instruction insert)
         {
             processor.Insert(insert, OpCodes.Ldarg_0);
-            processor.Insert(insert, OpCodes.Ldarg_0);
-            processor.Insert(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
-            if (TargetMethod.DeclaringType.IsValueType)
+
+            if (TargetMethod.IsStatic)
             {
-                processor.Insert(insert, OpCodes.Box, TargetMethod.DeclaringType);
+                processor.Insert(insert, OpCodes.Ldnull);
             }
+            else
+            {
+                processor.Insert(insert, OpCodes.Ldarg_0);
+                processor.Insert(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
+                if (TargetMethod.DeclaringType.IsValueType)
+                {
+                    processor.Insert(insert, OpCodes.Box, TargetMethod.DeclaringType);
+                }
+            }
+
             processor.Insert(insert, OpCodes.Ldarg_0);
             {
                 var parameters = TargetMethod.Parameters;
