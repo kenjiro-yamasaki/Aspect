@@ -545,7 +545,22 @@ namespace SoftCube.Aspects
             ///             aspect.OnSuccess(aspectArgs);
             ///             result = (TResult)aspectArgs.ReturnValue;
             ///         }
-            var leave = outerCatch.HandlerStart.Previous;
+            Instruction leave;
+            {
+                var instruction = outerCatch.HandlerStart.Previous;
+                if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
+                {
+                    leave = instruction;
+                }
+                else if (instruction.OpCode == OpCodes.Throw)
+                {
+                    leave = processor.InsertLeave(instruction.Next, OpCodes.Leave);
+                }
+                else
+                {
+                    throw new NotSupportedException();
+                }
+            }
             {
                 var insert = leave;
                 var branch = new Instruction[2];

@@ -18,8 +18,12 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            var result = 静的メソッド("a").ToList();
+            var program = new Program();
 
+            var task = program.例外();
+            Logger.Trace("1");
+            task.Wait();
+            Logger.Trace("8");
 
             //var program = new Program();
 
@@ -39,67 +43,69 @@ namespace SoftCube.Aspects
             Console.Read();
         }
 
-
-        private static object Instance;
-
-        private class OnEntrySpy : OnMethodBoundaryAspect
+        private class EventLogger : OnMethodBoundaryAspect
         {
             public override void OnEntry(MethodExecutionArgs args)
             {
-                Instance = args.Instance;
+                Logger.Trace("OnEntry");
+            }
+
+            public override void OnSuccess(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnSuccess");
+            }
+
+            public override void OnException(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnException");
+            }
+
+            public override void OnExit(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnExit");
+            }
+
+            public override void OnResume(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnResume");
+            }
+
+            public override void OnYield(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnYield");
             }
         }
 
-        [OnEntrySpy]
-        private static IEnumerable<string> 静的メソッド(string arg0)
+        [EventLogger]
+        private async Task 例外()
         {
-            yield return arg0;
+            Logger.Trace("0");
+
+            await Task.Run(() =>
+            {
+                Thread.Sleep(10);
+                Logger.Trace("2");
+            });
+
+            //Logger.Trace("3");
+
+            //await Task.Run(() =>
+            //{
+            //    Thread.Sleep(10);
+            //    Logger.Trace("4");
+            //});
+
+            //Logger.Trace("5");
+
+            //await Task.Run(() =>
+            //{
+            //    Thread.Sleep(10);
+            //    Logger.Trace("6");
+            //});
+
+            //Logger.Trace("7");
+            throw new InvalidOperationException();
         }
 
-
-
-
-        //private class IncrementAspect : OnMethodBoundaryAspect
-        //{
-        //    public override void OnSuccess(MethodExecutionArgs args)
-        //    {
-        //        args.Arguments.SetArgument(0, (int)args.Arguments.GetArgument(0) + 1);
-        //        args.Arguments.SetArgument(1, (int)args.Arguments.GetArgument(1) + 1);
-        //        args.Arguments.SetArgument(2, (int)args.Arguments.GetArgument(2) + 1);
-        //        args.Arguments.SetArgument(3, (int)args.Arguments.GetArgument(3) + 1);
-        //        args.Arguments.SetArgument(4, (int)args.Arguments.GetArgument(4) + 1);
-        //        args.Arguments.SetArgument(5, (int)args.Arguments.GetArgument(5) + 1);
-        //        args.Arguments.SetArgument(6, (int)args.Arguments.GetArgument(6) + 1);
-        //        args.Arguments.SetArgument(7, (int)args.Arguments.GetArgument(7) + 1);
-        //        //args.Arguments.SetArgument(8, (int)args.Arguments.GetArgument(8) + 1);
-        //    }
-        //}
-
-        ////[IncrementAspect]
-        ////private static void 出力引数をインクリメント(out int arg1, int arg2, out int arg3, out int arg4, out int arg5, out int arg6, out int arg7, out int arg8, out int arg9)
-        ////{
-        ////    arg1 = 1;
-        ////    arg2 = 2;
-        ////    arg3 = 3;
-        ////    arg4 = 4;
-        ////    arg5 = 5;
-        ////    arg6 = 6;
-        ////    arg7 = 7;
-        ////    arg8 = 8;
-        ////    arg9 = 9;
-        ////}
-
-        //[IncrementAspect]
-        //private static void 出力引数をインクリメント(out int arg1, int arg2, out int arg3, out int arg4, out int arg5, out int arg6, out int arg7, out int arg8)
-        //{
-        //    arg1 = 1;
-        //    arg2 = 2;
-        //    arg3 = 3;
-        //    arg4 = 4;
-        //    arg5 = 5;
-        //    arg6 = 6;
-        //    arg7 = 7;
-        //    arg8 = 8;
-        //}
     }
 }
