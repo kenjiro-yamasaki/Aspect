@@ -32,7 +32,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="method">メソッド。</param>
         /// <param name="aspect">アスペクト。</param>
-        protected override void OnInject(MethodDefinition method, CustomAttribute aspect)
+        sealed protected override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
             var iteratorStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
             var asyncStateMachineAttribute    = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");

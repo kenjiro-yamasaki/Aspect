@@ -29,1297 +29,419 @@ namespace SoftCube.Aspects
 
         public class 通常のメソッド
         {
-            public class 署名
+            public class イベントハンドラーの呼びだし順序
             {
-                #region 引数と戻り値なし
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数と戻り値なし()
-                {
-                    Logger.Trace("A");
-                }
-
-                [Fact]
-                public void 引数と戻り値なし_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数と戻り値なし();
-
-                        Assert.Equal($"OnEntry A OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region 引数のみ
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数のみ(int arg)
-                {
-                    Logger.Trace("A");
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void 引数のみ_正しくアスペクトが適用される(int arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数のみ(arg);
-
-                        Assert.Equal($"OnEntry {arg} A OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region 引数の個数
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が1つ(string arg1)
-                {
-                    Logger.Trace(arg1);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が2つ(string arg1, string arg2)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が3つ(string arg1, string arg2, string arg3)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                    Logger.Trace(arg3);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が4つ(string arg1, string arg2, string arg3, string arg4)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                    Logger.Trace(arg3);
-                    Logger.Trace(arg4);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が5つ(string arg1, string arg2, string arg3, string arg4, string arg5)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                    Logger.Trace(arg3);
-                    Logger.Trace(arg4);
-                    Logger.Trace(arg5);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が6つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                    Logger.Trace(arg3);
-                    Logger.Trace(arg4);
-                    Logger.Trace(arg5);
-                    Logger.Trace(arg6);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が7つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                    Logger.Trace(arg3);
-                    Logger.Trace(arg4);
-                    Logger.Trace(arg5);
-                    Logger.Trace(arg6);
-                    Logger.Trace(arg7);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が8つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                    Logger.Trace(arg3);
-                    Logger.Trace(arg4);
-                    Logger.Trace(arg5);
-                    Logger.Trace(arg6);
-                    Logger.Trace(arg7);
-                    Logger.Trace(arg8);
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private void 引数が9つ(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
-                {
-                    Logger.Trace(arg1);
-                    Logger.Trace(arg2);
-                    Logger.Trace(arg3);
-                    Logger.Trace(arg4);
-                    Logger.Trace(arg5);
-                    Logger.Trace(arg6);
-                    Logger.Trace(arg7);
-                    Logger.Trace(arg8);
-                    Logger.Trace(arg9);
-                }
-
-                [Fact]
-                public void 引数が1つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が1つ("a");
-
-                        Assert.Equal($"OnEntry \"a\" a OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が2つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が2つ("a", "b");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" a b OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が3つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が3つ("a", "b", "c");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" a b c OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が4つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が4つ("a", "b", "c", "d");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" a b c d OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が5つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が5つ("a", "b", "c", "d", "e");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" a b c d e OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が6つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が6つ("a", "b", "c", "d", "e", "f");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" a b c d e f OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が7つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が7つ("a", "b", "c", "d", "e", "f", "g");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" a b c d e f g OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が8つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が8つ("a", "b", "c", "d", "e", "f", "g", "h");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" a b c d e f g h OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void 引数が9つ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        引数が9つ("a", "b", "c", "d", "e", "f", "g", "h", "i");
-
-                        Assert.Equal($"OnEntry \"a\" \"b\" \"c\" \"d\" \"e\" \"f\" \"g\" \"h\" \"i\" a b c d e f g h i OnSuccess null OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region 戻り値のみ
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private int 戻り値のみ()
-                {
-                    Logger.Trace("A");
-                    return 7;
-                }
-
-                [Fact]
-                public void 戻り値のみ_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = 戻り値のみ();
-
-                        Assert.Equal(7, result);
-                        Assert.Equal($"OnEntry A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region さまざまな型の引数と戻り値
-
-                #region int
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private int @int(int arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void int_正しくアスペクトが適用される(int arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @int(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region short
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private short @short(short arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void short_正しくアスペクトが適用される(short arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @short(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region long
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private long @long(long arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void long_正しくアスペクトが適用される(long arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @long(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region uint
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private uint @uint(uint arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void uint_正しくアスペクトが適用される(uint arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @uint(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region ushort
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private ushort @ushort(ushort arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void ushort_正しくアスペクトが適用される(ushort arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @ushort(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region ulong
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private ulong @ulong(ulong arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void ulong_正しくアスペクトが適用される(ulong arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @ulong(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region byte
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private byte @byte(byte arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                public void byte_正しくアスペクトが適用される(byte arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @byte(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region sbyte
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private sbyte @sbyte(sbyte arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0)]
-                [InlineData(1)]
-                [InlineData(2)]
-                [InlineData(3)]
-                [InlineData(4)]
-                [InlineData(5)]
-                [InlineData(6)]
-                [InlineData(7)]
-                [InlineData(8)]
-                [InlineData(10)]
-                [InlineData(-1)]
-                [InlineData(-2)]
-                [InlineData(-3)]
-                [InlineData(-4)]
-                [InlineData(-5)]
-                [InlineData(-6)]
-                [InlineData(-7)]
-                [InlineData(-8)]
-                [InlineData(-10)]
-                public void sbyte_正しくアスペクトが適用される(sbyte arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @sbyte(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region bool
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private bool @bool(bool arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(true)]
-                [InlineData(false)]
-                public void bool_正しくアスペクトが適用される(bool arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @bool(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region double
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private double @double(double arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0.0)]
-                [InlineData(0.5)]
-                [InlineData(1.0)]
-                [InlineData(100.0)]
-                [InlineData(-0.5)]
-                [InlineData(-1.0)]
-                [InlineData(-100.0)]
-                public void double_正しくアスペクトが適用される(double arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @double(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region float
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private float @float(float arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0.0)]
-                [InlineData(0.5)]
-                [InlineData(1.0)]
-                [InlineData(100.0)]
-                [InlineData(-0.5)]
-                [InlineData(-1.0)]
-                [InlineData(-100.0)]
-                public void float_正しくアスペクトが適用される(float arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @float(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region decimal
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private decimal @decimal(decimal arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData(0.0)]
-                [InlineData(0.5)]
-                [InlineData(1.0)]
-                [InlineData(100.0)]
-                [InlineData(-0.5)]
-                [InlineData(-1.0)]
-                [InlineData(-100.0)]
-                public void decimal_正しくアスペクトが適用される(decimal arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @decimal(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region char
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private char @char(char arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData('a')]
-                [InlineData('あ')]
-                public void char_正しくアスペクトが適用される(char arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @char(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry '{arg}' A OnSuccess '{result}' OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region string
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private string @string(string arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Theory]
-                [InlineData("a")]
-                [InlineData("あ")]
-                public void string_正しくアスペクトが適用される(string arg)
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-
-                        var result = @string(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry \"{arg}\" A OnSuccess \"{result}\" OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region class
-
-                public class Class
-                {
-                    public string Property { get; set; }
-
-                    public override string ToString() => Property;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private Class @class(Class arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Fact]
-                public void class_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var arg = new Class() { Property = "a" };
-
-                        var result = @class(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region struct
-
-                public struct Struct
-                {
-                    public string Property { get; set; }
-
-                    public override string ToString() => Property;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private Struct @struct(Struct arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Fact]
-                public void struct_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var arg = new Struct() { Property = "a" };
-
-                        var result = @struct(arg);
-
-                        Assert.Equal($"OnEntry {arg} A OnSuccess {result} OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #region Collection
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private IEnumerable IEnumerable(IEnumerable arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private IEnumerable<int> IEnumerableT(IEnumerable<int> arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [OnMethodBoundaryAspectLogger(MethodType.NormalMethod)]
-                private List<int> ListT(List<int> arg)
-                {
-                    Logger.Trace("A");
-                    return arg;
-                }
-
-                [Fact]
-                public void IEnumerable_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var arg = new List<int>() { 0 };
-
-                        var result = IEnumerable(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry [0] A OnSuccess [0] OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void IEnumerableT_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var arg = new List<int>() { 0 };
-
-                        var result = IEnumerableT(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry [0] A OnSuccess [0] OnExit ", appender.ToString());
-                    }
-                }
-
-                [Fact]
-                public void ListT_正しくアスペクトが適用される()
-                {
-                    lock (LockObject)
-                    {
-                        var appender = CreateAppender();
-                        var arg = new List<int>() { 0 };
-
-                        var result = ListT(arg);
-
-                        Assert.Equal(arg, result);
-                        Assert.Equal($"OnEntry [0] A OnSuccess [0] OnExit ", appender.ToString());
-                    }
-                }
-
-                #endregion
-
-                #endregion
-            }
-
-            public class 引数の変更
-            {
-                #region 参照型
-
-                private class ToUpperAspect : OnMethodBoundaryAspect
+                private class EventLogger : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
-                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                        {
-                            var argument = args.Arguments[argumentIndex] as string;
-                            args.Arguments[argumentIndex] = argument.ToUpper();
-                        }
+                        Logger.Trace("OnEntry");
                     }
-                }
 
-                [ToUpperAspect]
-                private string 引数を大文字に変更(string arg1)
-                {
-                    return arg1;
-                }
-
-                [ToUpperAspect]
-                private (string, string) 引数を大文字に変更(string arg1, string arg2)
-                {
-                    return (arg1, arg2);
-                }
-
-                [ToUpperAspect]
-                private (string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3)
-                {
-                    return (arg1, arg2, arg3);
-                }
-
-                [ToUpperAspect]
-                private (string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4)
-                {
-                    return (arg1, arg2, arg3, arg4);
-                }
-
-                [ToUpperAspect]
-                private (string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5);
-                }
-
-                [ToUpperAspect]
-                private (string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6);
-                }
-
-                [ToUpperAspect]
-                private (string, string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                }
-
-                [ToUpperAspect]
-                private (string, string, string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                }
-
-                [ToUpperAspect]
-                private (string, string, string, string, string, string, string, string, string) 引数を大文字に変更(string arg1, string arg2, string arg3, string arg4, string arg5, string arg6, string arg7, string arg8, string arg9)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が1つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数を大文字に変更("a");
-                    Assert.Equal("A", result);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が2つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2) = 引数を大文字に変更("a", "b");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が3つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3) = 引数を大文字に変更("a", "b", "c");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が4つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4) = 引数を大文字に変更("a", "b", "c", "d");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が5つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5) = 引数を大文字に変更("a", "b", "c", "d", "e");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が6つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6) = 引数を大文字に変更("a", "b", "c", "d", "e", "f");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が7つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6, result7) = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が8つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6, result7, result8) = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                    Assert.Equal("H", result8);
-                }
-
-                [Fact]
-                public void 引数を大文字に変更_引数が9つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6, result7, result8, result9) = 引数を大文字に変更("a", "b", "c", "d", "e", "f", "g", "h", "i");
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                    Assert.Equal("H", result8);
-                    Assert.Equal("I", result9);
-                }
-
-                #endregion
-
-                #region 値型
-
-                private class IncrementAspect : OnMethodBoundaryAspect
-                {
-                    public override void OnEntry(MethodExecutionArgs args)
+                    public override void OnSuccess(MethodExecutionArgs args)
                     {
-                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                        {
-                            var argument = (int)args.Arguments[argumentIndex];
-                            args.Arguments[argumentIndex] = argument + 1;
-                        }
+                        Logger.Trace("OnSuccess");
                     }
-                }
 
-                [IncrementAspect]
-                private int 引数をインクリメント(int arg1)
-                {
-                    return arg1;
-                }
+                    public override void OnException(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnException");
+                    }
 
-                [IncrementAspect]
-                private (int, int) 引数をインクリメント(int arg1, int arg2)
-                {
-                    return (arg1, arg2);
-                }
-
-                [IncrementAspect]
-                private (int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3)
-                {
-                    return (arg1, arg2, arg3);
-                }
-
-                [IncrementAspect]
-                private (int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4)
-                {
-                    return (arg1, arg2, arg3, arg4);
-                }
-
-                [IncrementAspect]
-                private (int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5);
-                }
-
-                [IncrementAspect]
-                private (int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6);
-                }
-
-                [IncrementAspect]
-                private (int, int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-                }
-
-                [IncrementAspect]
-                private (int, int, int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-                }
-
-                [IncrementAspect]
-                private (int, int, int, int, int, int, int, int, int) 引数をインクリメント(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9)
-                {
-                    return (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
-                {
-                    var result = 引数をインクリメント(1);
-                    Assert.Equal(2, result);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2) = 引数をインクリメント(1, 2);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3) = 引数をインクリメント(1, 2, 3);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4) = 引数をインクリメント(1, 2, 3, 4);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5) = 引数をインクリメント(1, 2, 3, 4, 5);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6) = 引数をインクリメント(1, 2, 3, 4, 5, 6);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6, result7) = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6, result7, result8) = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                    Assert.Equal(9, result8);
-                }
-
-                [Fact]
-                public void 引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
-                {
-                    var (result1, result2, result3, result4, result5, result6, result7, result8, result9) = 引数をインクリメント(1, 2, 3, 4, 5, 6, 7, 8, 9);
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                    Assert.Equal(9, result8);
-                    Assert.Equal(10, result9);
-                }
-
-                #endregion
-            }
-
-            public class 戻り値の変更
-            {
-                #region 参照型
-
-                private class ToUpperAspect : OnMethodBoundaryAspect
-                {
                     public override void OnExit(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnExit");
+                    }
+
+                    public override void OnResume(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnResume");
+                    }
+
+                    public override void OnYield(MethodExecutionArgs args)
+                    {
+                        Logger.Trace("OnYield");
+                    }
+                }
+
+                [EventLogger]
+                private void 正常()
+                {
+                    Logger.Trace("正常");
+                }
+
+                [EventLogger]
+                private void 例外()
+                {
+                    Logger.Trace("例外");
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 正常_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    正常();
+
+                    Assert.Equal($"OnEntry 正常 OnSuccess OnExit ", appender.ToString());
+                }
+
+                [Fact]
+                public void 例外_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var exception = Record.Exception(() => 例外());
+
+                    Assert.IsType<InvalidOperationException>(exception);
+                    Assert.Equal($"OnEntry 例外 OnException OnExit ", appender.ToString());
+                }
+            }
+
+
+            public class OnEntry
+            {
+                private static object Instance;
+
+                private class OnEntrySpy : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        Instance = args.Instance;
+                    }
+                }
+
+                [OnEntrySpy]
+                private void メソッド()
+                {
+                }
+
+                [Fact]
+                public void メソッド_正しくアスペクトが適用される()
+                {
+                    メソッド();
+
+                    Assert.Same(this, Instance);
+                }
+
+                [OnEntrySpy]
+                private static void 静的メソッド()
+                {
+                }
+
+                [Fact]
+                public void 静的メソッド_正しくアスペクトが適用される()
+                {
+                    静的メソッド();
+
+                    Assert.Null(Instance);
+                }
+            }
+
+
+
+
+            public class 引数
+            {
+                private class ChangeArguments : OnMethodBoundaryAspect
+                {
+                    public override void OnEntry(MethodExecutionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            switch (args.Arguments[argumentIndex])
+                            {
+                                case int argument:
+                                    args.Arguments[argumentIndex] = argument + 1;
+                                    break;
+
+                                case string argument:
+                                    args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                                    break;
+
+                                case null:
+                                    break;
+
+                                default:
+                                    throw new NotSupportedException();
+                            }
+                        }
+                    }
+                }
+
+                #region 引数1つ
+
+                [ChangeArguments]
+                private int 引数を変更(int arg0)
+                {
+                    return arg0;
+                }
+
+                [Fact]
+                public void 引数を変更_引数1つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+
+                    var result = 引数を変更(arg0);
+
+                    Assert.Equal(1, result);
+                }
+
+                #endregion
+
+                #region 引数2つ
+
+                [ChangeArguments]
+                private (int, string) 引数を変更(int arg0, string arg1)
+                {
+                    return (arg0, arg1);
+                }
+
+                [Fact]
+                public void 引数を変更_引数2つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+
+                    var (result0, result1) = 引数を変更(arg0, arg1);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                }
+
+                #endregion
+
+                #region 引数3つ
+
+                [ChangeArguments]
+                private (int, string, int) 引数を変更(int arg0, string arg1, in int arg2)
+                {
+                    return (arg0, arg1, arg2);
+                }
+
+                [Fact]
+                public void 引数を変更_引数3つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+
+                    var (result0, result1, result2) = 引数を変更(arg0, arg1, arg2);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                }
+
+                #endregion
+
+                #region 引数4つ
+
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3)
+                {
+                    return (arg0, arg1, arg2, arg3);
+                }
+
+                [Fact]
+                public void 引数を変更_引数4つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                }
+
+                #endregion
+
+                #region 引数5つ
+
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4)
+                {
+                    return (arg0, arg1, arg2, arg3);
+                }
+
+                [Fact]
+                public void 引数を変更_引数5つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                }
+
+                #endregion
+
+                #region 引数6つ
+
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5)
+                {
+                    return (arg0, arg1, arg2, arg3);
+                }
+
+                [Fact]
+                public void 引数を変更_引数6つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
+                }
+
+                #endregion
+
+                #region 引数7つ
+
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6)
+                {
+                    arg6 = 7;
+                    return (arg0, arg1, arg2, arg3);
+                }
+
+                [Fact]
+                public void 引数を変更_引数7つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    int arg6;
+
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7,   arg6);
+                }
+
+                #endregion
+
+                #region 引数8つ
+
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7)
+                {
+                    arg6 = 7;
+                    arg7 = "8";
+                    return (arg0, arg1, arg2, arg3);
+                }
+
+                [Fact]
+                public void 引数を変更_引数8つ_正しくアスペクトが適用される()
+                {
+                    var    arg0 = 0;
+                    var    arg1 = "1";
+                    var    arg2 = 2;
+                    var    arg3 = "3";
+                    var    arg4 = 4;
+                    var    arg5 = "5";
+                    int    arg6;
+                    string arg7;
+
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7,   arg6);
+                    Assert.Equal("8", arg7);
+                }
+
+                #endregion
+
+                #region 引数9つ
+
+                [ChangeArguments]
+                private (int, string, int, string, int) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7, int arg8)
+                {
+                    arg6 = 7;
+                    arg7 = "8";
+                    return (arg0, arg1, arg2, arg3, arg8);
+                }
+
+                [Fact]
+                public void 引数を変更_引数9つ_正しくアスペクトが適用される()
+                {
+                    var    arg0 = 0;
+                    var    arg1 = "1";
+                    var    arg2 = 2;
+                    var    arg3 = "3";
+                    var    arg4 = 4;
+                    var    arg5 = "5";
+                    int    arg6;
+                    string arg7;
+                    int    arg8 = 8;
+
+                    var (result0, result1, result2, result3, result8) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7, arg8);
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7,   arg6);
+                    Assert.Equal("8", arg7);
+                    Assert.Equal(9,   result8);
+                }
+
+                #endregion
+            }
+
+            public class 戻り値
+            {
+                #region 参照型
+
+                private class ToUpper : OnMethodBoundaryAspect
+                {
+                    public override void OnSuccess(MethodExecutionArgs args)
                     {
                         var returnValue = args.ReturnValue as string;
                         args.ReturnValue = returnValue.ToUpper();
                     }
                 }
 
-                [ToUpperAspect]
+                [ToUpper]
                 private string 戻り値を大文字に変更(string arg1)
                 {
                     return arg1;
@@ -1329,6 +451,7 @@ namespace SoftCube.Aspects
                 public void 戻り値を大文字に変更_正しくアスペクトが適用される()
                 {
                     var result = 戻り値を大文字に変更("a");
+
                     Assert.Equal("A", result);
                 }
 
@@ -1336,16 +459,16 @@ namespace SoftCube.Aspects
 
                 #region 値型
 
-                private class IncrementAspect : OnMethodBoundaryAspect
+                private class Increment : OnMethodBoundaryAspect
                 {
-                    public override void OnExit(MethodExecutionArgs args)
+                    public override void OnSuccess(MethodExecutionArgs args)
                     {
                         var returnValue = (int)args.ReturnValue;
                         args.ReturnValue = returnValue + 1;
                     }
                 }
 
-                [IncrementAspect]
+                [Increment]
                 private int 戻り値をインクリメント(int arg1)
                 {
                     return arg1;
@@ -1357,1023 +480,6 @@ namespace SoftCube.Aspects
                     var result = 戻り値をインクリメント(1);
                     Assert.Equal(2, result);
                 }
-
-                #endregion
-            }
-
-            public class ポインタ
-            {
-                #region 参照型
-
-                private class ToUpperAspect : OnMethodBoundaryAspect
-                {
-                    public override void OnSuccess(MethodExecutionArgs args)
-                    {
-                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                        {
-                            var value = (string)args.Arguments.GetArgument(argumentIndex);
-                            args.Arguments.SetArgument(argumentIndex, value.ToUpper());
-                        }
-                    }
-                }
-
-                #region ref
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6, ref string arg7)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6, ref string arg7, ref string arg8)
-                {
-                }
-
-                [ToUpperAspect]
-                private void 入出力引数を大文字に変換(ref string arg1, ref string arg2, ref string arg3, ref string arg4, ref string arg5, ref string arg6, ref string arg7, ref string arg8, ref string arg9)
-                {
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が1つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-
-                    入出力引数を大文字に変換(ref result1);
-
-                    Assert.Equal("A", result1);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が2つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-
-                    入出力引数を大文字に変換(ref result1, ref result2);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が3つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3 = "c";
-
-                    入出力引数を大文字に変換(ref result1, ref result2, ref result3);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が4つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3 = "c";
-                    string result4 = "d";
-
-                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が5つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3 = "c";
-                    string result4 = "d";
-                    string result5 = "e";
-
-                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が6つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3 = "c";
-                    string result4 = "d";
-                    string result5 = "e";
-                    string result6 = "f";
-
-                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が7つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3 = "c";
-                    string result4 = "d";
-                    string result5 = "e";
-                    string result6 = "f";
-                    string result7 = "g";
-
-                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が8つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3 = "c";
-                    string result4 = "d";
-                    string result5 = "e";
-                    string result6 = "f";
-                    string result7 = "g";
-                    string result8 = "h";
-
-                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                    Assert.Equal("H", result8);
-                }
-
-                [Fact]
-                public void 入出力引数を大文字に変換_引数が9つ_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3 = "c";
-                    string result4 = "d";
-                    string result5 = "e";
-                    string result6 = "f";
-                    string result7 = "g";
-                    string result8 = "h";
-                    string result9 = "i";
-
-                    入出力引数を大文字に変換(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8, ref result9);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                    Assert.Equal("H", result8);
-                    Assert.Equal("I", result9);
-                }
-
-                #endregion
-
-                #region out
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1)
-                {
-                    arg1 = "a";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                    arg3 = "c";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                    arg3 = "c";
-                    arg4 = "d";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                    arg3 = "c";
-                    arg4 = "d";
-                    arg5 = "e";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                    arg3 = "c";
-                    arg4 = "d";
-                    arg5 = "e";
-                    arg6 = "f";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6, out string arg7)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                    arg3 = "c";
-                    arg4 = "d";
-                    arg5 = "e";
-                    arg6 = "f";
-                    arg7 = "g";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6, out string arg7, out string arg8)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                    arg3 = "c";
-                    arg4 = "d";
-                    arg5 = "e";
-                    arg6 = "f";
-                    arg7 = "g";
-                    arg8 = "h";
-                }
-
-                [ToUpperAspect]
-                private void 出力引数を大文字に変換(out string arg1, out string arg2, out string arg3, out string arg4, out string arg5, out string arg6, out string arg7, out string arg8, out string arg9)
-                {
-                    arg1 = "a";
-                    arg2 = "b";
-                    arg3 = "c";
-                    arg4 = "d";
-                    arg5 = "e";
-                    arg6 = "f";
-                    arg7 = "g";
-                    arg8 = "h";
-                    arg9 = "i";
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が1つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-
-                    出力引数を大文字に変換(out result1);
-
-                    Assert.Equal("A", result1);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が2つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-
-                    出力引数を大文字に変換(out result1, out result2);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が3つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-                    string result3;
-
-                    出力引数を大文字に変換(out result1, out result2, out result3);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が4つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-                    string result3;
-                    string result4;
-
-                    出力引数を大文字に変換(out result1, out result2, out result3, out result4);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が5つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-                    string result3;
-                    string result4;
-                    string result5;
-
-                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が6つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-                    string result3;
-                    string result4;
-                    string result5;
-                    string result6;
-
-                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が7つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-                    string result3;
-                    string result4;
-                    string result5;
-                    string result6;
-                    string result7;
-
-                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6, out result7);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が8つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-                    string result3;
-                    string result4;
-                    string result5;
-                    string result6;
-                    string result7;
-                    string result8;
-
-                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                    Assert.Equal("H", result8);
-                }
-
-                [Fact]
-                public void 出力引数を大文字に変換_引数が9つ_正しくアスペクトが適用される()
-                {
-                    string result1;
-                    string result2;
-                    string result3;
-                    string result4;
-                    string result5;
-                    string result6;
-                    string result7;
-                    string result8;
-                    string result9;
-
-                    出力引数を大文字に変換(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8, out result9);
-
-                    Assert.Equal("A", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                    Assert.Equal("D", result4);
-                    Assert.Equal("E", result5);
-                    Assert.Equal("F", result6);
-                    Assert.Equal("G", result7);
-                    Assert.Equal("H", result8);
-                    Assert.Equal("I", result9);
-                }
-
-                #endregion
-
-                #region mix
-
-                [ToUpperAspect]
-                private void 混合引数を大文字に変換(string arg1, ref string arg2, out string arg3)
-                {
-                    arg3 = "c";
-                }
-
-                [Fact]
-                public void 混合引数を大文字に変換_正しくアスペクトが適用される()
-                {
-                    string result1 = "a";
-                    string result2 = "b";
-                    string result3;
-
-                    混合引数を大文字に変換(result1, ref result2, out result3);
-
-                    Assert.Equal("a", result1);
-                    Assert.Equal("B", result2);
-                    Assert.Equal("C", result3);
-                }
-
-                #endregion
-
-                #endregion
-
-                #region 値型
-
-                private class IncrementAspect : OnMethodBoundaryAspect
-                {
-                    public override void OnSuccess(MethodExecutionArgs args)
-                    {
-                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                        {
-                            var value = (int)args.Arguments.GetArgument(argumentIndex);
-                            args.Arguments.SetArgument(argumentIndex, value + 1);
-                        }
-                    }
-                }
-
-                #region ref
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7, ref int arg8)
-                {
-                }
-
-                [IncrementAspect]
-                private void 入出力引数をインクリメント(ref int arg1, ref int arg2, ref int arg3, ref int arg4, ref int arg5, ref int arg6, ref int arg7, ref int arg8, ref int arg9)
-                {
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-
-                    入出力引数をインクリメント(ref result1);
-
-                    Assert.Equal(2, result1);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-
-                    入出力引数をインクリメント(ref result1, ref result2);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-                    int result6 = 6;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-                    int result6 = 6;
-                    int result7 = 7;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-                    int result6 = 6;
-                    int result7 = 7;
-                    int result8 = 8;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                    Assert.Equal(9, result8);
-                }
-
-                [Fact]
-                public void 入出力引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3 = 3;
-                    int result4 = 4;
-                    int result5 = 5;
-                    int result6 = 6;
-                    int result7 = 7;
-                    int result8 = 8;
-                    int result9 = 9;
-
-                    入出力引数をインクリメント(ref result1, ref result2, ref result3, ref result4, ref result5, ref result6, ref result7, ref result8, ref result9);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                    Assert.Equal(9, result8);
-                    Assert.Equal(10, result9);
-                }
-
-                #endregion
-
-                #region out
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1)
-                {
-                    arg1 = 1;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2, out int arg3)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                    arg3 = 3;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2, out int arg3, out int arg4)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                    arg3 = 3;
-                    arg4 = 4;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2, out int arg3, out int arg4, out int arg5)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                    arg3 = 3;
-                    arg4 = 4;
-                    arg5 = 5;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2, out int arg3, out int arg4, out int arg5, out int arg6)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                    arg3 = 3;
-                    arg4 = 4;
-                    arg5 = 5;
-                    arg6 = 6;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2, out int arg3, out int arg4, out int arg5, out int arg6, out int arg7)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                    arg3 = 3;
-                    arg4 = 4;
-                    arg5 = 5;
-                    arg6 = 6;
-                    arg7 = 7;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2, out int arg3, out int arg4, out int arg5, out int arg6, out int arg7, out int arg8)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                    arg3 = 3;
-                    arg4 = 4;
-                    arg5 = 5;
-                    arg6 = 6;
-                    arg7 = 7;
-                    arg8 = 8;
-                }
-
-                [IncrementAspect]
-                private void 出力引数をインクリメント(out int arg1, out int arg2, out int arg3, out int arg4, out int arg5, out int arg6, out int arg7, out int arg8, out int arg9)
-                {
-                    arg1 = 1;
-                    arg2 = 2;
-                    arg3 = 3;
-                    arg4 = 4;
-                    arg5 = 5;
-                    arg6 = 6;
-                    arg7 = 7;
-                    arg8 = 8;
-                    arg9 = 9;
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が1つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-
-                    出力引数をインクリメント(out result1);
-
-                    Assert.Equal(2, result1);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が2つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-
-                    出力引数をインクリメント(out result1, out result2);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が3つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-                    int result3;
-
-                    出力引数をインクリメント(out result1, out result2, out result3);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が4つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-                    int result3;
-                    int result4;
-
-                    出力引数をインクリメント(out result1, out result2, out result3, out result4);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が5つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-                    int result3;
-                    int result4;
-                    int result5;
-
-                    出力引数をインクリメント(out result1, out result2, out result3, out result4, out result5);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が6つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-                    int result3;
-                    int result4;
-                    int result5;
-                    int result6;
-
-                    出力引数をインクリメント(out result1, out result2, out result3, out result4, out result5, out result6);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が7つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-                    int result3;
-                    int result4;
-                    int result5;
-                    int result6;
-                    int result7;
-
-                    出力引数をインクリメント(out result1, out result2, out result3, out result4, out result5, out result6, out result7);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が8つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-                    int result3;
-                    int result4;
-                    int result5;
-                    int result6;
-                    int result7;
-                    int result8;
-
-                    出力引数をインクリメント(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                    Assert.Equal(9, result8);
-                }
-
-                [Fact]
-                public void 出力引数をインクリメント_引数が9つ_正しくアスペクトが適用される()
-                {
-                    int result1;
-                    int result2;
-                    int result3;
-                    int result4;
-                    int result5;
-                    int result6;
-                    int result7;
-                    int result8;
-                    int result9;
-
-                    出力引数をインクリメント(out result1, out result2, out result3, out result4, out result5, out result6, out result7, out result8, out result9);
-
-                    Assert.Equal(2, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                    Assert.Equal(5, result4);
-                    Assert.Equal(6, result5);
-                    Assert.Equal(7, result6);
-                    Assert.Equal(8, result7);
-                    Assert.Equal(9, result8);
-                    Assert.Equal(10, result9);
-                }
-
-                #endregion
-
-                #region mix
-
-                [IncrementAspect]
-                private void 混合引数をインクリメント(int arg1, ref int arg2, out int arg3)
-                {
-                    arg3 = 3;
-                }
-
-                [Fact]
-                public void 混合引数をインクリメント_正しくアスペクトが適用される()
-                {
-                    int result1 = 1;
-                    int result2 = 2;
-                    int result3;
-
-                    混合引数をインクリメント(result1, ref result2, out result3);
-
-                    Assert.Equal(1, result1);
-                    Assert.Equal(3, result2);
-                    Assert.Equal(4, result3);
-                }
-
-                #endregion
 
                 #endregion
             }
