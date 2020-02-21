@@ -145,8 +145,11 @@ namespace SoftCube.Aspects
                 }
 
                 ///
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                if (!originalMethod.IsStatic)
+                {
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                }
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
@@ -294,8 +297,11 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldarg_0);
                 }
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                if (!originalMethod.IsStatic)
+                {
+                    processor.Emit(OpCodes.Ldarg_0);
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                }
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];

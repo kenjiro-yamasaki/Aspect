@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace SoftCube.Aspects

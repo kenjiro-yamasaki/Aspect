@@ -24,7 +24,7 @@ namespace SoftCube.Aspects
             var arg1 = "1";
             var arg2 = 2;
 
-            var (result0, result1, result2) = program.引数を変更(arg0, arg1, in arg2);
+            var (result0, result1, result2) = 引数を変更(arg0, arg1, in arg2);
 
 
             Console.Read();
@@ -35,32 +35,32 @@ namespace SoftCube.Aspects
         {
             public override void OnInvoke(MethodInterceptionArgs args)
             {
-                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                {
-                    switch (args.Arguments[argumentIndex])
-                    {
-                        case int argument:
-                            args.Arguments[argumentIndex] = argument + 1;
-                            break;
+                //for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                //{
+                //    switch (args.Arguments[argumentIndex])
+                //    {
+                //        case int argument:
+                //            args.Arguments[argumentIndex] = argument + 1;
+                //            break;
 
-                        case string argument:
-                            args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
-                            break;
+                //        case string argument:
+                //            args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                //            break;
 
-                        case null:
-                            break;
+                //        case null:
+                //            break;
 
-                        default:
-                            throw new NotSupportedException();
-                    }
-                }
+                //        default:
+                //            throw new NotSupportedException();
+                //    }
+                //}
 
                 args.Proceed();
             }
         }
 
         [ChangeArguments]
-        private (int, string, int) 引数を変更(int arg0, string arg1, in int arg2)
+        private static (int, string, int) 引数を変更(int arg0, string arg1, in int arg2)
         {
             return (arg0, arg1, arg2);
         }
