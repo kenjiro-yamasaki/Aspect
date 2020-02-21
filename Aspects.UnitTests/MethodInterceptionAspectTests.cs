@@ -238,138 +238,138 @@ namespace SoftCube.Aspects
 
                 #region 引数6つ
 
-                //[ChangeArguments]
-                //private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5)
-                //{
-                //    return (arg0, arg1, arg2, arg3);
-                //}
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5)
+                {
+                    return (arg0, arg1, arg2, arg3);
+                }
 
-                //[Fact]
-                //public void 引数を変更_引数6つ_正しくアスペクトが適用される()
-                //{
-                //    var arg0 = 0;
-                //    var arg1 = "1";
-                //    var arg2 = 2;
-                //    var arg3 = "3";
-                //    var arg4 = 4;
-                //    var arg5 = "5";
+                [Fact]
+                public void 引数を変更_引数6つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
 
-                //    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5);
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5);
 
-                //    Assert.Equal(1,   result0);
-                //    Assert.Equal("2", result1);
-                //    Assert.Equal(3,   result2);
-                //    Assert.Equal("4", result3);
-                //    Assert.Equal(5,   arg4);
-                //    Assert.Equal("6", arg5);
-                //}
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5, arg4);
+                    Assert.Equal("6", arg5);
+                }
 
                 #endregion
 
                 #region 引数7つ
 
-                //[ChangeArguments]
-                //private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6)
-                //{
-                //    arg6 = 7;
-                //    return (arg0, arg1, arg2, arg3);
-                //}
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6)
+                {
+                    arg6 = 7;
+                    return (arg0, arg1, arg2, arg3);
+                }
 
-                //[Fact]
-                //public void 引数を変更_引数7つ_正しくアスペクトが適用される()
-                //{
-                //    var arg0 = 0;
-                //    var arg1 = "1";
-                //    var arg2 = 2;
-                //    var arg3 = "3";
-                //    var arg4 = 4;
-                //    var arg5 = "5";
-                //    int arg6;
+                [Fact]
+                public void 引数を変更_引数7つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    int arg6;
 
-                //    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6);
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6);
 
-                //    Assert.Equal(1,   result0);
-                //    Assert.Equal("2", result1);
-                //    Assert.Equal(3,   result2);
-                //    Assert.Equal("4", result3);
-                //    Assert.Equal(5,   arg4);
-                //    Assert.Equal("6", arg5);
-                //    Assert.Equal(7,   arg6);
-                //}
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5, arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7, arg6);
+                }
 
                 #endregion
 
                 #region 引数8つ
 
-                //[ChangeArguments]
-                //private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7)
-                //{
-                //    arg6 = 7;
-                //    arg7 = "8";
-                //    return (arg0, arg1, arg2, arg3);
-                //}
+                [ChangeArguments]
+                private (int, string, int, string) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7)
+                {
+                    arg6 = 7;
+                    arg7 = "8";
+                    return (arg0, arg1, arg2, arg3);
+                }
 
-                //[Fact]
-                //public void 引数を変更_引数8つ_正しくアスペクトが適用される()
-                //{
-                //    var    arg0 = 0;
-                //    var    arg1 = "1";
-                //    var    arg2 = 2;
-                //    var    arg3 = "3";
-                //    var    arg4 = 4;
-                //    var    arg5 = "5";
-                //    int    arg6;
-                //    string arg7;
+                [Fact]
+                public void 引数を変更_引数8つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    int arg6;
+                    string arg7;
 
-                //    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7);
+                    var (result0, result1, result2, result3) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7);
 
-                //    Assert.Equal(1,   result0);
-                //    Assert.Equal("2", result1);
-                //    Assert.Equal(3,   result2);
-                //    Assert.Equal("4", result3);
-                //    Assert.Equal(5,   arg4);
-                //    Assert.Equal("6", arg5);
-                //    Assert.Equal(7,   arg6);
-                //    Assert.Equal("8", arg7);
-                //}
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5, arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7, arg6);
+                    Assert.Equal("8", arg7);
+                }
 
                 #endregion
 
                 #region 引数9つ
 
-                //[ChangeArguments]
-                //private (int, string, int, string, int) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7, int arg8)
-                //{
-                //    arg6 = 7;
-                //    arg7 = "8";
-                //    return (arg0, arg1, arg2, arg3, arg8);
-                //}
+                [ChangeArguments]
+                private (int, string, int, string, int) 引数を変更(int arg0, string arg1, in int arg2, in string arg3, ref int arg4, ref string arg5, out int arg6, out string arg7, int arg8)
+                {
+                    arg6 = 7;
+                    arg7 = "8";
+                    return (arg0, arg1, arg2, arg3, arg8);
+                }
 
-                //[Fact]
-                //public void 引数を変更_引数9つ_正しくアスペクトが適用される()
-                //{
-                //    var    arg0 = 0;
-                //    var    arg1 = "1";
-                //    var    arg2 = 2;
-                //    var    arg3 = "3";
-                //    var    arg4 = 4;
-                //    var    arg5 = "5";
-                //    int    arg6;
-                //    string arg7;
-                //    int    arg8 = 8;
+                [Fact]
+                public void 引数を変更_引数9つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    int arg6;
+                    string arg7;
+                    int arg8 = 8;
 
-                //    var (result0, result1, result2, result3, result8) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7, arg8);
+                    var (result0, result1, result2, result3, result8) = 引数を変更(arg0, arg1, arg2, arg3, ref arg4, ref arg5, out arg6, out arg7, arg8);
 
-                //    Assert.Equal(1,   result0);
-                //    Assert.Equal("2", result1);
-                //    Assert.Equal(3,   result2);
-                //    Assert.Equal("4", result3);
-                //    Assert.Equal(5,   arg4);
-                //    Assert.Equal("6", arg5);
-                //    Assert.Equal(7,   arg6);
-                //    Assert.Equal("8", arg7);
-                //    Assert.Equal(9,   result8);
-                //}
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5, arg4);
+                    Assert.Equal("6", arg5);
+                    Assert.Equal(7, arg6);
+                    Assert.Equal("8", arg7);
+                    Assert.Equal(9, result8);
+                }
 
                 #endregion
             }
