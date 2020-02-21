@@ -20,92 +20,49 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var task = program.例外();
-            Logger.Trace("1");
-            task.Wait();
-            Logger.Trace("8");
+            var arg0 = 0;
+            var arg1 = "1";
+            var arg2 = 2;
 
-            //var program = new Program();
+            var (result0, result1, result2) = program.引数を変更(arg0, arg1, in arg2);
 
-            //int result1;
-            //int result2 = 2;
-            //int result3;
-            //int result4;
-            //int result5;
-            //int result6;
-            //int result7;
-            //int result8;
-            //int result9;
-
-            ////出力引数をインクリメント(out result1, result2, out result3, out result4, out result5, out result6, out result7, out result8, out result9);
-            //出力引数をインクリメント(out result1, result2, out result3, out result4, out result5, out result6, out result7, out result8);
 
             Console.Read();
         }
 
-        private class EventLogger : OnMethodBoundaryAspect
+
+        private class ChangeArguments : MethodInterceptionAspect
         {
-            public override void OnEntry(MethodExecutionArgs args)
+            public override void OnInvoke(MethodInterceptionArgs args)
             {
-                Logger.Trace("OnEntry");
-            }
+                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                {
+                    switch (args.Arguments[argumentIndex])
+                    {
+                        case int argument:
+                            args.Arguments[argumentIndex] = argument + 1;
+                            break;
 
-            public override void OnSuccess(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnSuccess");
-            }
+                        case string argument:
+                            args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                            break;
 
-            public override void OnException(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnException");
-            }
+                        case null:
+                            break;
 
-            public override void OnExit(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnExit");
-            }
+                        default:
+                            throw new NotSupportedException();
+                    }
+                }
 
-            public override void OnResume(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnResume");
-            }
-
-            public override void OnYield(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnYield");
+                args.Proceed();
             }
         }
 
-        [EventLogger]
-        private async Task 例外()
+        [ChangeArguments]
+        private (int, string, int) 引数を変更(int arg0, string arg1, in int arg2)
         {
-            Logger.Trace("0");
-
-            await Task.Run(() =>
-            {
-                Thread.Sleep(10);
-                Logger.Trace("2");
-            });
-
-            //Logger.Trace("3");
-
-            //await Task.Run(() =>
-            //{
-            //    Thread.Sleep(10);
-            //    Logger.Trace("4");
-            //});
-
-            //Logger.Trace("5");
-
-            //await Task.Run(() =>
-            //{
-            //    Thread.Sleep(10);
-            //    Logger.Trace("6");
-            //});
-
-            //Logger.Trace("7");
-            throw new InvalidOperationException();
+            return (arg0, arg1, arg2);
         }
-
     }
 }
