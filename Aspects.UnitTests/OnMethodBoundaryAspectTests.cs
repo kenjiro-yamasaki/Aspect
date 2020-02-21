@@ -96,7 +96,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class AspectArgs
+            public class インスタンス
             {
                 private static object Instance;
 
@@ -466,7 +466,7 @@ namespace SoftCube.Aspects
 
             public class 仮想関数
             {
-                private class ToUpperAspect : OnMethodBoundaryAspect
+                private class ToUpper : OnMethodBoundaryAspect
                 {
                     public override void OnSuccess(MethodExecutionArgs args)
                     {
@@ -481,7 +481,7 @@ namespace SoftCube.Aspects
 
                 private class Derived : Base
                 {
-                    [ToUpperAspect]
+                    [ToUpper]
                     public override string 戻り値を大文字に変更(string arg)
                     {
                         return arg;
@@ -569,7 +569,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class AspectArgs
+            public class インスタンス
             {
                 private static object Instance;
 
@@ -1018,7 +1018,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class AspectArgs
+            public class インスタンス
             {
                 private static object Instance;
 
@@ -1429,7 +1429,7 @@ namespace SoftCube.Aspects
 
             public class 仮想関数
             {
-                private class ToUpperAspect : OnMethodBoundaryAspect
+                private class ToUpper : OnMethodBoundaryAspect
                 {
                     public override void OnYield(MethodExecutionArgs args)
                     {
@@ -1444,7 +1444,7 @@ namespace SoftCube.Aspects
 
                 private class Derived : Base
                 {
-                    [ToUpperAspect]
+                    [ToUpper]
                     public override IEnumerable<string> 戻り値を大文字に変更(string arg0, string arg1)
                     {
                         yield return arg0;
@@ -1547,7 +1547,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class AspectArgs
+            public class インスタンス
             {
                 private static object Instance;
 
@@ -2085,7 +2085,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class AspectArgs
+            public class インスタンス
             {
                 private static object Instance;
 
@@ -2698,7 +2698,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class AspectArgs
+            public class インスタンス
             {
                 private static object Instance;
 
