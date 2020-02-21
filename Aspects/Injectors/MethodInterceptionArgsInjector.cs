@@ -98,6 +98,53 @@ namespace SoftCube.Aspects
                 /// {
                 ///     return ((TInstance)base.Instance).OriginalMethod((TArg0)arguments[0], (TArg1)arguments[1], ...);
                 /// }
+                var variables = overridenInvokeMethod.Body.Variables;
+                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
+                {
+                    var parameter     = originalMethod.Parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        var variable = variables.Count;
+                        variables.Add(new VariableDefinition(elementType));
+
+                        processor.Emit(OpCodes.Ldarg_1);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Unbox_Any, elementType);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Castclass, elementType);
+                        }
+                        processor.Emit(OpCodes.Stloc, variable);
+                    }
+                    else
+                    {
+                        var variable = variables.Count;
+                        variables.Add(new VariableDefinition(parameterType));
+
+                        processor.Emit(OpCodes.Ldarg_1);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        if (parameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Unbox_Any, parameterType);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Castclass, parameterType);
+                        }
+                        processor.Emit(OpCodes.Stloc, variable);
+                    }
+                }
+
+                ///
                 processor.Emit(OpCodes.Ldarg_0);
                 processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
@@ -105,19 +152,16 @@ namespace SoftCube.Aspects
                     var parameter     = originalMethod.Parameters[parameterIndex];
                     var parameterType = parameter.ParameterType;
 
-                    processor.Emit(OpCodes.Ldarg_1);
-                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
-                    if (parameterType.IsValueType)
+                    if (parameterType.IsByReference)
                     {
-                        processor.Emit(OpCodes.Unbox_Any, parameterType);
+                        processor.Emit(OpCodes.Ldloca, parameterIndex);
                     }
                     else
                     {
-                        processor.Emit(OpCodes.Castclass, parameterType);
+                        processor.Emit(OpCodes.Ldloc, parameterIndex);
                     }
                 }
-                processor.Emit(OpCodes.Callvirt, originalMethod);
+                processor.Emit(OpCodes.Call, originalMethod);
 
                 if (originalMethod.HasReturnValue())
                 {
@@ -130,6 +174,38 @@ namespace SoftCube.Aspects
                 {
                     processor.Emit(OpCodes.Ldnull);
                 }
+
+                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
+                {
+                    var parameter     = originalMethod.Parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        processor.Emit(OpCodes.Ldarg_1);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Ldloc, parameterIndex);
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, elementType);
+                        }
+                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg_1);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Ldloc, parameterIndex);
+                        if (parameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, parameterType);
+                        }
+                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
+                    }
+                }
+
                 processor.Emit(OpCodes.Ret);
             }
         }
@@ -164,6 +240,55 @@ namespace SoftCube.Aspects
                 /// {
                 ///     base.ReturnType = ((TInstance)base.Instance).OriginalMethod((TArg0)base.Arguments[0], (TArg1)base.Arguments[1], ...);
                 /// }
+                var variables = overridenProceedMethod.Body.Variables;
+                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
+                {
+                    var parameter     = originalMethod.Parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        var variable = variables.Count;
+                        variables.Add(new VariableDefinition(elementType));
+
+                        processor.Emit(OpCodes.Ldarg_0);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Unbox_Any, elementType);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Castclass, elementType);
+                        }
+                        processor.Emit(OpCodes.Stloc, variable);
+                    }
+                    else
+                    {
+                        var variable = variables.Count;
+                        variables.Add(new VariableDefinition(parameterType));
+
+                        processor.Emit(OpCodes.Ldarg_0);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        if (parameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Unbox_Any, parameterType);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Castclass, parameterType);
+                        }
+                        processor.Emit(OpCodes.Stloc, variable);
+                    }
+                }
+
+                ///
                 if (originalMethod.HasReturnValue())
                 {
                     processor.Emit(OpCodes.Ldarg_0);
@@ -175,21 +300,16 @@ namespace SoftCube.Aspects
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
                     var parameterType = parameter.ParameterType;
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
-                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
-                    if (parameterType.IsValueType)
+                    if (parameterType.IsByReference)
                     {
-                        processor.Emit(OpCodes.Unbox_Any, parameterType);
+                        processor.Emit(OpCodes.Ldloca, parameterIndex);
                     }
                     else
                     {
-                        processor.Emit(OpCodes.Castclass, parameterType);
+                        processor.Emit(OpCodes.Ldloc, parameterIndex);
                     }
                 }
-                processor.Emit(OpCodes.Callvirt, originalMethod);
+                processor.Emit(OpCodes.Call, originalMethod);
 
                 if (originalMethod.HasReturnValue())
                 {
@@ -198,6 +318,40 @@ namespace SoftCube.Aspects
                         processor.Emit(OpCodes.Box, originalMethod.ReturnType);
                     }
                     processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
+                }
+
+                ///
+                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
+                {
+                    var parameter     = originalMethod.Parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        processor.Emit(OpCodes.Ldarg_0);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Ldloc, parameterIndex);
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, elementType);
+                        }
+                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg_0);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Ldloc, parameterIndex);
+                        if (parameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, parameterType);
+                        }
+                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
+                    }
                 }
 
                 processor.Emit(OpCodes.Ret);

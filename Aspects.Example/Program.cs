@@ -64,5 +64,20 @@ namespace SoftCube.Aspects
         {
             return (arg0, arg1, arg2);
         }
+
+        public object Invoke(Arguments arguments)
+        {
+            var arg0 = (int)arguments[0];
+            var arg1 = (string)arguments[1];
+            var arg2 = (int)arguments[2];
+
+            var result = 引数を変更(arg0, arg1, in arg2);
+
+            arguments[0] = arg0;
+            arguments[1] = arg1;
+            arguments[2] = arg2;
+
+            return result;
+        }
     }
 }

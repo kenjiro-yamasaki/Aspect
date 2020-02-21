@@ -87,6 +87,7 @@ namespace SoftCube.Aspects
                 injector.CreateAspectArgsVariable(processor, derivedAspectArgsType);
                 injector.SetMethod(processor);
                 injector.InvokeEventHandler(processor, nameof(OnInvoke));
+                injector.UpdateArguments(processor);
                 injector.Return(processor);
             }
         }
@@ -109,9 +110,9 @@ namespace SoftCube.Aspects
             {
                 var method = injector.TargetMethod;
                 method.Body = new Mono.Cecil.Cil.MethodBody(method);
-                var declaringType = method.DeclaringType;
+                var declaringType         = method.DeclaringType;
                 var derivedAspectArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.FullName + "+" + nameof(MethodInterceptionArgs));
-                var processor = method.Body.GetILProcessor();
+                var processor             = method.Body.GetILProcessor();
 
                 /// var aspect = new Aspect();
                 /// var arguments = new Arguments(...);
