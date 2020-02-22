@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SoftCube.Aspects
@@ -8,6 +10,32 @@ namespace SoftCube.Aspects
     {
         public class 通常のメソッド
         {
+            public class インスタンス
+            {
+                private static object Instance;
+
+                private class OnEntrySpy : MethodInterceptionAspect
+                {
+                    public override void OnInvoke(MethodInterceptionArgs args)
+                    {
+                        Instance = args.Instance;
+                    }
+                }
+
+                [OnEntrySpy]
+                private void メソッド()
+                {
+                }
+
+                [Fact]
+                public void メソッド_正しくアスペクトが適用される()
+                {
+                    メソッド();
+
+                    Assert.Same(this, Instance);
+                }
+            }
+
             public class Proceed
             {
                 public class イベントハンドラーの呼びだし順序
@@ -67,32 +95,6 @@ namespace SoftCube.Aspects
 
                         Assert.IsType<InvalidOperationException>(exception);
                         Assert.Equal($"OnEntry 1 OnException OnExit ", StringBuilder.ToString());
-                    }
-                }
-
-                public class インスタンス
-                {
-                    private static object Instance;
-
-                    private class OnEntrySpy : MethodInterceptionAspect
-                    {
-                        public override void OnInvoke(MethodInterceptionArgs args)
-                        {
-                            Instance = args.Instance;
-                        }
-                    }
-
-                    [OnEntrySpy]
-                    private void メソッド()
-                    {
-                    }
-
-                    [Fact]
-                    public void メソッド_正しくアスペクトが適用される()
-                    {
-                        メソッド();
-
-                        Assert.Same(this, Instance);
                     }
                 }
 
@@ -926,6 +928,32 @@ namespace SoftCube.Aspects
 
         public class 静的メソッド
         {
+            public class インスタンス
+            {
+                private static object Instance;
+
+                private class OnEntrySpy : MethodInterceptionAspect
+                {
+                    public override void OnInvoke(MethodInterceptionArgs args)
+                    {
+                        Instance = args.Instance;
+                    }
+                }
+
+                [OnEntrySpy]
+                private static void メソッド()
+                {
+                }
+
+                [Fact]
+                public void メソッド_正しくアスペクトが適用される()
+                {
+                    メソッド();
+
+                    Assert.Null(Instance);
+                }
+            }
+
             public class Proceed
             {
                 public class イベントハンドラーの呼びだし順序
@@ -989,31 +1017,6 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                public class インスタンス
-                {
-                    private static object Instance;
-
-                    private class OnEntrySpy : MethodInterceptionAspect
-                    {
-                        public override void OnInvoke(MethodInterceptionArgs args)
-                        {
-                            Instance = args.Instance;
-                        }
-                    }
-
-                    [OnEntrySpy]
-                    private static void メソッド()
-                    {
-                    }
-
-                    [Fact]
-                    public void メソッド_正しくアスペクトが適用される()
-                    {
-                        メソッド();
-
-                        Assert.Null(Instance);
-                    }
-                }
 
                 public class 引数
                 {
@@ -1771,6 +1774,95 @@ namespace SoftCube.Aspects
                     }
 
                     #endregion
+                }
+            }
+        }
+
+        public class 非同期メソッド
+        {
+            public class イベントハンドラーの呼びだし順序
+            {
+                private readonly StringBuilder StringBuilder = new StringBuilder();
+
+                private class EventLogger : MethodInterceptionAspect
+                {
+                    public override async Task OnInvokeAsync(MethodInterceptionArgs args)
+                    {
+                        var instance = args.Instance as イベントハンドラーの呼びだし順序;
+                        var stringBuilder = instance.StringBuilder;
+
+                        stringBuilder.Append("OnEntry ");
+                        try
+                        {
+                            await args.ProceedAsync();
+                            stringBuilder.Append("OnSuccess ");
+                        }
+                        catch (Exception ex)
+                        {
+                            stringBuilder.Append("OnException ");
+                        }
+                        finally
+                        {
+                            stringBuilder.Append("OnExit ");
+                        }
+                    }
+                }
+
+                [EventLogger]
+                private async Task 正常()
+                {
+                    StringBuilder.Append("0 ");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        StringBuilder.Append("2 ");
+                    });
+
+                    StringBuilder.Append("3 ");
+                }
+
+                [Fact]
+                public void 正常_イベントハンドラーが正しくよばれる()
+                {
+                    var task = 正常();
+                    StringBuilder.Append("1 ");
+
+                    task.Wait();
+                    StringBuilder.Append("4 ");
+
+                    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", StringBuilder.ToString());
+                }
+
+                [EventLogger]
+                private async Task 例外()
+                {
+                    StringBuilder.Append("0 ");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        StringBuilder.Append("2 ");
+                    });
+
+                    StringBuilder.Append("3 ");
+
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 例外_イベントハンドラーが正しくよばれる()
+                {
+                    var task = 例外();
+                    StringBuilder.Append("1 ");
+
+                    var exception = Record.Exception(() => task.Wait());
+                    StringBuilder.Append("4 ");
+
+                    var aggregateException = Assert.IsType<AggregateException>(exception);
+                    Assert.Single(aggregateException.InnerExceptions);
+                    Assert.IsType<InvalidOperationException>(aggregateException.InnerExceptions[0]);
+                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", StringBuilder.ToString());
                 }
             }
         }

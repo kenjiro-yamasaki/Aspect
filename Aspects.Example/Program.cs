@@ -1,7 +1,6 @@
 ﻿using SoftCube.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,64 +19,60 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var arg0 = 0;
-            var arg1 = "1";
-            var arg2 = 2;
+            var task = program.例外_();
+            task.Wait();
 
-            var (result0, result1, result2) = 引数を変更(arg0, arg1, in arg2);
-
+            var result = task.Result;
+            Logger.Trace(result);
 
             Console.Read();
         }
 
-
-        private class ChangeArguments : MethodInterceptionAspect
+        public async Task<string> 例外_()
         {
-            public override void OnInvoke(MethodInterceptionArgs args)
+            var aspectArgs = new AspectArgs(this, new Arguments());
+            var aspect = new Aspect();
+
+            var task = aspect.OnInvokeAsync(aspectArgs);
+            await task;
+            return aspectArgs.ReturnValue as string;
+        }
+
+        public async Task<string> 例外()
+        {
+            Logger.Trace("0");
+
+            await Task.Run(() =>
             {
-                //for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                //{
-                //    switch (args.Arguments[argumentIndex])
-                //    {
-                //        case int argument:
-                //            args.Arguments[argumentIndex] = argument + 1;
-                //            break;
+                Thread.Sleep(10);
+                Logger.Trace("2");
+            });
+            Logger.Trace("3");
 
-                //        case string argument:
-                //            args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
-                //            break;
+            return "4";
+        }
 
-                //        case null:
-                //            break;
+        private class AspectArgs : MethodInterceptionArgs
+        {
+            public AspectArgs(object instance, Arguments arguments)
+                : base(instance, arguments)
+            {
+            }
 
-                //        default:
-                //            throw new NotSupportedException();
-                //    }
-                //}
-
-                args.Proceed();
+            public override async Task ProceedAsync()
+            {
+                var program = Instance as Program;
+                ReturnValue = await program.例外();
             }
         }
 
-        [ChangeArguments]
-        private static (int, string, int) 引数を変更(int arg0, string arg1, in int arg2)
+        private class Aspect
         {
-            return (arg0, arg1, arg2);
-        }
-
-        public object Invoke(Arguments arguments)
-        {
-            var arg0 = (int)arguments[0];
-            var arg1 = (string)arguments[1];
-            var arg2 = (int)arguments[2];
-
-            var result = 引数を変更(arg0, arg1, in arg2);
-
-            arguments[0] = arg0;
-            arguments[1] = arg1;
-            arguments[2] = arg2;
-
-            return result;
+            public async Task OnInvokeAsync(MethodInterceptionArgs args)
+            {
+                await args.ProceedAsync();
+            }
         }
     }
+
 }
