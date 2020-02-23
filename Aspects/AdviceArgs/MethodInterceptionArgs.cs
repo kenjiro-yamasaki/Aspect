@@ -15,6 +15,16 @@ namespace SoftCube.Aspects
         /// </summary>
         public Task Task { get; set; }
 
+        /// <summary>
+        /// 非同期タスクの結果。
+        /// </summary>
+        /// <remarks>
+        /// InvokeAsync、ProceedAsync の戻り値は Task 型ですが、ターゲットメソッドの戻り値が Task<TResult> の場合、
+        /// Task<TResult> 型のインスタンスを戻します。
+        /// Task を Task<TResult> にキャストすることも難しいため Task<TResult>.Result の値を取得したい場合、このプロパティを使用します。
+        /// </remarks>
+        public virtual object TaskResult => throw new NotImplementedException();
+
         #endregion
 
         #region コンストラクター
@@ -34,7 +44,7 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを呼び出します。
+        /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを呼びだします。
         /// </summary>
         /// <param name="arguments">引数コレクション。</param>
         /// <returns>戻り値。</returns>
@@ -44,7 +54,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 現在の引数を渡し、その戻り値を <see cref="ReturnValue"/> に格納することにより、インターセプトされたメソッドの呼び出します。
+        /// 現在の引数を渡し、その戻り値を <see cref="ReturnValue"/> に格納することにより、インターセプトされたメソッドの呼びだします。
         /// </summary>
         public virtual void Proceed()
         {
@@ -52,9 +62,9 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを非同期で呼びだします。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>タスク。</returns>
         public async Task InvokeAsync(Arguments arguments)
         {
             Task = InvokeAsyncImpl(arguments);
@@ -62,31 +72,22 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// 現在の引数を渡し、その戻り値を <see cref="ReturnValue"/> に格納することにより、インターセプトされたメソッドを非同期で呼びだします。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>タスク。</returns>
         public async Task ProceedAsync()
         {
             Task = InvokeAsyncImpl(Arguments);
             await Task;
-            ReturnValue = GetTaskResult();
+            ReturnValue = TaskResult;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="arguments"></param>
-        /// <returns></returns>
+        /// <param name="arguments">引数コレクション。</param>
+        /// <returns>タスク。</returns>
         protected virtual Task InvokeAsyncImpl(Arguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public virtual object GetTaskResult()
         {
             throw new NotImplementedException();
         }

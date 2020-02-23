@@ -444,7 +444,7 @@ namespace SoftCube.Aspects
             var aspectArgsTypeReference      = module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsType               = aspectArgsTypeReference.Resolve();
             var derivedAspectArgsType        = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
-            var getTaskResultMethod          = aspectArgsType.Methods.Single(m => m.Name == "GetTaskResult");
+            var getTaskResultMethod          = aspectArgsType.Properties.Single(p => p.Name == nameof(MethodInterceptionArgs.TaskResult)).GetMethod;
             var overridenGetTaskResultMethod = new MethodDefinition(getTaskResultMethod.Name, (getTaskResultMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), module.TypeSystem.Object);
 
             derivedAspectArgsType.Methods.Add(overridenGetTaskResultMethod);

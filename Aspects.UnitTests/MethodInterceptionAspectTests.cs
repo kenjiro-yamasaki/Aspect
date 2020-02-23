@@ -1824,7 +1824,7 @@ namespace SoftCube.Aspects
                         if ((Flags & EventLoggerFlags.InvokeAsync) == EventLoggerFlags.InvokeAsync)
                         {
                             await args.InvokeAsync(args.Arguments);
-                            args.ReturnValue = args.GetTaskResult();
+                            args.ReturnValue = args.TaskResult;
                             Logger.Trace("OnSuccess");
                         }
                     }
@@ -2935,7 +2935,7 @@ namespace SoftCube.Aspects
                             }
 
                             await args.InvokeAsync(args.Arguments);
-                            args.ReturnValue = args.GetTaskResult();
+                            args.ReturnValue = args.TaskResult;
                         }
                     }
 
@@ -3267,7 +3267,7 @@ namespace SoftCube.Aspects
                         {
                             await args.InvokeAsync(args.Arguments);
 
-                            var returnValue = args.GetTaskResult() as string;
+                            var returnValue = args.TaskResult as string;
                             args.ReturnValue = returnValue.ToUpper();
                         }
                     }
@@ -3303,7 +3303,7 @@ namespace SoftCube.Aspects
                         {
                             await args.InvokeAsync(args.Arguments);
 
-                            var returnValue = (int)args.GetTaskResult();
+                            var returnValue = (int)args.TaskResult;
                             args.ReturnValue = returnValue + 1;
                         }
                     }
@@ -3340,7 +3340,7 @@ namespace SoftCube.Aspects
                         {
                             await args.InvokeAsync(args.Arguments);
 
-                            var returnValue = args.GetTaskResult() as string;
+                            var returnValue = args.TaskResult as string;
                             args.ReturnValue = returnValue.ToUpper();
                         }
                     }
