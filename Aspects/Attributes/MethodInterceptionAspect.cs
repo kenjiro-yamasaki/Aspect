@@ -1,6 +1,8 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
@@ -39,6 +41,20 @@ namespace SoftCube.Aspects
             var isInvokeAsyncOverridden    = methodInjector.AspectType.Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
+                method.CustomAttributes.Remove(asyncStateMachineAttribute);
+
+                var module = method.Module;
+                var attribute = new CustomAttribute(module.ImportReference(typeof(AsyncStateMachineAttribute).GetConstructor(new Type[] {typeof(Type) })));
+                var argument  = new CustomAttributeArgument(module.ImportReference(typeof(Type)), module.ImportReference(typeof(MethodInterceptionAsyncStateMachine)));
+                attribute.ConstructorArguments.Add(argument);
+                method.CustomAttributes.Add(attribute);
+
+
+
+
+
+
+
                 aspectArgsInjector.CreateDerivedAspectArgs();
                 ReplaceAsyncMethod(methodInjector);
                 aspectArgsInjector.OverrideInvokeAsyncMethod(methodInjector.OriginalMethod);
@@ -123,9 +139,13 @@ namespace SoftCube.Aspects
                 injector.CreateArgumentsVariable(processor);
                 injector.CreateAspectArgsVariable(processor, derivedAspectArgsType);
                 injector.SetMethod(processor);
-                injector.InvokeEventHandler(processor, nameof(OnInvokeAsync));
-                processor.Emit(OpCodes.Pop);
-                injector.Return(processor);
+                ////////////////////////////////////////////////////////////////////////////////////
+                injector.CreateAsyncSteteMachine(processor);
+                injector.StartAsyncTaskMethodBuilder(processor);
+                ////////////////////////////////////////////////////////////////////////////////////
+                //injector.InvokeEventHandler(processor, nameof(OnInvokeAsync));
+                //processor.Emit(OpCodes.Pop);
+                //injector.Return(processor);
             }
         }
 

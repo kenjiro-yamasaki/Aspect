@@ -57,7 +57,7 @@ namespace SoftCube.Aspects
             var baseFullName  = $"{nameof(SoftCube)}.{nameof(Aspects)}.{nameof(MethodLevelAspect)}";
             var baseScopeName = $"{nameof(SoftCube)}.{nameof(Aspects)}.dll";
 
-            foreach (var attribute in method.CustomAttributes)
+            foreach (var attribute in method.CustomAttributes.ToList())
             {
                 var baseAttributeType = attribute.AttributeType.Resolve().BaseType.Resolve();
 

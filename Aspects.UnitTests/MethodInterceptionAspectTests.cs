@@ -1797,9 +1797,10 @@ namespace SoftCube.Aspects
                             await args.ProceedAsync();
                             stringBuilder.Append("OnSuccess ");
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             stringBuilder.Append("OnException ");
+                            throw;
                         }
                         finally
                         {

@@ -4,6 +4,7 @@ using SoftCube.Asserts;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -85,6 +86,16 @@ namespace SoftCube.Aspects
         /// objects のローカル変数。
         /// </summary>
         public int ObjectsVariable { get; private set; } = -1;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int AsyncStateMachineVariable { get; private set; } = -1;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int AsyncTaskMethodBuilderVariable { get; private set; } = -1;
 
         #endregion
 
@@ -258,6 +269,115 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Newobj, Module.ImportReference(aspectArgsType.Resolve().Methods.Single(m => m.Name == ".ctor")));
             processor.Emit(OpCodes.Stloc, AspectArgsVariable);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        public void CreateAsyncSteteMachine(ILProcessor processor)
+        {
+            Assert.Equal(AsyncStateMachineVariable, -1);
+            Assert.Equal(AsyncTaskMethodBuilderVariable, -1);
+            Assert.NotEqual(AspectVariable, -1);
+            Assert.NotEqual(AspectArgsVariable, -1);
+
+            var variables = TargetMethod.Body.Variables;
+            AsyncStateMachineVariable      = variables.Count() + 0;
+            AsyncTaskMethodBuilderVariable = variables.Count() + 1;
+
+            processor.Emit(OpCodes.Ldloc, AspectVariable);
+            processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+
+            var taskType = TargetMethod.ReturnType;
+            if (taskType is GenericInstanceType genericInstanceType)
+            {
+                var returnType       = genericInstanceType.GenericArguments[0].ToSystemType();
+                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine<>).MakeGenericType(returnType);
+                var builderType      = typeof(AsyncTaskMethodBuilder<>).MakeGenericType(returnType);
+
+                variables.Add(new VariableDefinition(Module.ImportReference(stateMachineType)));
+                variables.Add(new VariableDefinition(Module.ImportReference(builderType)));
+
+                processor.Emit(OpCodes.Newobj, Module.ImportReference(stateMachineType.GetConstructor(new Type[] { typeof(MethodInterceptionAspect), typeof(MethodInterceptionArgs) })));
+                processor.Emit(OpCodes.Stloc, AsyncStateMachineVariable);
+                processor.Emit(OpCodes.Ldloc, AsyncStateMachineVariable);
+                processor.Emit(OpCodes.Ldfld, Module.ImportReference(stateMachineType.GetField("Builder")));
+                processor.Emit(OpCodes.Stloc, AsyncTaskMethodBuilderVariable);
+            }
+            else
+            {
+                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine);
+                var builderType      = typeof(AsyncTaskMethodBuilder);
+
+                variables.Add(new VariableDefinition(Module.ImportReference(stateMachineType)));
+                variables.Add(new VariableDefinition(Module.ImportReference(builderType)));
+
+                processor.Emit(OpCodes.Newobj, Module.ImportReference(stateMachineType.GetConstructor(new Type[] { typeof(MethodInterceptionAspect), typeof(MethodInterceptionArgs) })));
+                processor.Emit(OpCodes.Stloc, AsyncStateMachineVariable);
+                processor.Emit(OpCodes.Ldloc, AsyncStateMachineVariable);
+                processor.Emit(OpCodes.Ldfld, Module.ImportReference(stateMachineType.GetField("Builder")));
+                processor.Emit(OpCodes.Stloc, AsyncTaskMethodBuilderVariable);
+            }
+        }
+
+        public void StartAsyncTaskMethodBuilder(ILProcessor processor)
+        {
+            //IL_0026:  ldloca.s   V_1
+            //IL_0028:  ldloca.s   V_0
+            //IL_002a:  call       instance void valuetype [mscorlib]System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<string>::Start<class SoftCube.Aspects.Program/'<例外_>d__1'>(!!0&)
+            processor.Emit(OpCodes.Ldloca, AsyncTaskMethodBuilderVariable);
+            processor.Emit(OpCodes.Ldloca, AsyncStateMachineVariable);
+
+            var taskType = TargetMethod.ReturnType;
+            if (taskType is GenericInstanceType genericInstanceType)
+            {
+                var returnType       = genericInstanceType.GenericArguments[0].ToSystemType();
+                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine<>).MakeGenericType(returnType);
+                var builderType      = typeof(AsyncTaskMethodBuilder<>).MakeGenericType(returnType);
+
+                processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
+
+                processor.Emit(OpCodes.Ldloc,  AsyncStateMachineVariable);
+                processor.Emit(OpCodes.Ldflda, Module.ImportReference(stateMachineType.GetField("Builder")));
+                processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
+                processor.Emit(OpCodes.Ret);
+                //processor.Emit(OpCodes.Ldloca, AsyncTaskMethodBuilderVariable);
+                //processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
+                //processor.Emit(OpCodes.Ret);
+            }
+            else 
+            {
+                var builderType = typeof(AsyncTaskMethodBuilder);
+                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine);
+
+                processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
+
+
+                //IL_007f:  ldloc.1
+                //IL_0080:  ldflda     valuetype [mscorlib]System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<string> SoftCube.Aspects.Program/'<例外>d__1'::'<>t__builder'
+                //IL_0085:  call       instance class [mscorlib]System.Threading.Tasks.Task`1<!0> valuetype [mscorlib]System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<string>::get_Task()
+                //IL_008a:  stloc.0
+                //IL_008b:  ldloc.0
+                //IL_008c:  ret
+                processor.Emit(OpCodes.Ldloc,  AsyncStateMachineVariable);
+                processor.Emit(OpCodes.Ldflda, Module.ImportReference(stateMachineType.GetField("Builder")));
+                processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
+                processor.Emit(OpCodes.Ret);
+
+
+
+
+                //processor.Emit(OpCodes.Ldloca, AsyncTaskMethodBuilderVariable);
+                //processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
+                //processor.Emit(OpCodes.Ret);
+            }
+
+            processor.Body.Method.Log();
+        }
+
+
+
+
 
         /// <summary>
         /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
