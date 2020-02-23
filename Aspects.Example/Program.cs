@@ -18,11 +18,8 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var task = program.値型を戻す();
+            var task = program.戻り値なし();
             task.Wait();
-
-            var result = task.Result;
-            Logger.Trace(result.ToString());
 
             Console.Read();
         }
@@ -55,10 +52,10 @@ namespace SoftCube.Aspects
                         await args.ProceedAsync();
                         Logger.Trace("OnSuccess");
                     }
-                    if ((Flags & EventLoggerFlags.InvokeAsync) == EventLoggerFlags.ProceedAsync)
+                    if ((Flags & EventLoggerFlags.InvokeAsync) == EventLoggerFlags.InvokeAsync)
                     {
-                        args.ReturnValue = args.InvokeAsync(args.Arguments);
-                        await (args.ReturnValue as Task);
+                        await args.InvokeAsync(args.Arguments);
+                        args.ReturnValue = args.GetTaskResult();
                         Logger.Trace("OnSuccess");
                     }
                 }
@@ -77,8 +74,9 @@ namespace SoftCube.Aspects
             }
         }
 
-        [EventLogger(EventLoggerFlags.ProceedAsync)]
-        private async Task<int> 値型を戻す()
+
+        [EventLogger(EventLoggerFlags.InvokeAsync)]
+        private async Task 戻り値なし()
         {
             Logger.Trace("0");
 
@@ -89,21 +87,18 @@ namespace SoftCube.Aspects
             });
 
             Logger.Trace("3");
-
-            return 4;
         }
 
         //[Fact]
-        //public void 値型を戻す_イベントハンドラーが正しくよばれる()
+        //public void 戻り値なし_イベントハンドラーが正しくよばれる()
         //{
         //    var appender = CreateAppender();
 
-        //    var task = 値型を戻す();
+        //    var task = 戻り値なし();
         //    Logger.Trace("1");
 
         //    task.Wait();
-        //    var result = task.Result;
-        //    Logger.Trace(result.ToString());
+        //    Logger.Trace("4");
 
         //    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", appender.ToString());
         //}

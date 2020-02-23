@@ -55,9 +55,10 @@ namespace SoftCube.Aspects
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task InvokeAsync(Arguments arguments)
+        public async Task InvokeAsync(Arguments arguments)
         {
-            return InvokeAsyncImpl(arguments);
+            Task = InvokeAsyncImpl(arguments);
+            await Task;
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace SoftCube.Aspects
         /// 
         /// </summary>
         /// <returns></returns>
-        protected virtual object GetTaskResult()
+        public virtual object GetTaskResult()
         {
             throw new NotImplementedException();
         }
