@@ -271,10 +271,10 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 非同期タスクメソッドビルダーを開始します。
+        /// 非同期ステートマシンを開始します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        public void StartAsyncTaskMethodBuilder(ILProcessor processor)
+        public void StartAsyncStateMachine(ILProcessor processor)
         {
             Assert.Equal(AsyncStateMachineVariable, -1);
             Assert.Equal(AsyncTaskMethodBuilderVariable, -1);

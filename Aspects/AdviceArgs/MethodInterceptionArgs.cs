@@ -48,17 +48,17 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="arguments">引数コレクション。</param>
         /// <returns>戻り値。</returns>
-        public virtual object Invoke(Arguments arguments)
+        public object Invoke(Arguments arguments)
         {
-            throw new NotImplementedException();
+            return InvokeImpl(arguments);
         }
 
         /// <summary>
         /// 現在の引数を渡し、その戻り値を <see cref="ReturnValue"/> に格納することにより、インターセプトされたメソッドの呼びだします。
         /// </summary>
-        public virtual void Proceed()
+        public void Proceed()
         {
-            throw new NotImplementedException();
+            ReturnValue = InvokeImpl(Arguments);
         }
 
         /// <summary>
@@ -83,7 +83,17 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを呼びだします。
+        /// </summary>
+        /// <param name="arguments">引数コレクション。</param>
+        /// <returns>戻り値。</returns>
+        protected virtual object InvokeImpl(Arguments arguments)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを非同期で呼びだします。
         /// </summary>
         /// <param name="arguments">引数コレクション。</param>
         /// <returns>タスク。</returns>

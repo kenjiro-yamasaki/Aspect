@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -40,18 +41,16 @@ namespace SoftCube.Aspects
             {
                 method.CustomAttributes.Remove(asyncStateMachineAttribute);
 
-                aspectArgsInjector.CreateDerivedAspectArgs();
+                aspectArgsInjector.CreateAspectArgsImpl();
                 ReplaceAsyncMethod(methodInjector);
-                aspectArgsInjector.OverrideInvokeAsyncMethod(methodInjector.OriginalMethod);
-                aspectArgsInjector.OverrideGetTaskResult();
-                //aspectArgsInjector.OverrideProceedAsyncMethod(methodInjector.OriginalMethod);
+                aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalMethod);
+                aspectArgsInjector.OverrideTaskResultProperty();
             }
             else
             {
-                aspectArgsInjector.CreateDerivedAspectArgs();
+                aspectArgsInjector.CreateAspectArgsImpl();
                 ReplaceMethod(methodInjector);
-                aspectArgsInjector.OverrideInvokeMethod(methodInjector.OriginalMethod);
-                aspectArgsInjector.OverrideProceedMethod(methodInjector.OriginalMethod);
+                aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalMethod);
             }
         }
 
@@ -124,11 +123,11 @@ namespace SoftCube.Aspects
                 injector.CreateAspectArgsVariable(processor, derivedAspectArgsType);
                 injector.SetMethod(processor);
 
-                /// var stateMachine = new MethodInterceptionAsyncStateMachine<string>(aspect, aspectArgs);
+                /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);
                 /// AsyncTaskMethodBuilder<string> builder = stateMachine.Builder;
                 /// builder.Start(ref stateMachine);
                 /// return stateMachine.Builder.Task;
-                injector.StartAsyncTaskMethodBuilder(processor);
+                injector.StartAsyncStateMachine(processor);
             }
         }
 
@@ -150,7 +149,7 @@ namespace SoftCube.Aspects
         /// <param name="args">メソッドインターセプション引数。</param>
         public virtual Task OnInvokeAsync(MethodInterceptionArgs args)
         {
-            return null;
+            throw new NotImplementedException();
         }
 
         #endregion
