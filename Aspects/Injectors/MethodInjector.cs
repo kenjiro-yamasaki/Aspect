@@ -187,14 +187,7 @@ namespace SoftCube.Aspects
                     if (parameterType.IsByReference)
                     {
                         var elementType = parameterType.GetElementType();
-                        if (elementType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Ldind_I4);
-                        }
-                        else
-                        {
-                            processor.Emit(OpCodes.Ldind_Ref);
-                        }
+                        processor.EmitLdind(elementType);
                     }
                 }
                 processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
@@ -229,7 +222,7 @@ namespace SoftCube.Aspects
                     {
                         var elementType = parameterType.GetElementType();
 
-                        processor.Emit(OpCodes.Ldind_I4);
+                        processor.EmitLdind(elementType);
                         if (elementType.IsValueType)
                         {
                             processor.Emit(OpCodes.Box, elementType);
@@ -501,7 +494,7 @@ namespace SoftCube.Aspects
                             processor.Emit(OpCodes.Unbox, elementType);
                             processor.Emit(OpCodes.Ldobj, elementType);
                         }
-                        processor.Emit(OpCodes.Stind_I4);
+                        processor.EmitStind(elementType);
                     }
                     else
                     {
@@ -546,15 +539,7 @@ namespace SoftCube.Aspects
                         }
                         processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
-
-                        if (elementType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Stind_I4);
-                        }
-                        else
-                        {
-                            processor.Emit(OpCodes.Stind_Ref);
-                        }
+                        processor.EmitStind(elementType);
                     }
                     else
                     {
@@ -601,7 +586,7 @@ namespace SoftCube.Aspects
                         {
                             processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         }
-                        processor.Emit(OpCodes.Ldind_I4);
+                        processor.EmitLdind(elementType);
                         if (elementType.IsValueType)
                         {
                             processor.Emit(OpCodes.Box, elementType);
@@ -639,6 +624,8 @@ namespace SoftCube.Aspects
 
                     if (parameterType.IsByReference)
                     {
+                        var elementType = parameterType.GetElementType();
+
                         processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         if (TargetMethod.IsStatic)
                         {
@@ -648,7 +635,7 @@ namespace SoftCube.Aspects
                         {
                             processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         }
-                        processor.Emit(OpCodes.Ldind_I4);
+                        processor.EmitLdind(elementType);
                         processor.Emit(OpCodes.Stfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
                     }
                     else

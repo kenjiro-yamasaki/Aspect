@@ -650,6 +650,113 @@ namespace SoftCube.Aspects
             return attributeIndex;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="typeReference"></param>
+        internal static void EmitLdind(this ILProcessor processor, TypeReference typeReference)
+        {
+            if (!typeReference.IsValueType)
+            {
+                processor.Emit(OpCodes.Ldind_Ref);
+                return;
+            }
+
+            switch (typeReference.Name)
+            {
+                case nameof(SByte):
+                    processor.Emit(OpCodes.Ldind_I1);
+                    return;
+
+                case nameof(Int16):
+                    processor.Emit(OpCodes.Ldind_I2);
+                    return;
+
+                case nameof(Int32):
+                    processor.Emit(OpCodes.Ldind_I4);
+                    return;
+
+                case nameof(Int64):
+                    processor.Emit(OpCodes.Ldind_I8);
+                    return;
+
+                case nameof(Boolean):
+                case nameof(Byte):
+                    processor.Emit(OpCodes.Ldind_U1);
+                    return;
+
+                case nameof(UInt16):
+                    processor.Emit(OpCodes.Ldind_U2);
+                    return;
+
+                case nameof(UInt32):
+                    processor.Emit(OpCodes.Ldind_U4);
+                    return;
+
+                case nameof(UInt64):
+                    processor.Emit(OpCodes.Ldind_I8);
+                    return;
+
+                case nameof(Single):
+                    processor.Emit(OpCodes.Ldind_R4);
+                    return;
+
+                case nameof(Double):
+                    processor.Emit(OpCodes.Ldind_R8);
+                    return;
+
+                default:
+                    processor.Emit(OpCodes.Ldobj, typeReference);
+                    return;
+            }
+        }
+
+        internal static void EmitStind(this ILProcessor processor, TypeReference typeReference)
+        {
+            if (!typeReference.IsValueType)
+            {
+                processor.Emit(OpCodes.Stind_Ref);
+                return;
+            }
+
+            switch (typeReference.Name)
+            {
+                case nameof(Boolean):
+                case nameof(Byte):
+                case nameof(SByte):
+                    processor.Emit(OpCodes.Stind_I1);
+                    return;
+
+                case nameof(Int16):
+                case nameof(UInt16):
+                    processor.Emit(OpCodes.Stind_I2);
+                    return;
+
+                case nameof(Int32):
+                case nameof(UInt32):
+                    processor.Emit(OpCodes.Stind_I4);
+                    return;
+
+                case nameof(Int64):
+                case nameof(UInt64):
+                    processor.Emit(OpCodes.Stind_I8);
+                    return;
+
+                case nameof(Single):
+                    processor.Emit(OpCodes.Stind_R4);
+                    return;
+
+                case nameof(Double):
+                    processor.Emit(OpCodes.Stind_R8);
+                    return;
+
+                default:
+                    processor.Emit(OpCodes.Stobj, typeReference);
+                    return;
+            }
+        }
+
         #endregion
 
         #endregion
