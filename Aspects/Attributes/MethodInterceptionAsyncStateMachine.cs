@@ -15,7 +15,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 非同期タスクメソッドビルダー。
         /// </summary>
-        public AsyncTaskMethodBuilder Builder;
+        public readonly AsyncTaskMethodBuilder Builder;
 
         /// <summary>
         /// ステート。
@@ -35,12 +35,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト。
         /// </summary>
-        private MethodInterceptionAspect Aspect;
+        private readonly MethodInterceptionAspect Aspect;
 
         /// <summary>
         /// アスペクト引数。
         /// </summary>
-        private MethodInterceptionArgs AspectArgs;
+        private readonly MethodInterceptionArgs AspectArgs;
 
         #endregion
 
@@ -68,17 +68,16 @@ namespace SoftCube.Aspects
         /// </summary>
         private void MoveNext()
         {
-            int state = State;
             try
             {
                 TaskAwaiter awaiter;
-                if (state != 0)
+                if (State != 0)
                 {
                     Task = Aspect.OnInvokeAsync(AspectArgs);
                     awaiter = Task.GetAwaiter();
                     if (!awaiter.IsCompleted)
                     {
-                        state = (State = 0);
+                        State = 0;
                         TaskAwaiter = awaiter;
 
                         var stateMachine = this;
@@ -91,7 +90,7 @@ namespace SoftCube.Aspects
                     awaiter = TaskAwaiter;
 
                     TaskAwaiter = default;
-                    state = (State = -1);
+                    State = -1;
                 }
                 awaiter.GetResult();
             }
@@ -139,7 +138,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 非同期タスクメソッドビルダー。
         /// </summary>
-        public AsyncTaskMethodBuilder<TResult> Builder;
+        public readonly AsyncTaskMethodBuilder<TResult> Builder;
 
         /// <summary>
         /// ステート。
@@ -159,12 +158,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト。
         /// </summary>
-        private MethodInterceptionAspect Aspect;
+        private readonly MethodInterceptionAspect Aspect;
 
         /// <summary>
         /// アスペクト引数。
         /// </summary>
-        private MethodInterceptionArgs AspectArgs;
+        private readonly MethodInterceptionArgs AspectArgs;
 
         #endregion
 

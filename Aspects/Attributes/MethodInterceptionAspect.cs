@@ -43,18 +43,6 @@ namespace SoftCube.Aspects
             {
                 method.CustomAttributes.Remove(asyncStateMachineAttribute);
 
-                var module = method.Module;
-                var attribute = new CustomAttribute(module.ImportReference(typeof(AsyncStateMachineAttribute).GetConstructor(new Type[] {typeof(Type) })));
-                var argument  = new CustomAttributeArgument(module.ImportReference(typeof(Type)), module.ImportReference(typeof(MethodInterceptionAsyncStateMachine)));
-                attribute.ConstructorArguments.Add(argument);
-                method.CustomAttributes.Add(attribute);
-
-
-
-
-
-
-
                 aspectArgsInjector.CreateDerivedAspectArgs();
                 ReplaceAsyncMethod(methodInjector);
                 aspectArgsInjector.OverrideInvokeAsyncMethod(methodInjector.OriginalMethod);
@@ -133,19 +121,16 @@ namespace SoftCube.Aspects
                 /// var arguments = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-                /// aspect.OnInvokeAsync(aspectArgs);
-                /// return (TResult)aspectArgs.ReturnValue;
                 injector.CreateAspectVariable(processor);
                 injector.CreateArgumentsVariable(processor);
                 injector.CreateAspectArgsVariable(processor, derivedAspectArgsType);
                 injector.SetMethod(processor);
-                ////////////////////////////////////////////////////////////////////////////////////
-                injector.CreateAsyncSteteMachine(processor);
+
+                /// var stateMachine = new MethodInterceptionAsyncStateMachine<string>(aspect, aspectArgs);
+                /// AsyncTaskMethodBuilder<string> builder = stateMachine.Builder;
+                /// builder.Start(ref stateMachine);
+                /// return stateMachine.Builder.Task;
                 injector.StartAsyncTaskMethodBuilder(processor);
-                ////////////////////////////////////////////////////////////////////////////////////
-                //injector.InvokeEventHandler(processor, nameof(OnInvokeAsync));
-                //processor.Emit(OpCodes.Pop);
-                //injector.Return(processor);
             }
         }
 
