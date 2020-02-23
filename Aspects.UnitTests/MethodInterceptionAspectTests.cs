@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SoftCube.Logging;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +9,19 @@ namespace SoftCube.Aspects
 {
     public class MethodInterceptionAspectTests
     {
+        #region テストユーティリティ
+
+        internal static StringAppender CreateAppender()
+        {
+            var appender = new StringAppender();
+            appender.LogFormat = "{Message} ";
+            Logger.Add(appender);
+
+            return appender;
+        }
+
+        #endregion
+
         public class 通常のメソッド
         {
             public class インスタンス
@@ -1017,7 +1031,6 @@ namespace SoftCube.Aspects
                     }
                 }
 
-
                 public class 引数
                 {
                     private class ChangeArguments : MethodInterceptionAspect
@@ -1782,90 +1795,774 @@ namespace SoftCube.Aspects
         {
             public class イベントハンドラーの呼びだし順序
             {
-                private readonly StringBuilder StringBuilder = new StringBuilder();
+                [Flags]
+                private enum EventLoggerFlags
+                {
+                    None         = 0,
+                    ProceedAsync = 1 << 0,
+                    InvokeAsync  = 1 << 1,
+                    Rethrow      = 1 << 2,
+                }
 
                 private class EventLogger : MethodInterceptionAspect
                 {
+                    private EventLoggerFlags Flags { get; }
+
+                    public EventLogger(EventLoggerFlags flags)
+                    {
+                        Flags = flags;
+                    }
+
                     public override async Task OnInvokeAsync(MethodInterceptionArgs args)
                     {
-                        var instance = args.Instance as イベントハンドラーの呼びだし順序;
-                        var stringBuilder = instance.StringBuilder;
-
-                        stringBuilder.Append("OnEntry ");
+                        Logger.Trace("OnEntry");
                         try
                         {
-                            await args.ProceedAsync();
-                            stringBuilder.Append("OnSuccess ");
+                            if ((Flags & EventLoggerFlags.ProceedAsync) == EventLoggerFlags.ProceedAsync)
+                            {
+                                await args.ProceedAsync();
+                                Logger.Trace("OnSuccess");
+                            }
+                            if ((Flags & EventLoggerFlags.InvokeAsync) == EventLoggerFlags.ProceedAsync)
+                            {
+                                args.ReturnValue = args.InvokeAsync(args.Arguments);
+                                await (args.ReturnValue as Task);
+                                Logger.Trace("OnSuccess");
+                            }
                         }
                         catch (Exception)
                         {
-                            stringBuilder.Append("OnException ");
-                            throw;
+                            Logger.Trace("OnException");
+                            if ((Flags & EventLoggerFlags.Rethrow) == EventLoggerFlags.Rethrow)
+                            {
+                                throw;
+                            }
                         }
                         finally
                         {
-                            stringBuilder.Append("OnExit ");
+                            Logger.Trace("OnExit");
                         }
                     }
                 }
 
-                [EventLogger]
-                private async Task 正常()
+                #region 戻り値なし
+
+                [EventLogger(EventLoggerFlags.ProceedAsync)]
+                private async Task 戻り値なし()
                 {
-                    StringBuilder.Append("0 ");
+                    Logger.Trace("0");
 
                     await Task.Run(() =>
                     {
                         Thread.Sleep(10);
-                        StringBuilder.Append("2 ");
+                        Logger.Trace("2");
                     });
 
-                    StringBuilder.Append("3 ");
+                    Logger.Trace("3");
                 }
 
                 [Fact]
-                public void 正常_イベントハンドラーが正しくよばれる()
+                public void 戻り値なし_イベントハンドラーが正しくよばれる()
                 {
-                    var task = 正常();
-                    StringBuilder.Append("1 ");
+                    var appender = CreateAppender();
+
+                    var task = 戻り値なし();
+                    Logger.Trace("1");
 
                     task.Wait();
-                    StringBuilder.Append("4 ");
+                    Logger.Trace("4");
 
-                    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", StringBuilder.ToString());
+                    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", appender.ToString());
                 }
 
-                [EventLogger]
-                private async Task 例外()
+                [EventLogger(EventLoggerFlags.ProceedAsync | EventLoggerFlags.Rethrow)]
+                private async Task 戻り値なし_例外を再送出する()
                 {
-                    StringBuilder.Append("0 ");
+                    Logger.Trace("0");
 
                     await Task.Run(() =>
                     {
                         Thread.Sleep(10);
-                        StringBuilder.Append("2 ");
+                        Logger.Trace("2");
                     });
 
-                    StringBuilder.Append("3 ");
+                    Logger.Trace("3");
 
                     throw new InvalidOperationException();
                 }
 
                 [Fact]
-                public void 例外_イベントハンドラーが正しくよばれる()
+                public void 戻り値なし_例外を再送出する_イベントハンドラーが正しくよばれる()
                 {
-                    var task = 例外();
-                    StringBuilder.Append("1 ");
+                    var appender = CreateAppender();
+
+                    var task = 戻り値なし_例外を再送出する();
+                    Logger.Trace("1");
 
                     var exception = Record.Exception(() => task.Wait());
-                    StringBuilder.Append("4 ");
+                    Logger.Trace("4");
 
                     var aggregateException = Assert.IsType<AggregateException>(exception);
                     Assert.Single(aggregateException.InnerExceptions);
                     Assert.IsType<InvalidOperationException>(aggregateException.InnerExceptions[0]);
-                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", StringBuilder.ToString());
+                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", appender.ToString());
                 }
+
+                [EventLogger(EventLoggerFlags.ProceedAsync)]
+                private async Task 戻り値なし_例外を再送出しない()
+                {
+                    Logger.Trace("0");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace("2");
+                    });
+
+                    Logger.Trace("3");
+
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 戻り値なし_例外を再送出しない_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var task = 戻り値なし_例外を再送出しない();
+                    Logger.Trace("1");
+
+                    var exception = Record.Exception(() => task.Wait());
+                    Logger.Trace("4");
+
+                    Assert.Null(exception);
+                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region 値型を戻す
+
+                [EventLogger(EventLoggerFlags.ProceedAsync)]
+                private async Task<int> 値型を戻す()
+                {
+                    Logger.Trace("0");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace("2");
+                    });
+
+                    Logger.Trace("3");
+
+                    return 4;
+                }
+
+                [Fact]
+                public void 値型を戻す_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var task = 値型を戻す();
+                    Logger.Trace("1");
+
+                    task.Wait();
+                    var result = task.Result;
+                    Logger.Trace(result.ToString());
+
+                    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", appender.ToString());
+                }
+
+                [EventLogger(EventLoggerFlags.ProceedAsync | EventLoggerFlags.Rethrow)]
+                private async Task<int> 値型を戻す_例外を再送出する()
+                {
+                    Logger.Trace("0");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace("2");
+                    });
+
+                    Logger.Trace("3");
+
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 値型を戻す_例外を再送出する_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var task = 値型を戻す_例外を再送出する();
+                    Logger.Trace("1");
+
+                    var exception = Record.Exception(() => task.Wait());
+                    Logger.Trace("4");
+
+                    var aggregateException = Assert.IsType<AggregateException>(exception);
+                    Assert.Single(aggregateException.InnerExceptions);
+                    Assert.IsType<InvalidOperationException>(aggregateException.InnerExceptions[0]);
+                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", appender.ToString());
+                }
+
+                [EventLogger(EventLoggerFlags.ProceedAsync)]
+                private async Task<int> 値型を戻す_例外を再送出しない()
+                {
+                    Logger.Trace("0");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace("2");
+                    });
+
+                    Logger.Trace("3");
+
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 値型を戻す_例外を再送出しない_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var task = 値型を戻す_例外を再送出しない();
+                    Logger.Trace("1");
+
+                    var exception = Record.Exception(() => task.Wait());
+                    Logger.Trace("4");
+
+                    Assert.Null(exception);
+                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region 値型を戻す
+
+                [EventLogger(EventLoggerFlags.ProceedAsync)]
+                private async Task<string> 参照型を戻す()
+                {
+                    Logger.Trace("0");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace("2");
+                    });
+
+                    Logger.Trace("3");
+
+                    return "4";
+                }
+
+                [Fact]
+                public void 参照型を戻す_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var task = 参照型を戻す();
+                    Logger.Trace("1");
+
+                    task.Wait();
+                    var result = task.Result;
+                    Logger.Trace(result);
+
+                    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", appender.ToString());
+                }
+
+                [EventLogger(EventLoggerFlags.ProceedAsync | EventLoggerFlags.Rethrow)]
+                private async Task<string> 参照型を戻す_例外を再送出する()
+                {
+                    Logger.Trace("0");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace("2");
+                    });
+
+                    Logger.Trace("3");
+
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 参照型を戻す_例外を再送出する_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var task = 参照型を戻す_例外を再送出する();
+                    Logger.Trace("1");
+
+                    var exception = Record.Exception(() => task.Wait());
+                    Logger.Trace("4");
+
+                    var aggregateException = Assert.IsType<AggregateException>(exception);
+                    Assert.Single(aggregateException.InnerExceptions);
+                    Assert.IsType<InvalidOperationException>(aggregateException.InnerExceptions[0]);
+                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", appender.ToString());
+                }
+
+                [EventLogger(EventLoggerFlags.ProceedAsync)]
+                private async Task<string> 参照型を戻す_例外を再送出しない()
+                {
+                    Logger.Trace("0");
+
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                        Logger.Trace("2");
+                    });
+
+                    Logger.Trace("3");
+
+                    throw new InvalidOperationException();
+                }
+
+                [Fact]
+                public void 参照型を戻す_例外を再送出しない_イベントハンドラーが正しくよばれる()
+                {
+                    var appender = CreateAppender();
+
+                    var task = 参照型を戻す_例外を再送出しない();
+                    Logger.Trace("1");
+
+                    var exception = Record.Exception(() => task.Wait());
+                    Logger.Trace("4");
+
+                    Assert.Null(exception);
+                    Assert.Equal($"OnEntry 0 1 2 3 OnException OnExit 4 ", appender.ToString());
+                }
+
+                #endregion
             }
+
+            public class 引数
+            {
+                private class ChangeArguments : MethodInterceptionAspect
+                {
+                    public override async Task OnInvokeAsync(MethodInterceptionArgs args)
+                    {
+                        for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                        {
+                            switch (args.Arguments[argumentIndex])
+                            {
+                                case int argument:
+                                    args.Arguments[argumentIndex] = argument + 1;
+                                    break;
+
+                                case string argument:
+                                    args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                                    break;
+
+                                case null:
+                                    break;
+
+                                default:
+                                    throw new NotSupportedException();
+                            }
+                        }
+
+                        await args.ProceedAsync();
+                    }
+                }
+
+                #region 引数1つ
+
+                [ChangeArguments]
+                private async Task<int> 引数を変更(int arg0)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return arg0;
+                }
+
+                [Fact]
+                public void 引数を変更_引数1つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+
+                    var task = 引数を変更(arg0);
+                    task.Wait();
+                    var result = task.Result;
+
+                    Assert.Equal(1, result);
+                }
+
+                #endregion
+
+                #region 引数2つ
+
+                [ChangeArguments]
+                private async Task<(int, string)> 引数を変更(int arg0, string arg1)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1);
+                }
+
+                [Fact]
+                public void 引数を変更_引数2つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+
+                    var task = 引数を変更(arg0, arg1);
+                    task.Wait();
+                    var (result0, result1) = task.Result;
+
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                }
+
+                #endregion
+
+                #region 引数3つ
+
+                [ChangeArguments]
+                private async Task<(int, string, int)> 引数を変更(int arg0, string arg1, int arg2)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1, arg2);
+                }
+
+                [Fact]
+                public void 引数を変更_引数3つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+
+                    var task = 引数を変更(arg0, arg1, arg2);
+                    task.Wait();
+                    var (result0, result1, result2) = task.Result;
+
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3, result2);
+                }
+
+                #endregion
+
+                #region 引数4つ
+
+                [ChangeArguments]
+                private async Task<(int, string, int, string)> 引数を変更(int arg0, string arg1, int arg2, string arg3)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1, arg2, arg3);
+                }
+
+                [Fact]
+                public void 引数を変更_引数4つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+
+                    var task = 引数を変更(arg0, arg1, arg2, arg3);
+                    task.Wait();
+                    var (result0, result1, result2, result3) = task.Result;
+
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal("4", result3);
+                }
+
+                #endregion
+
+                #region 引数5つ
+
+                [ChangeArguments]
+                private async Task<(int, string, int, string, int)> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1, arg2, arg3, arg4);
+                }
+
+                [Fact]
+                public void 引数を変更_引数5つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+
+                    var task = 引数を変更(arg0, arg1, arg2, arg3, arg4);
+                    task.Wait();
+
+                    var (result0, result1, result2, result3, result4) = task.Result;
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   result4);
+                }
+
+                #endregion
+
+                #region 引数6つ
+
+                [ChangeArguments]
+                private async Task<(int, string, int, string, int, string)> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1, arg2, arg3, arg4, arg5);
+                }
+
+                [Fact]
+                public void 引数を変更_引数6つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+
+                    var task = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5);
+                    task.Wait();
+
+                    var (result0, result1, result2, result3, result4, result5) = task.Result;
+
+                    Assert.Equal(1, result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3, result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5, result4);
+                    Assert.Equal("6", result5);
+                }
+
+                #endregion
+
+                #region 引数7つ
+
+                [ChangeArguments]
+                private async Task<(int, string, int, string, int, string, int)> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                }
+
+                [Fact]
+                public void 引数を変更_引数7つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+
+                    var task = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                    task.Wait();
+                    var (result0, result1, result2, result3, result4, result5, result6) = task.Result;
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   result4);
+                    Assert.Equal("6", result5);
+                    Assert.Equal(7,   result6);
+                }
+
+                #endregion
+
+                #region 引数8つ
+
+                [ChangeArguments]
+                private async Task<(int, string, int, string, int, string, int, string)> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6, string arg7)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                }
+
+                [Fact]
+                public void 引数を変更_引数8つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+                    var arg7 = "7";
+
+                    var task = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                    task.Wait();
+                    var (result0, result1, result2, result3, result4, result5, result6, result7) = task.Result;
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   result4);
+                    Assert.Equal("6", result5);
+                    Assert.Equal(7,   result6);
+                    Assert.Equal("8", result7);
+                }
+
+                #endregion
+
+                #region 引数9つ
+
+                [ChangeArguments]
+                private async Task<(int, string, int, string, int, string, int, string, int)> 引数を変更(int arg0, string arg1, int arg2, string arg3, int arg4, string arg5, int arg6, string arg7, int arg8)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                }
+
+                [Fact]
+                public void 引数を変更_引数9つ_正しくアスペクトが適用される()
+                {
+                    var arg0 = 0;
+                    var arg1 = "1";
+                    var arg2 = 2;
+                    var arg3 = "3";
+                    var arg4 = 4;
+                    var arg5 = "5";
+                    var arg6 = 6;
+                    var arg7 = "7";
+                    var arg8 = 8;
+
+                    var task = 引数を変更(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                    task.Wait();
+                    var (result0, result1, result2, result3, result4, result5, result6, result7, result8) = task.Result;
+
+                    Assert.Equal(1,   result0);
+                    Assert.Equal("2", result1);
+                    Assert.Equal(3,   result2);
+                    Assert.Equal("4", result3);
+                    Assert.Equal(5,   result4);
+                    Assert.Equal("6", result5);
+                    Assert.Equal(7,   result6);
+                    Assert.Equal("8", result7);
+                    Assert.Equal(9,   result8);
+                }
+
+                #endregion
+            }
+
+            public class 戻り値
+            {
+                #region 参照型
+
+                private class ToUpper : MethodInterceptionAspect
+                {
+                    public override async Task OnInvokeAsync(MethodInterceptionArgs args)
+                    {
+                        await args.ProceedAsync();
+
+                        var returnValue = args.ReturnValue as string;
+                        args.ReturnValue = returnValue.ToUpper();
+                    }
+                }
+
+                [ToUpper]
+                private async Task<string> 戻り値を大文字に変更(string arg1)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return arg1;
+                }
+
+                [Fact]
+                public void 戻り値を大文字に変更_正しくアスペクトが適用される()
+                {
+                    var task = 戻り値を大文字に変更("a");
+                    task.Wait();
+                    var result = task.Result;
+
+                    Assert.Equal("A", result);
+                }
+
+                #endregion
+
+                #region 値型
+
+                private class Increment : MethodInterceptionAspect
+                {
+                    public override async Task OnInvokeAsync(MethodInterceptionArgs args)
+                    {
+                        await args.ProceedAsync();
+
+                        var returnValue = (int)args.ReturnValue;
+                        args.ReturnValue = returnValue + 1;
+                    }
+                }
+
+                [Increment]
+                private async Task<int> 戻り値をインクリメント(int arg1)
+                {
+                    await Task.Run(() =>
+                    {
+                        Thread.Sleep(10);
+                    });
+
+                    return arg1;
+                }
+
+                [Fact]
+                public void 戻り値をインクリメント_正しくアスペクトが適用される()
+                {
+                    var task = 戻り値をインクリメント(1);
+                    task.Wait();
+                    var result = task.Result;
+
+                    Assert.Equal(2, result);
+                }
+
+                #endregion
+            }
+
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using SoftCube.Logging;
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,107 +18,95 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            var task = program.正常();
+            var task = program.値型を戻す();
             task.Wait();
 
-            //var result = task.Result;
+            var result = task.Result;
+            Logger.Trace(result.ToString());
 
             Console.Read();
         }
 
+        [Flags]
+        private enum EventLoggerFlags
+        {
+            None = 0,
+            ProceedAsync = 1 << 0,
+            InvokeAsync = 1 << 1,
+            Rethrow = 1 << 2,
+        }
 
         private class EventLogger : MethodInterceptionAspect
         {
+            private EventLoggerFlags Flags { get; }
+
+            public EventLogger(EventLoggerFlags flags)
+            {
+                Flags = flags;
+            }
+
             public override async Task OnInvokeAsync(MethodInterceptionArgs args)
             {
-                Logger.Trace("OnEntry ");
+                Logger.Trace("OnEntry");
                 try
                 {
-                    await args.ProceedAsync();
-                    Logger.Trace("OnSuccess ");
+                    if ((Flags & EventLoggerFlags.ProceedAsync) == EventLoggerFlags.ProceedAsync)
+                    {
+                        await args.ProceedAsync();
+                        Logger.Trace("OnSuccess");
+                    }
+                    if ((Flags & EventLoggerFlags.InvokeAsync) == EventLoggerFlags.ProceedAsync)
+                    {
+                        args.ReturnValue = args.InvokeAsync(args.Arguments);
+                        await (args.ReturnValue as Task);
+                        Logger.Trace("OnSuccess");
+                    }
                 }
                 catch (Exception)
                 {
-                    Logger.Trace("OnException ");
+                    Logger.Trace("OnException");
+                    if ((Flags & EventLoggerFlags.Rethrow) == EventLoggerFlags.Rethrow)
+                    {
+                        throw;
+                    }
                 }
                 finally
                 {
-                    Logger.Trace("OnExit ");
+                    Logger.Trace("OnExit");
                 }
             }
         }
 
-        [EventLogger]
-        private async Task 正常()
+        [EventLogger(EventLoggerFlags.ProceedAsync)]
+        private async Task<int> 値型を戻す()
         {
-            Logger.Trace("0 ");
+            Logger.Trace("0");
 
             await Task.Run(() =>
             {
                 Thread.Sleep(10);
-                Logger.Trace("2 ");
+                Logger.Trace("2");
             });
 
-            Logger.Trace("3 ");
+            Logger.Trace("3");
 
-            //return "4 ";
+            return 4;
         }
 
-
-
-        //private Task 正常_()
+        //[Fact]
+        //public void 値型を戻す_イベントハンドラーが正しくよばれる()
         //{
-        //    var stateMachine = new MethodInterceptionAsyncStateMachine(null, null);
-        //    var builder = stateMachine.Builder;
-        //    builder.Start(ref stateMachine);
-        //    return builder.Task;
+        //    var appender = CreateAppender();
+
+        //    var task = 値型を戻す();
+        //    Logger.Trace("1");
+
+        //    task.Wait();
+        //    var result = task.Result;
+        //    Logger.Trace(result.ToString());
+
+        //    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", appender.ToString());
         //}
 
-
-        //public async Task<string> 例外_()
-        //{
-        //    var aspectArgs = new AspectArgs(this, new Arguments());
-        //    var aspect = new Aspect();
-
-        //    var task = aspect.OnInvokeAsync(aspectArgs);
-        //    await task;
-        //    return aspectArgs.ReturnValue as string;
-        //}
-
-        //public async Task<string> 例外()
-        //{
-        //    Logger.Trace("0");
-
-        //    await Task.Run(() =>
-        //    {
-        //        Thread.Sleep(10);
-        //        Logger.Trace("2");
-        //    });
-        //    Logger.Trace("3");
-
-        //    return "4";
-        //}
-
-        //private class AspectArgs : MethodInterceptionArgs
-        //{
-        //    public AspectArgs(object instance, Arguments arguments)
-        //        : base(instance, arguments)
-        //    {
-        //    }
-
-        //    public override async Task ProceedAsync()
-        //    {
-        //        var program = Instance as Program;
-        //        ReturnValue = await program.例外();
-        //    }
-        //}
-
-        //private class Aspect
-        //{
-        //    public async Task OnInvokeAsync(MethodInterceptionArgs args)
-        //    {
-        //        await args.ProceedAsync();
-        //    }
-        //}
     }
 }

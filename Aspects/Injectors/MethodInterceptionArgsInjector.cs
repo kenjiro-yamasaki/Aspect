@@ -365,11 +365,11 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// <see cref="MethodInterceptionArgs.InvokeAsync(Arguments)"/> をオーバーライドします。
+        /// <see cref="MethodInterceptionArgs.InvokeAsyncImpl(Arguments)"/> をオーバーライドします。
         /// </summary>
         /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
-        /// <see cref="MethodInterceptionArgs.InvokeAsync(Arguments)"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
+        /// <see cref="MethodInterceptionArgs.InvokeAsyncImpl(Arguments)"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
         public void OverrideInvokeAsyncMethod(MethodDefinition originalMethod)
@@ -382,7 +382,7 @@ namespace SoftCube.Aspects
             var aspectArgsType             = aspectArgsTypeReference.Resolve();
             var derivedAspectArgsType      = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
             var argumentsTypeReferernce    = module.ImportReference(typeof(Arguments));
-            var invokeAsyncMethod          = aspectArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.InvokeAsync));
+            var invokeAsyncMethod          = aspectArgsType.Methods.Single(m => m.Name == "InvokeAsyncImpl");
             var overridenInvokeAsyncMethod = new MethodDefinition(invokeAsyncMethod.Name, (invokeAsyncMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), module.ImportReference(typeof(Task)));
 
             overridenInvokeAsyncMethod.Parameters.Add(new ParameterDefinition(argumentsTypeReferernce) { Name = "arguments" });
@@ -433,77 +433,144 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// <see cref="MethodInterceptionArgs.ProceedAsync()"/> をオーバーライドします。
+        /// 
         /// </summary>
-        /// <param name="injector">メソッドへの注入。</param>
-        /// <remarks>
-        /// <see cref="MethodInterceptionArgs.ProceedAsync()"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodInjector)"/> を呼びだしてください。
-        /// </remarks>
-        public void OverrideProceedAsyncMethod(MethodDefinition originalMethod)
+        public void OverrideGetTaskResult()
         {
             var module        = TargetMethod.Module;
             var declaringType = TargetMethod.DeclaringType;
 
-            /// Proceed メソッドのオーバーライドを追加します。
-            var aspectArgsTypeReference     = module.ImportReference(typeof(MethodInterceptionArgs));
-            var aspectArgsType              = aspectArgsTypeReference.Resolve();
-            var derivedAspectArgsType       = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
-            var proceedAsyncMethod          = aspectArgsType.Methods.Single(m => m.Name == nameof(MethodInterceptionArgs.ProceedAsync));
-            var overridenProceedAsyncMethod = new MethodDefinition(proceedAsyncMethod.Name, (proceedAsyncMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), module.ImportReference(typeof(Task)));
+            /// Invoke メソッドのオーバーライドを追加します。
+            var aspectArgsTypeReference      = module.ImportReference(typeof(MethodInterceptionArgs));
+            var aspectArgsType               = aspectArgsTypeReference.Resolve();
+            var derivedAspectArgsType        = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
+            var getTaskResultMethod          = aspectArgsType.Methods.Single(m => m.Name == "GetTaskResult");
+            var overridenGetTaskResultMethod = new MethodDefinition(getTaskResultMethod.Name, (getTaskResultMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), module.TypeSystem.Object);
 
-            derivedAspectArgsType.Methods.Add(overridenProceedAsyncMethod);
+            derivedAspectArgsType.Methods.Add(overridenGetTaskResultMethod);
 
-            /// Proceed メソッドのオーバーライドを実装します。
+            /// GetTaskResult メソッドのオーバーライドを実装します。
             {
-                var processor = overridenProceedAsyncMethod.Body.GetILProcessor();
+                var processor = overridenGetTaskResultMethod.Body.GetILProcessor();
+                var variables = overridenGetTaskResultMethod.Body.Variables;
 
-                /// public override Task ProceedAsync()
-                /// {
-                ///     base.ReturnType = ((TInstance)base.Instance).OriginalMethod((TArg0)base.Arguments[0], (TArg1)base.Arguments[1], ...);
-                ///     return base.ReturnType;
-                /// }
-                if (originalMethod.HasReturnValue())
+                if (TargetMethod.ReturnType is GenericInstanceType genericInstanceType)
                 {
-                    processor.Emit(OpCodes.Ldarg_0);
-                }
+                    var returnType = genericInstanceType.GenericArguments[0].ToSystemType();
+                    var taskType   = typeof(Task<>).MakeGenericType(returnType);
 
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
-                for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
-                {
-                    var parameter     = originalMethod.Parameters[parameterIndex];
-                    var parameterType = parameter.ParameterType;
+                    var taskVariable = variables.Count;
+                    variables.Add(new VariableDefinition(module.ImportReference(taskType)));
 
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
-                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
-                    if (parameterType.IsValueType)
+                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Task)).GetGetMethod()));
+                    processor.Emit(OpCodes.Isinst, module.ImportReference(taskType));
+                    processor.Emit(OpCodes.Stloc, taskVariable);
+                    processor.Emit(OpCodes.Ldloc, taskVariable);
+                    processor.Emit(OpCodes.Callvirt, module.ImportReference(taskType.GetProperty("Result").GetGetMethod()));
+                    if (returnType.IsValueType)
                     {
-                        processor.Emit(OpCodes.Unbox_Any, parameterType);
+                        processor.Emit(OpCodes.Box, module.ImportReference(returnType));
                     }
-                    else
-                    {
-                        processor.Emit(OpCodes.Castclass, parameterType);
-                    }
+                    processor.Emit(OpCodes.Ret);
                 }
-                processor.Emit(OpCodes.Callvirt, originalMethod);
-
-                if (originalMethod.HasReturnValue())
+                else
                 {
-                    if (originalMethod.ReturnType.IsValueType)
-                    {
-                        processor.Emit(OpCodes.Box, originalMethod.ReturnType);
-                    }
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetSetMethod()));
+                    processor.Emit(OpCodes.Ldnull);
+                    processor.Emit(OpCodes.Ret);
                 }
-
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.ReturnValue)).GetGetMethod()));
-                processor.Emit(OpCodes.Ret);
             }
         }
+
+        ///// <summary>
+        ///// <see cref="MethodInterceptionArgs.ProceedAsyncImpl()"/> をオーバーライドします。
+        ///// </summary>
+        ///// <param name="injector">メソッドへの注入。</param>
+        ///// <remarks>
+        ///// <see cref="MethodInterceptionArgs.ProceedAsyncImpl()"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
+        ///// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodInjector)"/> を呼びだしてください。
+        ///// </remarks>
+        //public void OverrideProceedAsyncMethod(MethodDefinition originalMethod)
+        //{
+        //    var module        = TargetMethod.Module;
+        //    var declaringType = TargetMethod.DeclaringType;
+
+        //    /// Proceed メソッドのオーバーライドを追加します。
+        //    var aspectArgsTypeReference     = module.ImportReference(typeof(MethodInterceptionArgs));
+        //    var aspectArgsType              = aspectArgsTypeReference.Resolve();
+        //    var derivedAspectArgsType       = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
+        //    var proceedAsyncMethod          = aspectArgsType.Methods.Single(m => m.Name == "ProceedAsyncImpl");
+        //    var overridenProceedAsyncMethod = new MethodDefinition(proceedAsyncMethod.Name, (proceedAsyncMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), module.ImportReference(typeof(Task)));
+
+        //    derivedAspectArgsType.Methods.Add(overridenProceedAsyncMethod);
+
+        //    /// Proceed メソッドのオーバーライドを実装します。
+        //    {
+        //        var processor = overridenProceedAsyncMethod.Body.GetILProcessor();
+
+        //        /// public override Task ProceedAsync()
+        //        /// {
+        //        ///     base.ReturnType = ((TInstance)base.Instance).OriginalMethod((TArg0)base.Arguments[0], (TArg1)base.Arguments[1], ...);
+        //        ///     return base.ReturnType;
+        //        /// }
+        //        if (originalMethod.HasReturnValue())
+        //        {
+        //            processor.Emit(OpCodes.Ldarg_0);
+        //        }
+
+        //        processor.Emit(OpCodes.Ldarg_0);
+        //        processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+        //        for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
+        //        {
+        //            var parameter     = originalMethod.Parameters[parameterIndex];
+        //            var parameterType = parameter.ParameterType;
+
+        //            processor.Emit(OpCodes.Ldarg_0);
+        //            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Arguments)).GetGetMethod()));
+        //            processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+        //            processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+        //            if (parameterType.IsValueType)
+        //            {
+        //                processor.Emit(OpCodes.Unbox_Any, parameterType);
+        //            }
+        //            else
+        //            {
+        //                processor.Emit(OpCodes.Castclass, parameterType);
+        //            }
+        //        }
+        //        processor.Emit(OpCodes.Callvirt, originalMethod);
+
+        //        //if (originalMethod.HasReturnValue())
+        //        //{
+        //        //    if (originalMethod.ReturnType.IsValueType)
+        //        //    {
+        //        //        processor.Emit(OpCodes.Box, originalMethod.ReturnType);
+        //        //    }
+        //        //}
+        //        //else
+        //        //{
+        //        //    processor.Emit(OpCodes.Ldnull);
+        //        //}
+        //        processor.Emit(OpCodes.Castclass, Module.ImportReference(typeof(Task)));
+        //        processor.Emit(OpCodes.Ret);
+
+
+
+
+        //        //if (originalMethod.HasReturnValue())
+        //        //{
+        //        //    if (originalMethod.ReturnType.IsValueType)
+        //        //    {
+        //        //        processor.Emit(OpCodes.Box, originalMethod.ReturnType);
+        //        //    }
+        //        //    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Task)).GetSetMethod()));
+        //        //}
+
+        //        //processor.Emit(OpCodes.Ldarg_0);
+        //        //processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Task)).GetGetMethod()));
+        //        //processor.Emit(OpCodes.Ret);
+        //    }
+        //}
 
         #endregion
     }

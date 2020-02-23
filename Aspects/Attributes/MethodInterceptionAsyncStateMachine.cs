@@ -191,7 +191,7 @@ namespace SoftCube.Aspects
         /// </summary>
         private void MoveNext()
         {
-            TResult result;
+            //var result = default(TResult);
             try
             {
                 TaskAwaiter taskAwaiter;
@@ -219,8 +219,11 @@ namespace SoftCube.Aspects
                 }
                 taskAwaiter.GetResult();
 
-                var resultTask = AspectArgs.ReturnValue as Task<TResult>;
-                result = resultTask.Result;
+                //var resultTask = AspectArgs.Task as Task<TResult>;
+                //if (resultTask.Exception == null)
+                //{
+                //    AspectArgs.ReturnValue = resultTask.Result;
+                //}
             }
             catch (Exception exception)
             {
@@ -230,7 +233,14 @@ namespace SoftCube.Aspects
             }
 
             State = -2;
-            Builder.SetResult(result);
+            if (AspectArgs.ReturnValue != null)
+            {
+                Builder.SetResult((TResult)AspectArgs.ReturnValue);
+            }
+            else
+            {
+                Builder.SetResult(default);
+            }
         }
 
         #region IAsyncStateMachine

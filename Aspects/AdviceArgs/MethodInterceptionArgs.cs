@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
@@ -9,6 +8,15 @@ namespace SoftCube.Aspects
     /// </summary>
     public abstract class MethodInterceptionArgs : MethodArgs
     {
+        #region プロパティ
+
+        /// <summary>
+        /// 非同期タスク。
+        /// </summary>
+        public Task Task { get; set; }
+
+        #endregion
+
         #region コンストラクター
 
         /// <summary>
@@ -47,7 +55,28 @@ namespace SoftCube.Aspects
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual Task InvokeAsync(Arguments arguments)
+        public Task InvokeAsync(Arguments arguments)
+        {
+            return InvokeAsyncImpl(arguments);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public async Task ProceedAsync()
+        {
+            Task = InvokeAsyncImpl(Arguments);
+            await Task;
+            ReturnValue = GetTaskResult();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        protected virtual Task InvokeAsyncImpl(Arguments arguments)
         {
             throw new NotImplementedException();
         }
@@ -56,7 +85,7 @@ namespace SoftCube.Aspects
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual Task ProceedAsync()
+        protected virtual object GetTaskResult()
         {
             throw new NotImplementedException();
         }

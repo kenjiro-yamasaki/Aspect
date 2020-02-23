@@ -1,8 +1,5 @@
 ﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
@@ -46,7 +43,8 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.CreateDerivedAspectArgs();
                 ReplaceAsyncMethod(methodInjector);
                 aspectArgsInjector.OverrideInvokeAsyncMethod(methodInjector.OriginalMethod);
-                aspectArgsInjector.OverrideProceedAsyncMethod(methodInjector.OriginalMethod);
+                aspectArgsInjector.OverrideGetTaskResult();
+                //aspectArgsInjector.OverrideProceedAsyncMethod(methodInjector.OriginalMethod);
             }
             else
             {
