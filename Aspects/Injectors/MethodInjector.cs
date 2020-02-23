@@ -183,9 +183,18 @@ namespace SoftCube.Aspects
                     {
                         processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                     }
+
                     if (parameterType.IsByReference)
                     {
-                        processor.Emit(OpCodes.Ldind_I4);
+                        var elementType = parameterType.GetElementType();
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Ldind_I4);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldind_Ref);
+                        }
                     }
                 }
                 processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
@@ -525,6 +534,8 @@ namespace SoftCube.Aspects
 
                     if (parameterType.IsByReference)
                     {
+                        var elementType = parameterType.GetElementType();
+
                         if (TargetMethod.IsStatic)
                         {
                             processor.Emit(OpCodes.Ldarg, parameterIndex);
@@ -535,7 +546,15 @@ namespace SoftCube.Aspects
                         }
                         processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
-                        processor.Emit(OpCodes.Stind_I4);
+
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Stind_I4);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Stind_Ref);
+                        }
                     }
                     else
                     {

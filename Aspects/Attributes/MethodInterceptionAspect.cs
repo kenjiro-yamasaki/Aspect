@@ -93,7 +93,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 注入対象のメソッドを書き換えます。
+        /// 注入対象の非同期メソッドを書き換えます。
         /// </summary>
         /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
