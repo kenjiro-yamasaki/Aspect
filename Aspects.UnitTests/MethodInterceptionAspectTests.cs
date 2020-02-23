@@ -1843,7 +1843,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class Process
+            public class ProcessAsync
             {
                 public class イベントハンドラーの呼びだし順序
                 {
@@ -2609,7 +2609,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class Invoke
+            public class InvokeAsync
             {
                 public class イベントハンドラーの呼びだし順序
                 {
@@ -3373,6 +3373,265 @@ namespace SoftCube.Aspects
 
                         Assert.Equal("A", result);
                     }
+                }
+            }
+
+            public class None
+            {
+                public class イベントハンドラーの呼びだし順序
+                {
+                    #region 戻り値なし
+
+                    [EventLogger(EventLoggerFlags.None)]
+                    private async Task 戻り値なし()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+                    }
+
+                    [Fact]
+                    public void 戻り値なし_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        戻り値なし().Wait();
+                        Logger.Trace("1");
+
+                        Assert.Equal($"OnEntry OnExit 1 ", appender.ToString());
+                    }
+
+                    [EventLogger(EventLoggerFlags.Rethrow)]
+                    private async Task 戻り値なし_例外を再送出する()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        throw new InvalidOperationException();
+                    }
+
+                    [Fact]
+                    public void 戻り値なし_例外を再送出する_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        戻り値なし_例外を再送出する().Wait();
+                        Logger.Trace("1");
+
+                        Assert.Equal($"OnEntry OnExit 1 ", appender.ToString());
+                    }
+
+                    [EventLogger(EventLoggerFlags.None)]
+                    private async Task 戻り値なし_例外を再送出しない()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        throw new InvalidOperationException();
+                    }
+
+                    [Fact]
+                    public void 戻り値なし_例外を再送出しない_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        戻り値なし_例外を再送出しない().Wait();
+                        Logger.Trace("1");
+
+                        Assert.Equal($"OnEntry OnExit 1 ", appender.ToString());
+                    }
+
+                    #endregion
+
+                    #region 値型を戻す
+
+                    [EventLogger(EventLoggerFlags.None)]
+                    private async Task<int> 値型を戻す()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        return 4;
+                    }
+
+                    [Fact]
+                    public void 値型を戻す_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        var task = 値型を戻す();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry OnExit 0 ", appender.ToString());
+                    }
+
+                    [EventLogger(EventLoggerFlags.Rethrow)]
+                    private async Task<int> 値型を戻す_例外を再送出する()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        throw new InvalidOperationException();
+                    }
+
+                    [Fact]
+                    public void 値型を戻す_例外を再送出する_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        var task = 値型を戻す_例外を再送出する();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry OnExit 0 ", appender.ToString());
+                    }
+
+                    [EventLogger(EventLoggerFlags.None)]
+                    private async Task<int> 値型を戻す_例外を再送出しない()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        throw new InvalidOperationException();
+                    }
+
+                    [Fact]
+                    public void 値型を戻す_例外を再送出しない_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        var task = 値型を戻す_例外を再送出しない();
+                        Logger.Trace(task.Result.ToString());
+
+                        Assert.Equal($"OnEntry OnExit 0 ", appender.ToString());
+                    }
+
+                    #endregion
+
+                    #region 値型を戻す
+
+                    [EventLogger(EventLoggerFlags.None)]
+                    private async Task<string> 参照型を戻す()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        return "4";
+                    }
+
+                    [Fact]
+                    public void 参照型を戻す_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        var task = 参照型を戻す();
+
+                        Assert.Null(task.Result);
+                        Assert.Equal($"OnEntry OnExit ", appender.ToString());
+                    }
+
+                    [EventLogger(EventLoggerFlags.Rethrow)]
+                    private async Task<string> 参照型を戻す_例外を再送出する()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        throw new InvalidOperationException();
+                    }
+
+                    [Fact]
+                    public void 参照型を戻す_例外を再送出する_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        var task = 参照型を戻す_例外を再送出する();
+
+                        Assert.Null(task.Result);
+                        Assert.Equal($"OnEntry OnExit ", appender.ToString());
+                    }
+
+                    [EventLogger(EventLoggerFlags.None)]
+                    private async Task<string> 参照型を戻す_例外を再送出しない()
+                    {
+                        Logger.Trace("0");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep(10);
+                            Logger.Trace("2");
+                        });
+
+                        Logger.Trace("3");
+
+                        throw new InvalidOperationException();
+                    }
+
+                    [Fact]
+                    public void 参照型を戻す_例外を再送出しない_イベントハンドラーが正しくよばれる()
+                    {
+                        var appender = CreateAppender();
+
+                        var task = 参照型を戻す_例外を再送出しない();
+
+                        Assert.Null(task.Result);
+                        Assert.Equal($"OnEntry OnExit ", appender.ToString());
+                    }
+
+                    #endregion
                 }
             }
         }

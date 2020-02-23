@@ -24,58 +24,21 @@ namespace SoftCube.Aspects
             Console.Read();
         }
 
-        [Flags]
-        private enum EventLoggerFlags
-        {
-            None = 0,
-            ProceedAsync = 1 << 0,
-            InvokeAsync = 1 << 1,
-            Rethrow = 1 << 2,
-        }
-
         private class EventLogger : MethodInterceptionAspect
         {
-            private EventLoggerFlags Flags { get; }
-
-            public EventLogger(EventLoggerFlags flags)
-            {
-                Flags = flags;
-            }
-
             public override async Task OnInvokeAsync(MethodInterceptionArgs args)
             {
-                Logger.Trace("OnEntry");
-                try
+                if (false)
                 {
-                    if ((Flags & EventLoggerFlags.ProceedAsync) == EventLoggerFlags.ProceedAsync)
+                    await Task.Run(() =>
                     {
-                        await args.ProceedAsync();
-                        Logger.Trace("OnSuccess");
-                    }
-                    if ((Flags & EventLoggerFlags.InvokeAsync) == EventLoggerFlags.InvokeAsync)
-                    {
-                        await args.InvokeAsync(args.Arguments);
-                        args.ReturnValue = args.GetTaskResult();
-                        Logger.Trace("OnSuccess");
-                    }
-                }
-                catch (Exception)
-                {
-                    Logger.Trace("OnException");
-                    if ((Flags & EventLoggerFlags.Rethrow) == EventLoggerFlags.Rethrow)
-                    {
-                        throw;
-                    }
-                }
-                finally
-                {
-                    Logger.Trace("OnExit");
+                        //Thread.Sleep(10);
+                    });
                 }
             }
         }
 
-
-        [EventLogger(EventLoggerFlags.InvokeAsync)]
+        [EventLogger]
         private async Task 戻り値なし()
         {
             Logger.Trace("0");
@@ -88,20 +51,5 @@ namespace SoftCube.Aspects
 
             Logger.Trace("3");
         }
-
-        //[Fact]
-        //public void 戻り値なし_イベントハンドラーが正しくよばれる()
-        //{
-        //    var appender = CreateAppender();
-
-        //    var task = 戻り値なし();
-        //    Logger.Trace("1");
-
-        //    task.Wait();
-        //    Logger.Trace("4");
-
-        //    Assert.Equal($"OnEntry 0 1 2 3 OnSuccess OnExit 4 ", appender.ToString());
-        //}
-
     }
 }

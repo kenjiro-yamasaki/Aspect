@@ -15,17 +15,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 非同期タスクメソッドビルダー。
         /// </summary>
-        public readonly AsyncTaskMethodBuilder Builder;
+        public AsyncTaskMethodBuilder Builder;
 
         /// <summary>
         /// ステート。
         /// </summary>
         private int State;
-
-        /// <summary>
-        /// 非同期タスク。
-        /// </summary>
-        private Task Task;
 
         /// <summary>
         /// 非同期タスクが完了するまで待機するオブジェクト。
@@ -73,8 +68,7 @@ namespace SoftCube.Aspects
                 TaskAwaiter awaiter;
                 if (State != 0)
                 {
-                    Task = Aspect.OnInvokeAsync(AspectArgs);
-                    awaiter = Task.GetAwaiter();
+                    awaiter = Aspect.OnInvokeAsync(AspectArgs).GetAwaiter();
                     if (!awaiter.IsCompleted)
                     {
                         State = 0;
@@ -118,6 +112,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// ステートマシンを設定します。
         /// </summary>
+        /// <param name="stateMachine">ステートマシン。</param>
         void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
         {
         }
@@ -138,17 +133,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 非同期タスクメソッドビルダー。
         /// </summary>
-        public readonly AsyncTaskMethodBuilder<TResult> Builder;
+        public AsyncTaskMethodBuilder<TResult> Builder;
 
         /// <summary>
         /// ステート。
         /// </summary>
         private int State;
-
-        /// <summary>
-        /// 非同期タスク。
-        /// </summary>
-        private Task Task;
 
         /// <summary>
         /// 非同期タスクが完了するまで待機するオブジェクト。
@@ -191,39 +181,30 @@ namespace SoftCube.Aspects
         /// </summary>
         private void MoveNext()
         {
-            //var result = default(TResult);
             try
             {
-                TaskAwaiter taskAwaiter;
+                TaskAwaiter awaiter;
                 if (State != 0)
                 {
-                    Task = Aspect.OnInvokeAsync(AspectArgs);
-
-                    taskAwaiter = Task.GetAwaiter();
-                    if (!taskAwaiter.IsCompleted)
+                    awaiter = Aspect.OnInvokeAsync(AspectArgs).GetAwaiter();
+                    if (!awaiter.IsCompleted)
                     {
                         State = 0;
-                        TaskAwaiter = taskAwaiter;
+                        TaskAwaiter = awaiter;
 
                         var stateMachine = this;
-                        Builder.AwaitUnsafeOnCompleted(ref taskAwaiter, ref stateMachine);
+                        Builder.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
                         return;
                     }
                 }
                 else
                 {
-                    taskAwaiter = TaskAwaiter;
+                    awaiter = TaskAwaiter;
 
                     TaskAwaiter = default;
                     State = -1;
                 }
-                taskAwaiter.GetResult();
-
-                //var resultTask = AspectArgs.Task as Task<TResult>;
-                //if (resultTask.Exception == null)
-                //{
-                //    AspectArgs.ReturnValue = resultTask.Result;
-                //}
+                awaiter.GetResult();
             }
             catch (Exception exception)
             {
@@ -256,6 +237,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// ステートマシンを設定します。
         /// </summary>
+        /// <param name="stateMachine">ステートマシン。</param>
         void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
         {
         }
