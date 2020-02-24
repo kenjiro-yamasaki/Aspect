@@ -80,8 +80,8 @@ namespace SoftCube.Aspects
 
             /// 元々のメソッドを書き換えます。
             {
-                /// var aspect = new Aspect(...) { ... };
-                /// var arguments = new Arguments(...);
+                /// var aspect     = new Aspect(...) { ... };
+                /// var arguments  = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnInvoke(aspectArgs);
@@ -112,8 +112,8 @@ namespace SoftCube.Aspects
 
             /// 元々のメソッドを書き換えます。
             {
-                /// var aspect = new Aspect(...) {...};
-                /// var arguments = new Arguments(...);
+                /// var aspect     = new Aspect(...) {...};
+                /// var arguments  = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 methodInjector.CreateAspectVariable();
@@ -121,13 +121,13 @@ namespace SoftCube.Aspects
                 methodInjector.CreateAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
                 methodInjector.SetMethod();
 
-                /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);
-                /// var builder = stateMachine.Builder;
-                /// builder.Start(ref stateMachine);
-                /// return stateMachine.Builder.Task;
                 var taskType = methodInjector.TargetMethod.ReturnType;
                 if (taskType is GenericInstanceType genericInstanceType)
                 {
+                    /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);
+                    /// var builder      = stateMachine.Builder;
+                    /// builder.Start(ref stateMachine);
+                    /// return stateMachine.Builder.Task;
                     var returnType       = genericInstanceType.GenericArguments[0].ToSystemType();
                     var stateMachineType = typeof(MethodInterceptionAsyncStateMachine<>).MakeGenericType(returnType);
                     var aspectType       = typeof(MethodInterceptionAspect);
@@ -136,6 +136,10 @@ namespace SoftCube.Aspects
                 }
                 else
                 {
+                    /// var stateMachine = new MethodInterceptionAsyncStateMachine(aspect, aspectArgs);
+                    /// var builder      = stateMachine.Builder;
+                    /// builder.Start(ref stateMachine);
+                    /// return stateMachine.Builder.Task;
                     var stateMachineType = typeof(MethodInterceptionAsyncStateMachine);
                     var aspectType       = typeof(MethodInterceptionAspect);
                     var aspectArgsType   = typeof(MethodInterceptionArgs);

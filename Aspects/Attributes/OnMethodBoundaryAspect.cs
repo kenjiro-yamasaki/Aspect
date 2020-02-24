@@ -68,16 +68,14 @@ namespace SoftCube.Aspects
         /// <param name="injector">メソッドへの注入。</param>
         private void ReplaceMethod(MethodInjector injector)
         {
-            var method = injector.TargetMethod;
-            var module = method.Module;
-
             /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
             injector.ReplaceMethod();
 
             /// 元々のメソッドを書き換えます。
             {
-                //method.Body = new MethodBody(method);
-                var processor = method.Body.GetILProcessor();
+                var method    = injector.TargetMethod;
+                var module    = injector.Module;
+                var processor = injector.Processor;
 
                 /// 例外ハンドラーを追加します。
                 var handlers = method.Body.ExceptionHandlers;
@@ -86,7 +84,7 @@ namespace SoftCube.Aspects
                 handlers.Add(@catch);
                 handlers.Add(@finally);
 
-                /// var aspect     = new Aspect();
+                /// var aspect     = new Aspect(...) {...};
                 /// var arguments  = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
@@ -157,13 +155,13 @@ namespace SoftCube.Aspects
         /// <param name="injector">イテレーターステートマシンへの注入。</param>
         private void ReplaceMoveNextMethod(IteratorStateMachineInjector injector)
         {
-            var module = injector.Module;
-
             /// 新たなメソッドを生成し、MoveNext メソッドの内容を移動します。
             injector.ReplaceMoveNext();
 
             /// 元々の MoveNext メソッドを書き換えます。
             {
+                var module = injector.Module;
+
                 var moveNextMethod = injector.MoveNextMethod;
                 moveNextMethod.Body = new MethodBody(moveNextMethod);
 
