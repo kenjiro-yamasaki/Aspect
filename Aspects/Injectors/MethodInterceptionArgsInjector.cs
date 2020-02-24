@@ -9,9 +9,15 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプト引数への注入。
     /// </summary>
-    public class MethodInterceptionArgsImplInjector : AdviceArgsInjector
+    public class MethodInterceptionArgsInjector : AdviceArgsInjector
     {
         #region プロパティ
+
+        /// <summary>
+        /// アスペクトの型。
+        /// </summary>
+        public TypeDefinition DerivedAspectArgsType => DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
+
 
         /// <summary>
         /// <see cref="MethodInterceptionArgs"/> の派生クラスの型名。
@@ -27,7 +33,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspect">アスペクト。</param>
-        public MethodInterceptionArgsImplInjector(MethodDefinition targetMethod, CustomAttribute aspect)
+        public MethodInterceptionArgsInjector(MethodDefinition targetMethod, CustomAttribute aspect)
             : base(targetMethod, aspect)
         {
         }

@@ -33,7 +33,7 @@ namespace SoftCube.Aspects
         protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
             var methodInjector     = new MethodInjector(method, aspect);
-            var aspectArgsInjector = new MethodInterceptionArgsImplInjector(method, aspect);
+            var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspect);
 
             var asyncStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
             var isInvokeAsyncOverridden    = methodInjector.AspectType.Methods.Any(m => m.Name == nameof(OnInvokeAsync));
@@ -41,7 +41,7 @@ namespace SoftCube.Aspects
             {
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
-                ReplaceAsyncMethod(methodInjector);
+                ReplaceAsyncMethod(methodInjector, aspectArgsInjector);
                 aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalMethod);
                 aspectArgsInjector.OverrideTaskResultProperty();
 
@@ -53,7 +53,7 @@ namespace SoftCube.Aspects
             {
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
-                ReplaceMethod(methodInjector);
+                ReplaceMethod(methodInjector, aspectArgsInjector);
                 aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalMethod);
 
                 /// アスペクト属性を削除します。
@@ -64,77 +64,65 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 注入対象のメソッドを書き換えます。
         /// </summary>
-        /// <param name="injector">メソッドへの注入。</param>
+        /// <param name="methodInjector">メソッドへの注入。</param>
         /// <remarks>
         /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
-        private void ReplaceMethod(MethodInjector injector)
+        private void ReplaceMethod(MethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
-            injector.ReplaceMethod();
+            methodInjector.ReplaceMethod();
 
             /// 元々のメソッドを書き換えます。
             {
-                var method = injector.TargetMethod;
-                method.Body = new Mono.Cecil.Cil.MethodBody(method);
-                var declaringType         = method.DeclaringType;
-                var derivedAspectArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.FullName + "+" + nameof(MethodInterceptionArgs));
-                var processor             = method.Body.GetILProcessor();
-
                 /// var aspect = new Aspect();
                 /// var arguments = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnInvoke(aspectArgs);
                 /// return (TResult)aspectArgs.ReturnValue;
-                injector.CreateAspectVariable(processor);
-                injector.CreateArgumentsVariable(processor);
-                injector.CreateAspectArgsVariable(processor, derivedAspectArgsType);
-                injector.SetMethod(processor);
-                injector.InvokeEventHandler(processor, nameof(OnInvoke));
-                injector.UpdateArguments(processor);
-                injector.Return(processor);
+                methodInjector.CreateAspectVariable();
+                methodInjector.CreateArgumentsVariable();
+                methodInjector.CreateAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
+                methodInjector.SetMethod();
+                methodInjector.InvokeEventHandler(nameof(OnInvoke));
+                methodInjector.SetAspectArguments();
+                methodInjector.Return();
             }
         }
 
         /// <summary>
         /// 注入対象の非同期メソッドを書き換えます。
         /// </summary>
-        /// <param name="injector">メソッドへの注入。</param>
+        /// <param name="methodInjector">メソッドへの注入。</param>
         /// <remarks>
         /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
-        private void ReplaceAsyncMethod(MethodInjector injector)
+        private void ReplaceAsyncMethod(MethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
-            injector.ReplaceMethod();
+            methodInjector.ReplaceMethod();
 
             /// 元々のメソッドを書き換えます。
             {
-                var method = injector.TargetMethod;
-                method.Body = new Mono.Cecil.Cil.MethodBody(method);
-                var declaringType         = method.DeclaringType;
-                var derivedAspectArgsType = declaringType.NestedTypes.Single(nt => nt.Name == method.FullName + "+" + nameof(MethodInterceptionArgs));
-                var processor             = method.Body.GetILProcessor();
-
                 /// var aspect = new Aspect();
                 /// var arguments = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-                injector.CreateAspectVariable(processor);
-                injector.CreateArgumentsVariable(processor);
-                injector.CreateAspectArgsVariable(processor, derivedAspectArgsType);
-                injector.SetMethod(processor);
+                methodInjector.CreateAspectVariable();
+                methodInjector.CreateArgumentsVariable();
+                methodInjector.CreateAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
+                methodInjector.SetMethod();
 
                 /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);
                 /// AsyncTaskMethodBuilder<string> builder = stateMachine.Builder;
                 /// builder.Start(ref stateMachine);
                 /// return stateMachine.Builder.Task;
-                injector.StartAsyncStateMachine(processor);
+                methodInjector.StartAsyncStateMachine();
             }
         }
 

@@ -76,7 +76,7 @@ namespace SoftCube.Aspects
 
             /// 元々のメソッドを書き換えます。
             {
-                method.Body = new Mono.Cecil.Cil.MethodBody(method);
+                //method.Body = new MethodBody(method);
                 var processor = method.Body.GetILProcessor();
 
                 /// 例外ハンドラーを追加します。
@@ -92,11 +92,11 @@ namespace SoftCube.Aspects
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnEntry(aspectArgs);
                 {
-                    injector.CreateAspectVariable(processor);
-                    injector.CreateArgumentsVariable(processor);
-                    injector.CreateAspectArgsVariable(processor, module.ImportReference(typeof(MethodExecutionArgs)));
-                    injector.SetMethod(processor);
-                    injector.InvokeEventHandler(processor, nameof(OnEntry));
+                    injector.CreateAspectVariable();
+                    injector.CreateArgumentsVariable();
+                    injector.CreateAspectArgsVariable(module.ImportReference(typeof(MethodExecutionArgs)));
+                    injector.SetMethod();
+                    injector.InvokeEventHandler(nameof(OnEntry));
                 }
 
                 /// try
@@ -106,9 +106,9 @@ namespace SoftCube.Aspects
                 Instruction leave;
                 {
                     @catch.TryStart = @finally.TryStart = processor.EmitNop();
-                    injector.InvokeOriginalMethod(processor);
-                    injector.InvokeEventHandler(processor, nameof(OnSuccess));
-                    injector.UpdateArguments(processor);
+                    injector.InvokeOriginalMethod();
+                    injector.InvokeEventHandler(nameof(OnSuccess));
+                    injector.SetAspectArguments();
                     leave = processor.EmitLeave(OpCodes.Leave);
                 }
 
@@ -120,8 +120,8 @@ namespace SoftCube.Aspects
                 ///     throw;
                 {
                     @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-                    injector.SetException(processor);
-                    injector.InvokeEventHandler(processor, nameof(OnException));
+                    injector.SetException();
+                    injector.InvokeEventHandler(nameof(OnException));
                     processor.Emit(OpCodes.Rethrow);
                 }
 
@@ -131,7 +131,7 @@ namespace SoftCube.Aspects
                 ///     aspect.OnExit(aspectArgs);
                 {
                     @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                    injector.InvokeEventHandler(processor, nameof(OnExit));
+                    injector.InvokeEventHandler(nameof(OnExit));
                     processor.Emit(OpCodes.Endfinally);
                 }
 
@@ -139,7 +139,7 @@ namespace SoftCube.Aspects
                 /// return (TResult)aspectArgs.ReturnValue;
                 {
                     leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    injector.Return(processor);
+                    injector.Return();
                 }
 
                 /// IL を最適化します。

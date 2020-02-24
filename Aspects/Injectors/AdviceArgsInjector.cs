@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using System;
-using System.Linq;
 
 namespace SoftCube.Aspects
 {
@@ -19,7 +18,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクトの型。
         /// </summary>
-        public TypeDefinition AspectType { get; }
+        public TypeDefinition AspectType => Aspect.AttributeType.Resolve();
 
         /// <summary>
         /// ターゲットメソッド。
@@ -29,12 +28,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// モジュール。
         /// </summary>
-        public ModuleDefinition Module { get; }
+        public ModuleDefinition Module => TargetMethod.Module;
 
         /// <summary>
         /// ターゲットメソッドの宣言型。
         /// </summary>
-        public TypeDefinition DeclaringType { get; }
+        public TypeDefinition DeclaringType => TargetMethod.DeclaringType;
 
         #endregion
 
@@ -47,11 +46,8 @@ namespace SoftCube.Aspects
         /// <param name="aspect">アスペクト。</param>
         public AdviceArgsInjector(MethodDefinition targetMethod, CustomAttribute aspect)
         {
-            Aspect        = aspect ?? throw new ArgumentNullException(nameof(aspect));
-            AspectType    = Aspect.AttributeType.Resolve();
-            TargetMethod  = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
-            Module        = TargetMethod.Module;
-            DeclaringType = TargetMethod.DeclaringType;
+            Aspect       = aspect ?? throw new ArgumentNullException(nameof(aspect));
+            TargetMethod = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
         }
 
         #endregion
