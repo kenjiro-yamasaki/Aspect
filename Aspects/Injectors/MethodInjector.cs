@@ -5,12 +5,11 @@ using SoftCube.Asserts;
 using System;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// メソッドへの注入。
+    /// メソッドの注入。
     /// </summary>
     public class MethodInjector
     {
@@ -61,12 +60,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// パラメーターコレクション。
         /// </summary>
-        private Collection<ParameterDefinition> Parameters => TargetMethod.Parameters;
+        protected Collection<ParameterDefinition> Parameters => TargetMethod.Parameters;
 
         /// <summary>
         /// Arguments の <see cref="Type"/>。
         /// </summary>
-        private Type ArgumentsSystemType
+        protected Type ArgumentsSystemType
         {
             get
             {
@@ -95,37 +94,27 @@ namespace SoftCube.Aspects
         /// <summary>
         /// ローカル変数コレクション。
         /// </summary>
-        private Collection<VariableDefinition> Variables => TargetMethod.Body.Variables;
+        protected Collection<VariableDefinition> Variables => TargetMethod.Body.Variables;
 
         /// <summary>
         /// aspect のローカル変数。
         /// </summary>
-        private int AspectVariable { get; set; } = -1;
+        protected int AspectVariable { get; set; } = -1;
 
         /// <summary>
         /// arguments のローカル変数。
         /// </summary>
-        private int ArgumentsVariable { get; set; } = -1;
+        protected int ArgumentsVariable { get; set; } = -1;
 
         /// <summary>
         /// aspectArgs のローカル変数。
         /// </summary>
-        private int AspectArgsVariable { get; set; } = -1;
+        protected int AspectArgsVariable { get; set; } = -1;
 
         /// <summary>
         /// objects のローカル変数。
         /// </summary>
-        private int ObjectsVariable { get; set; } = -1;
-
-        /// <summary>
-        /// asyncStateMachine のローカル変数。
-        /// </summary>
-        private int AsyncStateMachineVariable { get; set; } = -1;
-
-        /// <summary>
-        /// asyncTaskMethodBuilder のローカル変数。
-        /// </summary>
-        private int AsyncTaskMethodBuilderVariable { get; set; } = -1;
+        protected int ObjectsVariable { get; set; } = -1;
 
         #endregion
 
@@ -673,74 +662,6 @@ namespace SoftCube.Aspects
             }
             else
             {
-                Processor.Emit(OpCodes.Ret);
-            }
-        }
-
-        /// <summary>
-        /// 非同期ステートマシンを開始します。
-        /// </summary>
-        public void StartAsyncStateMachine()
-        {
-            Assert.Equal(AsyncStateMachineVariable, -1);
-            Assert.Equal(AsyncTaskMethodBuilderVariable, -1);
-            Assert.NotEqual(AspectVariable, -1);
-            Assert.NotEqual(AspectArgsVariable, -1);
-
-            AsyncStateMachineVariable      = Variables.Count() + 0;
-            AsyncTaskMethodBuilderVariable = Variables.Count() + 1;
-
-            var taskType = TargetMethod.ReturnType;
-            if (taskType is GenericInstanceType genericInstanceType)
-            {
-                var returnType       = genericInstanceType.GenericArguments[0].ToSystemType();
-                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine<>).MakeGenericType(returnType);
-                var builderType      = typeof(AsyncTaskMethodBuilder<>).MakeGenericType(returnType);
-
-                Variables.Add(new VariableDefinition(Module.ImportReference(stateMachineType)));
-                Variables.Add(new VariableDefinition(Module.ImportReference(builderType)));
-
-                Processor.Emit(OpCodes.Ldloc, AspectVariable);
-                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-
-                Processor.Emit(OpCodes.Newobj, Module.ImportReference(stateMachineType.GetConstructor(new Type[] { typeof(MethodInterceptionAspect), typeof(MethodInterceptionArgs) })));
-                Processor.Emit(OpCodes.Stloc, AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Ldloc, AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Ldfld, Module.ImportReference(stateMachineType.GetField("Builder")));
-                Processor.Emit(OpCodes.Stloc, AsyncTaskMethodBuilderVariable);
-
-                Processor.Emit(OpCodes.Ldloca, AsyncTaskMethodBuilderVariable);
-                Processor.Emit(OpCodes.Ldloca, AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
-
-                Processor.Emit(OpCodes.Ldloc,  AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Ldflda, Module.ImportReference(stateMachineType.GetField("Builder")));
-                Processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
-                Processor.Emit(OpCodes.Ret);
-            }
-            else
-            {
-                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine);
-                var builderType      = typeof(AsyncTaskMethodBuilder);
-
-                Variables.Add(new VariableDefinition(Module.ImportReference(stateMachineType)));
-                Variables.Add(new VariableDefinition(Module.ImportReference(builderType)));
-
-                Processor.Emit(OpCodes.Ldloc, AspectVariable);
-                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-                Processor.Emit(OpCodes.Newobj, Module.ImportReference(stateMachineType.GetConstructor(new Type[] { typeof(MethodInterceptionAspect), typeof(MethodInterceptionArgs) })));
-                Processor.Emit(OpCodes.Stloc, AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Ldloc, AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Ldfld, Module.ImportReference(stateMachineType.GetField("Builder")));
-                Processor.Emit(OpCodes.Stloc, AsyncTaskMethodBuilderVariable);
-
-                Processor.Emit(OpCodes.Ldloca, AsyncTaskMethodBuilderVariable);
-                Processor.Emit(OpCodes.Ldloca, AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
-
-                Processor.Emit(OpCodes.Ldloc,  AsyncStateMachineVariable);
-                Processor.Emit(OpCodes.Ldflda, Module.ImportReference(stateMachineType.GetField("Builder")));
-                Processor.Emit(OpCodes.Call, Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
                 Processor.Emit(OpCodes.Ret);
             }
         }

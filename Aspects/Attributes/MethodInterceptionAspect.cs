@@ -32,13 +32,14 @@ namespace SoftCube.Aspects
         /// <param name="aspect">アスペクト。</param>
         protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
-            var methodInjector     = new MethodInjector(method, aspect);
-            var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspect);
 
             var asyncStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
-            var isInvokeAsyncOverridden    = methodInjector.AspectType.Methods.Any(m => m.Name == nameof(OnInvokeAsync));
+            var isInvokeAsyncOverridden    = aspect.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
+                var methodInjector     = new AsyncMethodInjector(method, aspect);
+                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspect);
+
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
                 ReplaceAsyncMethod(methodInjector, aspectArgsInjector);
@@ -51,6 +52,9 @@ namespace SoftCube.Aspects
             }
             else
             {
+                var methodInjector     = new MethodInjector(method, aspect);
+                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspect);
+
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
                 ReplaceMethod(methodInjector, aspectArgsInjector);
@@ -102,7 +106,7 @@ namespace SoftCube.Aspects
         /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
-        private void ReplaceAsyncMethod(MethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
+        private void ReplaceAsyncMethod(AsyncMethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
             methodInjector.ReplaceMethod();
@@ -122,7 +126,22 @@ namespace SoftCube.Aspects
                 /// AsyncTaskMethodBuilder<string> builder = stateMachine.Builder;
                 /// builder.Start(ref stateMachine);
                 /// return stateMachine.Builder.Task;
-                methodInjector.StartAsyncStateMachine();
+                var taskType = methodInjector.TargetMethod.ReturnType;
+                if (taskType is GenericInstanceType genericInstanceType)
+                {
+                    var returnType       = genericInstanceType.GenericArguments[0].ToSystemType();
+                    var stateMachineType = typeof(MethodInterceptionAsyncStateMachine<>).MakeGenericType(returnType);
+                    var aspectType       = typeof(MethodInterceptionAspect);
+                    var aspectArgsType   = typeof(MethodInterceptionArgs);
+                    methodInjector.StartAsyncStateMachine(stateMachineType, aspectType, aspectArgsType);
+                }
+                else
+                {
+                    var stateMachineType = typeof(MethodInterceptionAsyncStateMachine);
+                    var aspectType       = typeof(MethodInterceptionAspect);
+                    var aspectArgsType   = typeof(MethodInterceptionArgs);
+                    methodInjector.StartAsyncStateMachine(stateMachineType, aspectType, aspectArgsType);
+                }
             }
         }
 
