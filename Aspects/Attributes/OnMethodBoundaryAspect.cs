@@ -108,7 +108,7 @@ namespace SoftCube.Aspects
                     @catch.TryStart = @finally.TryStart = processor.EmitNop();
                     injector.InvokeOriginalMethod();
                     injector.InvokeEventHandler(nameof(OnSuccess));
-                    injector.SetAspectArguments();
+                    injector.SetAspectArguments(pointerOnly: true);
                     leave = processor.EmitLeave(OpCodes.Leave);
                 }
 
