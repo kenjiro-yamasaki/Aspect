@@ -260,12 +260,68 @@ namespace SoftCube.Aspects
 
                 switch (propertyValue)
                 {
-                    case int @int:
-                        Processor.Emit(OpCodes.Ldc_I4, @int);
+                    case bool value:
+                        if (value)
+                        {
+                            Processor.Emit(OpCodes.Ldc_I4_1);
+                        }
+                        else
+                        {
+                            Processor.Emit(OpCodes.Ldc_I4_0);
+                        }
                         break;
 
-                    case string @string:
-                        Processor.Emit(OpCodes.Ldstr, @string);
+                    case sbyte value:
+                        Processor.Emit(OpCodes.Ldc_I4_S, value);
+                        break;
+
+                    case short value:
+                        Processor.Emit(OpCodes.Ldc_I4, value);
+                        break;
+
+                    case int value:
+                        Processor.Emit(OpCodes.Ldc_I4, value);
+                        break;
+
+                    case long value:
+                        Processor.Emit(OpCodes.Ldc_I8, value);
+                        break;
+
+                    case byte value:
+                        Processor.Emit(OpCodes.Ldc_I4_S, (sbyte)value);
+                        break;
+
+                    case ushort value:
+                        Processor.Emit(OpCodes.Ldc_I4, (short)value);
+                        break;
+
+                    case uint value:
+                        Processor.Emit(OpCodes.Ldc_I4, (int)value);
+                        break;
+
+                    case ulong value:
+                        Processor.Emit(OpCodes.Ldc_I8, (long)value);
+                        break;
+
+                    case float value:
+                        Processor.Emit(OpCodes.Ldc_R4, value);
+                        break;
+
+                    case double value:
+                        Processor.Emit(OpCodes.Ldc_R8, value);
+                        break;
+
+                    case char value:
+                        Processor.Emit(OpCodes.Ldc_I4, value);
+                        break;
+
+                    case string value:
+                        Processor.Emit(OpCodes.Ldstr, value);
+                        break;
+
+                    case TypeReference value:
+                        Processor.Emit(OpCodes.Ldtoken, Module.ImportReference(value));
+                        Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
                         break;
 
                     default:

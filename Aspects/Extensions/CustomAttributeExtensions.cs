@@ -49,7 +49,15 @@ namespace SoftCube.Aspects
             /// 属性のプロパティを設定します。
             foreach (var property in attribute.Properties)
             {
-                aspectType.GetProperty(property.Name).SetValue(instance, property.Argument.Value, null);
+                if (property.Argument.Type.FullName == "System.Type")
+                {
+                    var value = property.Argument.Value as TypeReference;
+                    aspectType.GetProperty(property.Name).SetValue(instance, Type.GetType(value.FullName), null);
+                }
+                else 
+                {
+                    aspectType.GetProperty(property.Name).SetValue(instance, property.Argument.Value, null);
+                }
             }
 
             return instance;
