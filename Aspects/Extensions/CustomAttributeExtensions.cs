@@ -13,15 +13,15 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 属性を生成します。
+        /// アスペクトを生成します。
         /// </summary>
-        /// <typeparam name="TAspect">属性が表現する型。</typeparam>
-        /// <param name="attribute">属性。</param>
-        /// <returns>属性が表現するアスペクト。</returns>
+        /// <typeparam name="TAspect">アスペクトの型。</typeparam>
+        /// <param name="attribute">カスタム属性。</param>
+        /// <returns>アスペクト。</returns>
         internal static TAspect Create<TAspect>(this CustomAttribute attribute)
             where TAspect : class
         {
-            /// 属性のコンストラクター引数を取得します。
+            /// カスタム属性のコンストラクター引数を取得します。
             var arguments = new List<object>();
             foreach (var argument in attribute.ConstructorArguments)
             {
@@ -31,6 +31,11 @@ namespace SoftCube.Aspects
                 {
                     arguments.Add(Enum.ToObject(argumentType, argument.Value));
                 }
+                else if (argumentType.FullName == "System.Type")
+                {
+                    var value = argument.Value as TypeReference;
+                    arguments.Add(Type.GetType(value.FullName));
+                }
                 else
                 {
                     arguments.Add(argument.Value);
@@ -38,13 +43,13 @@ namespace SoftCube.Aspects
             }
 
             /// 属性のインスタンスを生成します。
-            var attributeType = attribute.AttributeType.ToSystemType();
-            var instance = Activator.CreateInstance(attributeType, arguments.ToArray()) as TAspect;
+            var aspectType = attribute.AttributeType.ToSystemType();
+            var instance = Activator.CreateInstance(aspectType, arguments.ToArray()) as TAspect;
 
             /// 属性のプロパティを設定します。
             foreach (var property in attribute.Properties)
             {
-                attributeType.GetProperty(property.Name).SetValue(instance, property.Argument.Value, null);
+                aspectType.GetProperty(property.Name).SetValue(instance, property.Argument.Value, null);
             }
 
             return instance;
