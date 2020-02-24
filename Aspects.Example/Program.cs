@@ -18,44 +18,48 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-
-            var arg0 = 0;
-            var arg1 = "1";
-            var arg2 = 2.0;
-            var arg3 = "3";
-            var arg4 = 4;
-            var arg5 = "5";
-
-            //program.戻り値なし(arg0, arg1, ref arg2, ref arg3, out arg4, out arg5);
-
+            char arg0 = 'a';
+            program.引数を変更(ref arg0);
 
             Console.Read();
         }
 
-        private class EventLogger : MethodInterceptionAspect
+        private class ChangeArguments : MethodInterceptionAspect
         {
             public override void OnInvoke(MethodInterceptionArgs args)
             {
+                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                {
+                    switch (args.Arguments[argumentIndex])
+                    {
+                        case sbyte argument:
+                            args.Arguments[argumentIndex] = (sbyte)(argument + 1);
+                            break;
+
+                        case int argument:
+                            args.Arguments[argumentIndex] = argument + 1;
+                            break;
+
+                        case string argument:
+                            args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                            break;
+
+                        case null:
+                            break;
+
+                        default:
+                            throw new NotSupportedException();
+                    }
+                }
+
                 args.Proceed();
             }
         }
 
-        [EventLogger]
-        private int 戻り値なし(ref decimal  arg0, ref byte arg1, ref ushort arg2, ref uint arg3, ref long arg4, ref ulong arg5)
+        [ChangeArguments]
+        private void 引数を変更(ref char arg0)
         {
-            return (int)arg0;
-        }
-
-
-        private void Test(ref ulong arg0, ref ushort arg1, ref bool arg2, ref double arg3)
-        {
-            EventLogger eventLogger = new EventLogger();
-            var arguments = new Arguments<ulong, ushort, bool, double>(arg0, arg1, arg2, arg3);
-
-            arg0 = arguments.Arg0;
-            arg1 = arguments.Arg1;
-            arg2 = arguments.Arg2;
-            arg3 = arguments.Arg3;
+            arg0 = 'b';
         }
     }
 }
