@@ -669,6 +669,7 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldind_I1);
                     return;
 
+                case nameof(Char):
                 case nameof(Int16):
                     processor.Emit(OpCodes.Ldind_I2);
                     return;
@@ -681,8 +682,8 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldind_I8);
                     return;
 
-                case nameof(Boolean):
                 case nameof(Byte):
+                case nameof(Boolean):
                     processor.Emit(OpCodes.Ldind_U1);
                     return;
 
@@ -712,6 +713,11 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="typeReference"></param>
         internal static void EmitStind(this ILProcessor processor, TypeReference typeReference)
         {
             if (!typeReference.IsValueType)
@@ -728,6 +734,7 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Stind_I1);
                     return;
 
+                case nameof(Char):
                 case nameof(Int16):
                 case nameof(UInt16):
                     processor.Emit(OpCodes.Stind_I2);
