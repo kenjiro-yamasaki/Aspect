@@ -18,48 +18,30 @@ namespace SoftCube.Aspects
         {
             var program = new Program();
 
-            char arg0 = 'a';
-            program.引数を変更(ref arg0);
+            var arg0 = 0;
+            var arg1 = "1";
+            var reuslt = program.引数を変更(arg0, arg1).Result;
 
             Console.Read();
         }
 
         private class ChangeArguments : MethodInterceptionAspect
         {
-            public override void OnInvoke(MethodInterceptionArgs args)
+            public override async Task OnInvokeAsync(MethodInterceptionArgs args)
             {
-                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
-                {
-                    switch (args.Arguments[argumentIndex])
-                    {
-                        case sbyte argument:
-                            args.Arguments[argumentIndex] = (sbyte)(argument + 1);
-                            break;
-
-                        case int argument:
-                            args.Arguments[argumentIndex] = argument + 1;
-                            break;
-
-                        case string argument:
-                            args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
-                            break;
-
-                        case null:
-                            break;
-
-                        default:
-                            throw new NotSupportedException();
-                    }
-                }
-
-                args.Proceed();
+                await args.ProceedAsync();
             }
         }
 
         [ChangeArguments]
-        private void 引数を変更(ref char arg0)
+        private async Task<int> 引数を変更(int arg0, string arg1)
         {
+            await Task.Run(() => {
+
+            });
+
             arg0 = 'b';
+            return arg0;
         }
     }
 }

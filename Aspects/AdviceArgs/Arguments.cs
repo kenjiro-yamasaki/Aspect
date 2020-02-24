@@ -5,14 +5,14 @@ using System.Collections.Generic;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     public class Arguments : IEnumerable, IEnumerable<object>, IReadOnlyList<object>
     {
         #region プロパティ
 
         /// <summary>
-        /// 要素数。
+        /// 引数の数。
         /// </summary>
         public int Count { get; }
 
@@ -41,7 +41,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="count">要素数。</param>
+        /// <param name="count">引数の数。</param>
         internal Arguments(int count)
         {
             Count = count;
@@ -96,7 +96,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     public class Arguments<TArg0> : Arguments
@@ -165,7 +165,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     /// <typeparam name="TArg1">第 1 引数の型。</typeparam>
@@ -249,7 +249,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     /// <typeparam name="TArg1">第 1 引数の型。</typeparam>
@@ -348,7 +348,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     /// <typeparam name="TArg1">第 1 引数の型。</typeparam>
@@ -462,7 +462,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     /// <typeparam name="TArg1">第 1 引数の型。</typeparam>
@@ -591,7 +591,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     /// <typeparam name="TArg1">第 1 引数の型。</typeparam>
@@ -735,7 +735,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     /// <typeparam name="TArg1">第 1 引数の型。</typeparam>
@@ -894,7 +894,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     /// <typeparam name="TArg0">第 0 引数の型。</typeparam>
     /// <typeparam name="TArg1">第 1 引数の型。</typeparam>
@@ -1068,7 +1068,7 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// 引数コレクション。
+    /// 引数配列。
     /// </summary>
     public sealed class ArgumentsArray : Arguments
     {

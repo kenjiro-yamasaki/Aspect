@@ -9,8 +9,17 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプト引数への注入。
     /// </summary>
-    public class MethodInterceptionArgsInjector : AdviceArgsInjector
+    public class MethodInterceptionArgsImplInjector : AdviceArgsInjector
     {
+        #region プロパティ
+
+        /// <summary>
+        /// <see cref="MethodInterceptionArgs"/> の派生クラスの型名。
+        /// </summary>
+        private string MethodInterceptionArgsImplTypeName => TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs);
+
+        #endregion
+
         #region コンストラクター
 
         /// <summary>
@@ -18,7 +27,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspect">アスペクト。</param>
-        public MethodInterceptionArgsInjector(MethodDefinition targetMethod, CustomAttribute aspect)
+        public MethodInterceptionArgsImplInjector(MethodDefinition targetMethod, CustomAttribute aspect)
             : base(targetMethod, aspect)
         {
         }
@@ -36,23 +45,26 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void CreateAspectArgsImpl()
         {
-            var declaringType = TargetMethod.DeclaringType;
-            var module        = declaringType.Module;
-            var @namespace    = declaringType.Namespace;
+            var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
+            var aspectArgsImplType      = new TypeDefinition(DeclaringType.Namespace, MethodInterceptionArgsImplTypeName, Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference) { IsNestedPrivate = true };
 
-            /// MethodInterceptionArgs の派生クラスを追加します。
-            var aspectArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
-            var aspectArgsType          = aspectArgsTypeReference.Resolve();
-            var derivedAspectArgsType   = new TypeDefinition(@namespace, TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs), Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference) { IsNestedPrivate = true };
+            DeclaringType.NestedTypes.Add(aspectArgsImplType);
+        }
 
-            declaringType.NestedTypes.Add(derivedAspectArgsType);
-
-            /// MethodInterceptionArgs の派生クラスにコンストラクターを追加します。
+        /// <summary>
+        /// <see cref="MethodInterceptionArgs"/> のコンストラクターを生成します。
+        /// </summary>
+        public void CreateConstructor()
+        {
             var methodAttributes = Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName;
-            var constructor      = new MethodDefinition(".ctor", methodAttributes, module.TypeSystem.Void);
+            var constructor      = new MethodDefinition(".ctor", methodAttributes, Module.TypeSystem.Void);
 
-            var instanceParameter  = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, module.TypeSystem.Object);
-            var argumentsParameter = new ParameterDefinition("arguments", Mono.Cecil.ParameterAttributes.None, module.ImportReference(typeof(Arguments)));
+            /// public MethodInterceptionArgsImpl(object instance, Arguments arguments)
+            ///     : base(instance, arguments)
+            /// {
+            /// }
+            var instanceParameter  = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, Module.TypeSystem.Object);
+            var argumentsParameter = new ParameterDefinition("arguments", Mono.Cecil.ParameterAttributes.None, Module.ImportReference(typeof(Arguments)));
             constructor.Parameters.Add(instanceParameter);
             constructor.Parameters.Add(argumentsParameter);
 
@@ -60,10 +72,11 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Ldarg_1);
             processor.Emit(OpCodes.Ldarg_2);
-            processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object), typeof(Arguments) })));
+            processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object), typeof(Arguments) })));
             processor.Emit(OpCodes.Ret);
 
-            derivedAspectArgsType.Methods.Add(constructor);
+            var aspectArgsImplType = DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
+            aspectArgsImplType.Methods.Add(constructor);
         }
 
         /// <summary>
@@ -76,29 +89,36 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void OverrideInvokeImplMethod(MethodDefinition originalMethod)
         {
-            var module         = TargetMethod.Module;
-            var declaringType  = TargetMethod.DeclaringType;
-
-            /// Invoke メソッドのオーバーライドを追加します。
-            var aspectArgsTypeReference = module.ImportReference(typeof(MethodInterceptionArgs));
+            /// InvokeImpl メソッドのオーバーライドを追加します。
+            var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsType          = aspectArgsTypeReference.Resolve();
-            var derivedAspectArgsType   = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
-            var argumentsTypeReferernce = module.ImportReference(typeof(Arguments));
+            var aspectArgsImplType      = DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
+            var argumentsTypeReferernce = Module.ImportReference(typeof(Arguments));
             var invokeMethod            = aspectArgsType.Methods.Single(m => m.Name == "InvokeImpl");
             var overridenInvokeMethod   = new MethodDefinition(invokeMethod.Name, (invokeMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), invokeMethod.ReturnType);
 
+            aspectArgsImplType.Methods.Add(overridenInvokeMethod);
             overridenInvokeMethod.Parameters.Add(new ParameterDefinition(argumentsTypeReferernce) { Name = "arguments" });
-            derivedAspectArgsType.Methods.Add(overridenInvokeMethod);
 
-            /// Invoke メソッドのオーバーライドを実装します。
+            /// InvokeImpl メソッドのオーバーライドを実装します。
+            /// protected override object InvokeImpl(Arguments arguments)
+            /// {
+            ///     var arg0 = (TArg0)arguments[0];
+            ///     var arg1 = (TArg1)arguments[1];
+            ///     ...
+            ///     var result = ((Program)base.Instance).OriginalFunc(arg0, arg1, ...);
+            ///     arguments[0] = arg0;
+            ///     arguments[1] = arg1;
+            ///     ...
+            ///     return result;
+            /// }
             {
                 var processor = overridenInvokeMethod.Body.GetILProcessor();
-
-                /// public override object Invoke(Arguments arguments)
-                /// {
-                ///     return ((TInstance)base.Instance).OriginalMethod((TArg0)arguments[0], (TArg1)arguments[1], ...);
-                /// }
                 var variables = overridenInvokeMethod.Body.Variables;
+
+                /// var arg0 = (TArg0)arguments[0];
+                /// var arg1 = (TArg1)arguments[1];
+                /// ...
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
@@ -113,7 +133,7 @@ namespace SoftCube.Aspects
 
                         processor.Emit(OpCodes.Ldarg_1);
                         processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                         if (elementType.IsValueType)
                         {
                             processor.Emit(OpCodes.Unbox_Any, elementType);
@@ -131,7 +151,7 @@ namespace SoftCube.Aspects
 
                         processor.Emit(OpCodes.Ldarg_1);
                         processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                         if (parameterType.IsValueType)
                         {
                             processor.Emit(OpCodes.Unbox_Any, parameterType);
@@ -144,11 +164,11 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                ///
+                /// var result = ((Program)base.Instance).OriginalFunc(arg0, arg1, ...);
                 if (!originalMethod.IsStatic)
                 {
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                    processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
                 }
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
@@ -178,6 +198,9 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldnull);
                 }
 
+                /// arguments[0] = arg0;
+                /// arguments[1] = arg1;
+                /// ...
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
@@ -194,21 +217,11 @@ namespace SoftCube.Aspects
                         {
                             processor.Emit(OpCodes.Box, elementType);
                         }
-                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
-                    }
-                    else
-                    {
-                        processor.Emit(OpCodes.Ldarg_1);
-                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Ldloc, parameterIndex);
-                        if (parameterType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Box, parameterType);
-                        }
-                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
+                        processor.Emit(OpCodes.Callvirt, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
                     }
                 }
 
+                /// return result;
                 processor.Emit(OpCodes.Ret);
             }
         }
@@ -223,30 +236,28 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void OverrideInvokeAsyncImplMethod(MethodDefinition originalMethod)
         {
-            var module        = TargetMethod.Module;
-            var declaringType = TargetMethod.DeclaringType;
-
-            /// Invoke メソッドのオーバーライドを追加します。
-            var aspectArgsTypeReference    = module.ImportReference(typeof(MethodInterceptionArgs));
+            /// InvokeAsyncImpl メソッドのオーバーライドを追加します。
+            var aspectArgsTypeReference    = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsType             = aspectArgsTypeReference.Resolve();
-            var derivedAspectArgsType      = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
-            var argumentsTypeReferernce    = module.ImportReference(typeof(Arguments));
+            var aspectArgsImplType         = DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
+            var argumentsTypeReferernce    = Module.ImportReference(typeof(Arguments));
             var invokeAsyncMethod          = aspectArgsType.Methods.Single(m => m.Name == "InvokeAsyncImpl");
-            var overridenInvokeAsyncMethod = new MethodDefinition(invokeAsyncMethod.Name, (invokeAsyncMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), module.ImportReference(typeof(Task)));
+            var overridenInvokeAsyncMethod = new MethodDefinition(invokeAsyncMethod.Name, (invokeAsyncMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), Module.ImportReference(typeof(Task)));
 
             overridenInvokeAsyncMethod.Parameters.Add(new ParameterDefinition(argumentsTypeReferernce) { Name = "arguments" });
-            derivedAspectArgsType.Methods.Add(overridenInvokeAsyncMethod);
+            aspectArgsImplType.Methods.Add(overridenInvokeAsyncMethod);
 
-            /// Invoke メソッドのオーバーライドを実装します。
+            /// InvokeAsyncImpl メソッドのオーバーライドを実装します。
+            /// public override Task InvokeAsync(Arguments arguments)
+            /// {
+            ///     return ((TInstance)base.Instance).OriginalMethod((TArg0)arguments[0], (TArg1)arguments[1], ...);
+            /// }
             {
                 var processor = overridenInvokeAsyncMethod.Body.GetILProcessor();
 
-                /// public override Task InvokeAsync(Arguments arguments)
-                /// {
-                ///     return ((TInstance)base.Instance).OriginalMethod((TArg0)arguments[0], (TArg1)arguments[1], ...);
-                /// }
+                /// return ((TInstance)base.Instance).OriginalMethod((TArg0)arguments[0], (TArg1)arguments[1], ...);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
@@ -254,7 +265,7 @@ namespace SoftCube.Aspects
 
                     processor.Emit(OpCodes.Ldarg_1);
                     processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                    processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                     if (parameterType.IsValueType)
                     {
                         processor.Emit(OpCodes.Unbox_Any, parameterType);
@@ -282,26 +293,28 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// <see cref="MethodInterceptionArgs.TaskResult"/> をオーバーライドします。
         /// </summary>
         public void OverrideTaskResultProperty()
         {
-            var module        = TargetMethod.Module;
-            var declaringType = TargetMethod.DeclaringType;
+            /// TaskResult メソッドのオーバーライドを追加します。
+            var aspectArgsTypeReference   = Module.ImportReference(typeof(MethodInterceptionArgs));
+            var aspectArgsType            = aspectArgsTypeReference.Resolve();
+            var aspectArgsImplType        = DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
+            var taskResultMethod          = aspectArgsType.Properties.Single(p => p.Name == nameof(MethodInterceptionArgs.TaskResult)).GetMethod;
+            var overridenTaskResultMethod = new MethodDefinition(taskResultMethod.Name, (taskResultMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), Module.TypeSystem.Object);
 
-            /// Invoke メソッドのオーバーライドを追加します。
-            var aspectArgsTypeReference      = module.ImportReference(typeof(MethodInterceptionArgs));
-            var aspectArgsType               = aspectArgsTypeReference.Resolve();
-            var derivedAspectArgsType        = declaringType.NestedTypes.Single(nt => nt.Name == TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs));
-            var getTaskResultMethod          = aspectArgsType.Properties.Single(p => p.Name == nameof(MethodInterceptionArgs.TaskResult)).GetMethod;
-            var overridenGetTaskResultMethod = new MethodDefinition(getTaskResultMethod.Name, (getTaskResultMethod.Attributes | Mono.Cecil.MethodAttributes.CheckAccessOnOverride) & ~(Mono.Cecil.MethodAttributes.NewSlot | Mono.Cecil.MethodAttributes.Abstract), module.TypeSystem.Object);
+            aspectArgsImplType.Methods.Add(overridenTaskResultMethod);
 
-            derivedAspectArgsType.Methods.Add(overridenGetTaskResultMethod);
-
-            /// GetTaskResult メソッドのオーバーライドを実装します。
+            /// TaskResult メソッドのオーバーライドを実装します。
+            /// public override object get_TaskResult()
+            /// {
+            ///     Task<TResult> task = base.Task as Task<TResult>;
+            ///     return task.Result;
+            /// }
             {
-                var processor = overridenGetTaskResultMethod.Body.GetILProcessor();
-                var variables = overridenGetTaskResultMethod.Body.Variables;
+                var processor = overridenTaskResultMethod.Body.GetILProcessor();
+                var variables = overridenTaskResultMethod.Body.Variables;
 
                 if (TargetMethod.ReturnType is GenericInstanceType genericInstanceType)
                 {
@@ -309,17 +322,17 @@ namespace SoftCube.Aspects
                     var taskType   = typeof(Task<>).MakeGenericType(returnType);
 
                     var taskVariable = variables.Count;
-                    variables.Add(new VariableDefinition(module.ImportReference(taskType)));
+                    variables.Add(new VariableDefinition(Module.ImportReference(taskType)));
 
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Task)).GetGetMethod()));
-                    processor.Emit(OpCodes.Isinst, module.ImportReference(taskType));
+                    processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodInterceptionArgs).GetProperty(nameof(MethodInterceptionArgs.Task)).GetGetMethod()));
+                    processor.Emit(OpCodes.Isinst, Module.ImportReference(taskType));
                     processor.Emit(OpCodes.Stloc, taskVariable);
                     processor.Emit(OpCodes.Ldloc, taskVariable);
-                    processor.Emit(OpCodes.Callvirt, module.ImportReference(taskType.GetProperty("Result").GetGetMethod()));
+                    processor.Emit(OpCodes.Callvirt, Module.ImportReference(taskType.GetProperty("Result").GetGetMethod()));
                     if (returnType.IsValueType)
                     {
-                        processor.Emit(OpCodes.Box, module.ImportReference(returnType));
+                        processor.Emit(OpCodes.Box, Module.ImportReference(returnType));
                     }
                     processor.Emit(OpCodes.Ret);
                 }

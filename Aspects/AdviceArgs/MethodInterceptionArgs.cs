@@ -19,9 +19,9 @@ namespace SoftCube.Aspects
         /// 非同期タスクの結果。
         /// </summary>
         /// <remarks>
-        /// InvokeAsync、ProceedAsync の戻り値は Task 型ですが、ターゲットメソッドの戻り値が Task<TResult> の場合、
-        /// Task<TResult> 型のインスタンスを戻します。
-        /// Task を Task<TResult> にキャストすることも難しいため Task<TResult>.Result の値を取得したい場合、このプロパティを使用します。
+        /// <see cref="InvokeAsync"/>、<see cref="ProceedAsync"/> の戻り値は <see cref="System.Threading.Tasks.Task"/> 型ですが、
+        /// ターゲットメソッドの戻り値が <see cref="Task{TResult}"/> の場合、<see cref="Task{TResult}"/> 型のインスタンスを戻します。
+        /// <see cref="Task{TResult}.Result"/> の値を取得したい場合、このプロパティを使用します。
         /// </remarks>
         public virtual object TaskResult => throw new NotImplementedException();
 
@@ -33,7 +33,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="instance">メソッドが実行されたインスタンス (静的メッソドが実行された場合、<c>null</c>)。</param>
-        /// <param name="arguments">引数コレクション。</param>
+        /// <param name="arguments">引数配列。</param>
         public MethodInterceptionArgs(object instance, Arguments arguments)
             : base(instance, arguments)
         {
@@ -46,7 +46,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを呼びだします。
         /// </summary>
-        /// <param name="arguments">引数コレクション。</param>
+        /// <param name="arguments">引数配列。</param>
         /// <returns>戻り値。</returns>
         public object Invoke(Arguments arguments)
         {
@@ -85,7 +85,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを呼びだします。
         /// </summary>
-        /// <param name="arguments">引数コレクション。</param>
+        /// <param name="arguments">引数配列。</param>
         /// <returns>戻り値。</returns>
         protected virtual object InvokeImpl(Arguments arguments)
         {
@@ -95,7 +95,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// <see cref="Arguments"/> に影響を与えることなく、指定された引数を使用して、インターセプトされたメソッドを非同期で呼びだします。
         /// </summary>
-        /// <param name="arguments">引数コレクション。</param>
+        /// <param name="arguments">引数配列。</param>
         /// <returns>タスク。</returns>
         protected virtual Task InvokeAsyncImpl(Arguments arguments)
         {

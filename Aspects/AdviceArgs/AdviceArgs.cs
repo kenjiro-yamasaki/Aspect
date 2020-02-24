@@ -19,7 +19,7 @@
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="instance">メソッドが実行されたインスタンス (静的メッソドが実行された場合、null)。</param>
+        /// <param name="instance">メソッドが実行されたインスタンス (静的メッソドが実行された場合、<c>null</c>)。</param>
         public AdviceArgs(object instance)
         {
             Instance = instance;

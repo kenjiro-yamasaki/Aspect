@@ -32,29 +32,9 @@ namespace SoftCube.Aspects
         public ModuleDefinition Module { get; }
 
         /// <summary>
-        /// Arguments の型。
+        /// ターゲットメソッドの宣言型。
         /// </summary>
-        public Type ArgumentsType
-        {
-            get
-            {
-                var parameters = TargetMethod.Parameters;
-                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
-                return parameters.Count switch
-                {
-                    0 => typeof(Arguments),
-                    1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                    2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                    3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                    4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                    5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                    6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                    7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                    8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                    _ => typeof(ArgumentsArray)
-                };
-            }
-        }
+        public TypeDefinition DeclaringType { get; }
 
         #endregion
 
@@ -67,10 +47,11 @@ namespace SoftCube.Aspects
         /// <param name="aspect">アスペクト。</param>
         public AdviceArgsInjector(MethodDefinition targetMethod, CustomAttribute aspect)
         {
-            Aspect       = aspect ?? throw new ArgumentNullException(nameof(aspect));
-            AspectType   = Aspect.AttributeType.Resolve();
-            TargetMethod = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
-            Module       = TargetMethod.Module;
+            Aspect        = aspect ?? throw new ArgumentNullException(nameof(aspect));
+            AspectType    = Aspect.AttributeType.Resolve();
+            TargetMethod  = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
+            Module        = TargetMethod.Module;
+            DeclaringType = TargetMethod.DeclaringType;
         }
 
         #endregion

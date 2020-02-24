@@ -33,24 +33,31 @@ namespace SoftCube.Aspects
         protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
             var methodInjector     = new MethodInjector(method, aspect);
-            var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspect);
+            var aspectArgsInjector = new MethodInterceptionArgsImplInjector(method, aspect);
 
             var asyncStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
             var isInvokeAsyncOverridden    = methodInjector.AspectType.Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                method.CustomAttributes.Remove(asyncStateMachineAttribute);
-
                 aspectArgsInjector.CreateAspectArgsImpl();
+                aspectArgsInjector.CreateConstructor();
                 ReplaceAsyncMethod(methodInjector);
                 aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalMethod);
                 aspectArgsInjector.OverrideTaskResultProperty();
+
+                /// アスペクト属性を削除します。
+                method.CustomAttributes.Remove(aspect);
+                method.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
                 aspectArgsInjector.CreateAspectArgsImpl();
+                aspectArgsInjector.CreateConstructor();
                 ReplaceMethod(methodInjector);
                 aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalMethod);
+
+                /// アスペクト属性を削除します。
+                method.CustomAttributes.Remove(aspect);
             }
         }
 
