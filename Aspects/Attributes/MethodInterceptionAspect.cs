@@ -32,7 +32,6 @@ namespace SoftCube.Aspects
         /// <param name="aspect">アスペクト。</param>
         protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
-
             var asyncStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
             var isInvokeAsyncOverridden    = aspect.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
@@ -81,7 +80,7 @@ namespace SoftCube.Aspects
 
             /// 元々のメソッドを書き換えます。
             {
-                /// var aspect = new Aspect();
+                /// var aspect = new Aspect(...) { ... };
                 /// var arguments = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
@@ -113,7 +112,7 @@ namespace SoftCube.Aspects
 
             /// 元々のメソッドを書き換えます。
             {
-                /// var aspect = new Aspect();
+                /// var aspect = new Aspect(...) {...};
                 /// var arguments = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
@@ -123,7 +122,7 @@ namespace SoftCube.Aspects
                 methodInjector.SetMethod();
 
                 /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);
-                /// AsyncTaskMethodBuilder<string> builder = stateMachine.Builder;
+                /// var builder = stateMachine.Builder;
                 /// builder.Start(ref stateMachine);
                 /// return stateMachine.Builder.Task;
                 var taskType = methodInjector.TargetMethod.ReturnType;
