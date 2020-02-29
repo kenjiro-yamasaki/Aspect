@@ -189,7 +189,7 @@ namespace SoftCube.Aspects
             var first        = instructions.First();
 
             /// アスペクトのインスタンスを生成し、ローカル変数にストアします。
-            var aspectVariable = processor.Insert(first, Aspect);
+            var aspectVariable = processor.InsertBefore(first, Aspect);
 
             /// アスペクトのインスタンスをフィールドにストアします。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
@@ -213,23 +213,23 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         public void CreateAspectArgsInstance(ILProcessor processor, Instruction insert)
         {
-            processor.Insert(insert, OpCodes.Ldarg_0);
+            processor.InsertBefore(insert, OpCodes.Ldarg_0);
 
             if (TargetMethod.IsStatic)
             {
-                processor.Insert(insert, OpCodes.Ldnull);
+                processor.InsertBefore(insert, OpCodes.Ldnull);
             }
             else
             {
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
                 if (TargetMethod.DeclaringType.IsValueType)
                 {
-                    processor.Insert(insert, OpCodes.Box, TargetMethod.DeclaringType);
+                    processor.InsertBefore(insert, OpCodes.Box, TargetMethod.DeclaringType);
                 }
             }
 
-            processor.Insert(insert, OpCodes.Ldarg_0);
+            processor.InsertBefore(insert, OpCodes.Ldarg_0);
             {
                 var parameters = TargetMethod.Parameters;
                 var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
@@ -239,37 +239,37 @@ namespace SoftCube.Aspects
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                     {
                         var parameter = parameters[parameterIndex];
-                        processor.Insert(insert, OpCodes.Ldarg_0);
-                        processor.Insert(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                        processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                        processor.InsertBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                     }
-                    processor.Insert(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
+                    processor.InsertBefore(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
                 }
                 else
                 {
-                    processor.Insert(insert, OpCodes.Ldc_I4, parameters.Count);
-                    processor.Insert(insert, OpCodes.Newarr, Module.ImportReference(typeof(object)));
+                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
+                    processor.InsertBefore(insert, OpCodes.Newarr, Module.ImportReference(typeof(object)));
                     for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                     {
                         var parameter = parameters[parameterIndex];
-                        processor.Insert(insert, OpCodes.Dup);
-                        processor.Insert(insert, OpCodes.Ldc_I4, parameterIndex);
-                        processor.Insert(insert, OpCodes.Ldarg_0);
-                        processor.Insert(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                        processor.InsertBefore(insert, OpCodes.Dup);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                        processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                        processor.InsertBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                         if (parameter.ParameterType.IsValueType)
                         {
-                            processor.Insert(insert, OpCodes.Box, parameter.ParameterType);
+                            processor.InsertBefore(insert, OpCodes.Box, parameter.ParameterType);
                         }
-                        processor.Insert(insert, OpCodes.Stelem_Ref);
+                        processor.InsertBefore(insert, OpCodes.Stelem_Ref);
                     }
-                    processor.Insert(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                    processor.InsertBefore(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                 }
             }
-            processor.Insert(insert, OpCodes.Stfld, ArgumentsField);
+            processor.InsertBefore(insert, OpCodes.Stfld, ArgumentsField);
 
-            processor.Insert(insert, OpCodes.Ldarg_0);
-            processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
-            processor.Insert(insert, OpCodes.Newobj, Module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
-            processor.Insert(insert, OpCodes.Stfld, AspectArgsField);
+            processor.InsertBefore(insert, OpCodes.Ldarg_0);
+            processor.InsertBefore(insert, OpCodes.Ldfld, ArgumentsField);
+            processor.InsertBefore(insert, OpCodes.Newobj, Module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
+            processor.InsertBefore(insert, OpCodes.Stfld, AspectArgsField);
         }
 
         /// <summary>
@@ -298,12 +298,12 @@ namespace SoftCube.Aspects
                 {
                     var parameter = parameters[parameterIndex];
 
-                    processor.Insert(insert, OpCodes.Ldarg_0);
-                    processor.Insert(insert, OpCodes.Dup);
-                    processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Dup);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, ArgumentsField);
 
-                    processor.Insert(insert, OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
-                    processor.Insert(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                    processor.InsertBefore(insert, OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
+                    processor.InsertBefore(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                 }
             }
             else
@@ -313,16 +313,16 @@ namespace SoftCube.Aspects
                     var parameter = parameters[parameterIndex];
                     var parameterType = parameter.ParameterType;
 
-                    processor.Insert(insert, OpCodes.Ldarg_0);
-                    processor.Insert(insert, OpCodes.Dup);
-                    processor.Insert(insert, OpCodes.Ldfld, ArgumentsField);
-                    processor.Insert(insert, OpCodes.Ldc_I4, parameterIndex);
-                    processor.Insert(insert, OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Dup);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, ArgumentsField);
+                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                    processor.InsertBefore(insert, OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
                     if (parameterType.IsValueType)
                     {
-                        processor.Insert(insert, OpCodes.Unbox_Any, parameterType);
+                        processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);
                     }
-                    processor.Insert(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                    processor.InsertBefore(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
                 }
             }
         }
@@ -345,10 +345,10 @@ namespace SoftCube.Aspects
         /// <param name="eventHandlerName">イベントハンドラー名。</param>
         public void InvokeEventHandler(ILProcessor processor, Instruction insert, string eventHandlerName)
         {
-            processor.Insert(insert, OpCodes.Ldarg_0);
-            processor.Insert(insert, OpCodes.Ldfld, AspectField);
-            processor.Insert(insert, OpCodes.Ldarg_0);
-            processor.Insert(insert, OpCodes.Ldfld, AspectArgsField);
+            processor.InsertBefore(insert, OpCodes.Ldarg_0);
+            processor.InsertBefore(insert, OpCodes.Ldfld, AspectField);
+            processor.InsertBefore(insert, OpCodes.Ldarg_0);
+            processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
 
             var aspectType = AspectType;
             while (true)
@@ -356,7 +356,7 @@ namespace SoftCube.Aspects
                 var eventHandler = aspectType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);
                 if (eventHandler != null)
                 {
-                    processor.Insert(insert, OpCodes.Callvirt, Module.ImportReference(eventHandler));
+                    processor.InsertBefore(insert, OpCodes.Callvirt, Module.ImportReference(eventHandler));
                     break;
                 }
                 else
@@ -389,12 +389,12 @@ namespace SoftCube.Aspects
             int exceptionVariable = variables.Count;
             variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
 
-            processor.Insert(insert, OpCodes.Stloc, exceptionVariable);
+            processor.InsertBefore(insert, OpCodes.Stloc, exceptionVariable);
 
-            processor.Insert(insert, OpCodes.Ldarg_0);
-            processor.Insert(insert, OpCodes.Ldfld, AspectArgsField);
-            processor.Insert(insert, OpCodes.Ldloc, exceptionVariable);
-            processor.Insert(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
+            processor.InsertBefore(insert, OpCodes.Ldarg_0);
+            processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
+            processor.InsertBefore(insert, OpCodes.Ldloc, exceptionVariable);
+            processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
         }
 
         /// <summary>

@@ -46,14 +46,14 @@ namespace SoftCube.Aspects
             {
                 var returnType = genericReturnType.GenericArguments[0];
 
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldfld, AspectArgsField);
-                processor.Insert(insert, OpCodes.Ldloc, returnVariable);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
+                processor.InsertBefore(insert, OpCodes.Ldloc, returnVariable);
                 if (returnType.IsValueType)
                 {
-                    processor.Insert(insert, OpCodes.Box, returnType);
+                    processor.InsertBefore(insert, OpCodes.Box, returnType);
                 }
-                processor.Insert(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
+                processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
             }
         }
 
@@ -69,14 +69,14 @@ namespace SoftCube.Aspects
             {
                 var returnType = genericReturnType.GenericArguments[0];
 
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldfld, AspectArgsField);
-                processor.Insert(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetGetMethod()));
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
+                processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetGetMethod()));
                 if (returnType.IsValueType)
                 {
-                    processor.Insert(insert, OpCodes.Unbox_Any, returnType);
+                    processor.InsertBefore(insert, OpCodes.Unbox_Any, returnType);
                 }
-                processor.Insert(insert, OpCodes.Stloc, returnVariable);
+                processor.InsertBefore(insert, OpCodes.Stloc, returnVariable);
             }
         }
 

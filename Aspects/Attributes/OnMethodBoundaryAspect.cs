@@ -512,23 +512,23 @@ namespace SoftCube.Aspects
                 var branch = new Instruction[2];
                 var insert = innerCatch.TryStart;
 
-                outerCatch.TryStart = processor.InsertNop(insert);
+                outerCatch.TryStart = processor.InsertNopBefore(insert);
 
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldfld, injector.ResumeFlagField);
-                branch[0] = processor.InsertBranch(insert, OpCodes.Brtrue_S);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, injector.ResumeFlagField);
+                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Brtrue_S);
 
                 injector.CreateAspectArgsInstance(processor, insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnEntry));
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldc_I4_1);
-                processor.Insert(insert, OpCodes.Stfld, injector.ResumeFlagField);
-                branch[1] = processor.InsertBranch(insert, OpCodes.Br_S);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
+                processor.InsertBefore(insert, OpCodes.Stfld, injector.ResumeFlagField);
+                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br_S);
 
-                branch[0].Operand = processor.InsertNop(insert);
+                branch[0].Operand = processor.InsertNopBefore(insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnResume));
 
-                branch[1].Operand = processor.InsertNop(insert);
+                branch[1].Operand = processor.InsertNopBefore(insert);
                 injector.SetArgumentFields(processor, insert);
             }
 
@@ -552,7 +552,7 @@ namespace SoftCube.Aspects
                 }
                 else if (instruction.OpCode == OpCodes.Throw)
                 {
-                    leave = processor.InsertLeave(instruction.Next, OpCodes.Leave);
+                    leave = processor.InsertLeaveBefore(instruction.Next, OpCodes.Leave);
                 }
                 else
                 {
@@ -563,17 +563,17 @@ namespace SoftCube.Aspects
                 var insert = leave;
                 var branch = new Instruction[2];
 
-                var leaveTarget = processor.InsertNop(insert);                                      // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldfld, injector.StateField);
-                processor.Insert(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.InsertBranch(insert, OpCodes.Beq);
+                var leaveTarget = processor.InsertNopBefore(insert);                                      // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, injector.StateField);
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
 
                 injector.InvokeEventHandler(processor, insert, nameof(OnYield));
-                branch[1] = processor.InsertBranch(insert, OpCodes.Br_S);
+                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br_S);
                 branch[1].Operand = leave;
 
-                branch[0].Operand = processor.InsertNop(insert);
+                branch[0].Operand = processor.InsertNopBefore(insert);
                 injector.SetReturnValue(processor, insert, resultVariable);
                 injector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
                 injector.SetReturnVariable(processor, insert, resultVariable);
@@ -600,10 +600,10 @@ namespace SoftCube.Aspects
             {
                 var insert = outerCatch.HandlerStart;
 
-                innerCatch.TryEnd = innerCatch.HandlerStart = processor.InsertNop(insert);
+                innerCatch.TryEnd = innerCatch.HandlerStart = processor.InsertNopBefore(insert);
                 injector.SetException(processor, insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnException));
-                processor.Insert(insert, OpCodes.Rethrow);
+                processor.InsertBefore(insert, OpCodes.Rethrow);
             }
 
             ///     finally
@@ -617,18 +617,18 @@ namespace SoftCube.Aspects
                 var insert = outerCatch.HandlerStart;
                 var branch = new Instruction[2];
 
-                innerCatch.HandlerEnd = innerFinally.TryEnd = innerFinally.HandlerStart = processor.InsertNop(insert);
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldfld, injector.StateField);
-                processor.Insert(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.InsertBranch(insert, OpCodes.Beq);
-                branch[1] = processor.InsertBranch(insert, OpCodes.Br);
+                innerCatch.HandlerEnd = innerFinally.TryEnd = innerFinally.HandlerStart = processor.InsertNopBefore(insert);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, injector.StateField);
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
+                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
+                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br);
 
-                branch[0].Operand = processor.InsertNop(insert);
+                branch[0].Operand = processor.InsertNopBefore(insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnExit));
 
-                branch[1].Operand = processor.InsertNop(insert);
-                processor.Insert(insert, OpCodes.Endfinally);
+                branch[1].Operand = processor.InsertNopBefore(insert);
+                processor.InsertBefore(insert, OpCodes.Endfinally);
                 innerFinally.HandlerEnd = insert;
             }
 
@@ -644,13 +644,13 @@ namespace SoftCube.Aspects
             {
                 var insert = outerCatch.HandlerEnd;
 
-                leave.Operand = outerCatch.HandlerEnd = processor.InsertNop(insert);
-                processor.Insert(insert, OpCodes.Ldarg_0);
-                processor.Insert(insert, OpCodes.Ldfld, injector.StateField);
-                processor.Insert(insert, OpCodes.Ldc_I4, -1);
-                processor.Insert(insert, OpCodes.Beq, insert);
+                leave.Operand = outerCatch.HandlerEnd = processor.InsertNopBefore(insert);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, injector.StateField);
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
+                processor.InsertBefore(insert, OpCodes.Beq, insert);
 
-                processor.Insert(insert, OpCodes.Br, instructions.Last());
+                processor.InsertBefore(insert, OpCodes.Br, instructions.Last());
             }
 
             /// IL を最適化します。

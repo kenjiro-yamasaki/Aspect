@@ -76,7 +76,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
             var instruction = processor.Create(opcode);
             if (insert != null)
@@ -96,7 +96,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -116,7 +116,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -136,7 +136,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -156,7 +156,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -176,7 +176,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -196,7 +196,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -216,7 +216,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -236,7 +236,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -256,7 +256,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -276,7 +276,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -296,7 +296,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -316,7 +316,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -336,7 +336,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -356,7 +356,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -376,7 +376,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="opcode">オペコード。</param>
         /// <param name="operand">オペランド。</param>
-        public static void Insert(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
+        public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
         {
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
@@ -402,7 +402,7 @@ namespace SoftCube.Aspects
         /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Branch 命令を挿入し、挿入した Branch 命令を戻します。
         /// 転送先の命令が生成された後、Branch 命令のオペランドを設定してください。
         /// </remarks>
-        public static Instruction InsertBranch(this ILProcessor processor, Instruction insert, OpCode opcode)
+        public static Instruction InsertBranchBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
             var instruction = processor.CreateBranch(opcode);
             if (insert != null)
@@ -429,7 +429,7 @@ namespace SoftCube.Aspects
         /// このメソッドは、オペランド (転送先の命令) が <c>null</c> の Leave 命令を挿入し、挿入した Leave 命令を戻します。
         /// 転送先の命令が生成された後、Leave 命令のオペランドを設定してください。
         /// </remarks>
-        public static Instruction InsertLeave(this ILProcessor processor, Instruction insert, OpCode opcode)
+        public static Instruction InsertLeaveBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
             var instruction = processor.CreateLeave(opcode);
             if (insert != null)
@@ -449,7 +449,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <returns>追加された Nop 命令。</returns>
-        public static Instruction InsertNop(this ILProcessor processor, Instruction insert)
+        public static Instruction InsertNopBefore(this ILProcessor processor, Instruction insert)
         {
             var instruction = processor.Create(OpCodes.Nop);
             if (insert != null)
@@ -470,7 +470,7 @@ namespace SoftCube.Aspects
         /// <param name="insert">命令。</param>
         /// <param name="attribute">属性。</param>
         /// <returns>属性の変数インデックス。</returns>
-        internal static int Insert(this ILProcessor processor, Instruction insert, CustomAttribute attribute)
+        internal static int InsertBefore(this ILProcessor processor, Instruction insert, CustomAttribute attribute)
         {
             var method       = processor.Body.Method;
             var module       = method.DeclaringType.Module.Assembly.MainModule;
@@ -492,65 +492,65 @@ namespace SoftCube.Aspects
                     case bool value:
                         if (value)
                         {
-                            processor.Insert(insert, OpCodes.Ldc_I4_1);
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
                         }
                         else
                         {
-                            processor.Insert(insert, OpCodes.Ldc_I4_0);
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_0);
                         }
                         break;
 
                     case sbyte value:
-                        processor.Insert(insert, OpCodes.Ldc_I4_S, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, value);
                         break;
 
                     case short value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
                         break;
 
                     case int value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
                         break;
 
                     case long value:
-                        processor.Insert(insert, OpCodes.Ldc_I8, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, value);
                         break;
 
                     case byte value:
-                        processor.Insert(insert, OpCodes.Ldc_I4_S, (sbyte)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, (sbyte)value);
                         break;
 
                     case ushort value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, (short)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (short)value);
                         break;
 
                     case uint value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, (int)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (int)value);
                         break;
 
                     case ulong value:
-                        processor.Insert(insert, OpCodes.Ldc_I8, (long)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, (long)value);
                         break;
 
                     case float value:
-                        processor.Insert(insert, OpCodes.Ldc_R4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_R4, value);
                         break;
 
                     case double value:
-                        processor.Insert(insert, OpCodes.Ldc_R8, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_R8, value);
                         break;
 
                     case char value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
                         break;
 
                     case string value:
-                        processor.Insert(insert, OpCodes.Ldstr, value);
+                        processor.InsertBefore(insert, OpCodes.Ldstr, value);
                         break;
 
                     case TypeReference value:
-                        processor.Insert(insert, OpCodes.Ldtoken, module.ImportReference(value));
-                        processor.Insert(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
+                        processor.InsertBefore(insert, OpCodes.Ldtoken, module.ImportReference(value));
+                        processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
                         break;
 
                     default:
@@ -558,8 +558,8 @@ namespace SoftCube.Aspects
                 }
             }
 
-            processor.Insert(insert, OpCodes.Newobj, module.ImportReference(attributeType.GetConstructor(argumentTypes.ToArray())));
-            processor.Insert(insert, OpCodes.Stloc, attributeIndex);
+            processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(attributeType.GetConstructor(argumentTypes.ToArray())));
+            processor.InsertBefore(insert, OpCodes.Stloc, attributeIndex);
 
             /// プロパティを設定します。
             foreach (var property in attribute.Properties)
@@ -567,79 +567,79 @@ namespace SoftCube.Aspects
                 var propertyName  = property.Name;
                 var propertyValue = property.Argument.Value;
 
-                processor.Insert(insert, OpCodes.Ldloc, attributeIndex);
+                processor.InsertBefore(insert, OpCodes.Ldloc, attributeIndex);
 
                 switch (propertyValue)
                 {
                     case bool value:
                         if (value)
                         {
-                            processor.Insert(insert, OpCodes.Ldc_I4_1);
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
                         }
                         else
                         {
-                            processor.Insert(insert, OpCodes.Ldc_I4_0);
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_0);
                         }
                         break;
 
                     case sbyte value:
-                        processor.Insert(insert, OpCodes.Ldc_I4_S, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, value);
                         break;
 
                     case short value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
                         break;
 
                     case int value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
                         break;
 
                     case long value:
-                        processor.Insert(insert, OpCodes.Ldc_I8, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, value);
                         break;
 
                     case byte value:
-                        processor.Insert(insert, OpCodes.Ldc_I4_S, (sbyte)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, (sbyte)value);
                         break;
 
                     case ushort value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, (short)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (short)value);
                         break;
 
                     case uint value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, (int)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (int)value);
                         break;
 
                     case ulong value:
-                        processor.Insert(insert, OpCodes.Ldc_I8, (long)value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, (long)value);
                         break;
 
                     case float value:
-                        processor.Insert(insert, OpCodes.Ldc_R4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_R4, value);
                         break;
 
                     case double value:
-                        processor.Insert(insert, OpCodes.Ldc_R8, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_R8, value);
                         break;
 
                     case char value:
-                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
                         break;
 
                     case string value:
-                        processor.Insert(insert, OpCodes.Ldstr, value);
+                        processor.InsertBefore(insert, OpCodes.Ldstr, value);
                         break;
 
                     case TypeReference value:
-                        processor.Insert(insert, OpCodes.Ldtoken, module.ImportReference(value));
-                        processor.Insert(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
+                        processor.InsertBefore(insert, OpCodes.Ldtoken, module.ImportReference(value));
+                        processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
                         break;
 
                     default:
                         throw new NotSupportedException();
                 }
 
-                processor.Insert(insert, OpCodes.Callvirt, module.ImportReference(attributeType.GetProperty(propertyName).GetSetMethod()));
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(attributeType.GetProperty(propertyName).GetSetMethod()));
             }
 
             return attributeIndex;
@@ -663,7 +663,7 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction EmitBranch(this ILProcessor processor, OpCode opcode)
         {
-            return InsertBranch(processor, null, opcode);
+            return InsertBranchBefore(processor, null, opcode);
         }
 
         /// <summary>
@@ -680,7 +680,7 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction EmitLeave(this ILProcessor processor, OpCode opcode)
         {
-            return InsertLeave(processor, null, opcode);
+            return InsertLeaveBefore(processor, null, opcode);
         }
 
         /// <summary>
@@ -690,7 +690,7 @@ namespace SoftCube.Aspects
         /// <returns>追加された Nop 命令。</returns>
         public static Instruction EmitNop(this ILProcessor processor)
         {
-            return InsertNop(processor, null);
+            return InsertNopBefore(processor, null);
         }
 
         /// <summary>
