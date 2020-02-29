@@ -16,7 +16,7 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// アスペクト。
+        /// アスペクトの属性。
         /// </summary>
         public CustomAttribute Aspect { get; }
 
@@ -126,7 +126,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト。</param>
+        /// <param name="aspect">アスペクト属性。</param>
         public MethodInjector(MethodDefinition targetMethod, CustomAttribute aspect)
         {
             Aspect       = aspect ?? throw new ArgumentNullException(nameof(aspect));
@@ -166,170 +166,7 @@ namespace SoftCube.Aspects
         public void CreateAspectVariable()
         {
             Assert.Equal(AspectVariable, -1);
-
-            /// ローカル変数を追加します。
-            AspectVariable = Variables.Count();
-            Variables.Add(new VariableDefinition(Module.ImportReference(AspectSystemType)));
-
-            /// アスペクトを生成して、ローカル変数にストアします。
-            var argumentTypes  = Aspect.ConstructorArguments.Select(a => a.Type.ToSystemType());
-            var argumentValues = Aspect.ConstructorArguments.Select(a => a.Value);
-            foreach (var argumentValue in argumentValues)
-            {
-                switch (argumentValue)
-                {
-                    case bool value:
-                        if (value)
-                        {
-                            Processor.Emit(OpCodes.Ldc_I4_1);
-                        }
-                        else
-                        {
-                            Processor.Emit(OpCodes.Ldc_I4_0);
-                        }
-                        break;
-
-                    case sbyte value:
-                        Processor.Emit(OpCodes.Ldc_I4_S, value);
-                        break;
-
-                    case short value:
-                        Processor.Emit(OpCodes.Ldc_I4, value);
-                        break;
-
-                    case int value:
-                        Processor.Emit(OpCodes.Ldc_I4, value);
-                        break;
-
-                    case long value:
-                        Processor.Emit(OpCodes.Ldc_I8, value);
-                        break;
-
-                    case byte value:
-                        Processor.Emit(OpCodes.Ldc_I4_S, (sbyte)value);
-                        break;
-
-                    case ushort value:
-                        Processor.Emit(OpCodes.Ldc_I4, (short)value);
-                        break;
-
-                    case uint value:
-                        Processor.Emit(OpCodes.Ldc_I4, (int)value);
-                        break;
-
-                    case ulong value:
-                        Processor.Emit(OpCodes.Ldc_I8, (long)value);
-                        break;
-
-                    case float value:
-                        Processor.Emit(OpCodes.Ldc_R4, value);
-                        break;
-
-                    case double value:
-                        Processor.Emit(OpCodes.Ldc_R8, value);
-                        break;
-
-                    case char value:
-                        Processor.Emit(OpCodes.Ldc_I4, value);
-                        break;
-
-                    case string value:
-                        Processor.Emit(OpCodes.Ldstr, value);
-                        break;
-
-                    case TypeReference value:
-                        Processor.Emit(OpCodes.Ldtoken, Module.ImportReference(value));
-                        Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
-                }
-            }
-
-            Processor.Emit(OpCodes.Newobj, Module.ImportReference(AspectSystemType.GetConstructor(argumentTypes.ToArray())));
-            Processor.Emit(OpCodes.Stloc, AspectVariable);
-
-            /// アスペクトのプロパティを設定します。
-            foreach (var property in Aspect.Properties)
-            {
-                var propertyName  = property.Name;
-                var propertyValue = property.Argument.Value;
-
-                Processor.Emit(OpCodes.Ldloc, AspectVariable);
-
-                switch (propertyValue)
-                {
-                    case bool value:
-                        if (value)
-                        {
-                            Processor.Emit(OpCodes.Ldc_I4_1);
-                        }
-                        else
-                        {
-                            Processor.Emit(OpCodes.Ldc_I4_0);
-                        }
-                        break;
-
-                    case sbyte value:
-                        Processor.Emit(OpCodes.Ldc_I4_S, value);
-                        break;
-
-                    case short value:
-                        Processor.Emit(OpCodes.Ldc_I4, value);
-                        break;
-
-                    case int value:
-                        Processor.Emit(OpCodes.Ldc_I4, value);
-                        break;
-
-                    case long value:
-                        Processor.Emit(OpCodes.Ldc_I8, value);
-                        break;
-
-                    case byte value:
-                        Processor.Emit(OpCodes.Ldc_I4_S, (sbyte)value);
-                        break;
-
-                    case ushort value:
-                        Processor.Emit(OpCodes.Ldc_I4, (short)value);
-                        break;
-
-                    case uint value:
-                        Processor.Emit(OpCodes.Ldc_I4, (int)value);
-                        break;
-
-                    case ulong value:
-                        Processor.Emit(OpCodes.Ldc_I8, (long)value);
-                        break;
-
-                    case float value:
-                        Processor.Emit(OpCodes.Ldc_R4, value);
-                        break;
-
-                    case double value:
-                        Processor.Emit(OpCodes.Ldc_R8, value);
-                        break;
-
-                    case char value:
-                        Processor.Emit(OpCodes.Ldc_I4, value);
-                        break;
-
-                    case string value:
-                        Processor.Emit(OpCodes.Ldstr, value);
-                        break;
-
-                    case TypeReference value:
-                        Processor.Emit(OpCodes.Ldtoken, Module.ImportReference(value));
-                        Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
-                }
-
-                Processor.Emit(OpCodes.Callvirt, Module.ImportReference(AspectSystemType.GetProperty(propertyName).GetSetMethod()));
-            }
+            AspectVariable = Processor.EmitCreateAspectCode(Aspect);
         }
 
         /// <summary>

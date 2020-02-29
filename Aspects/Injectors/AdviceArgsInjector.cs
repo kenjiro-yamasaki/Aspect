@@ -11,7 +11,7 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// アスペクト。
+        /// アスペクトの属性。
         /// </summary>
         public CustomAttribute Aspect { get; }
 
@@ -43,7 +43,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト。</param>
+        /// <param name="aspect">アスペクト属性。</param>
         public AdviceArgsInjector(MethodDefinition targetMethod, CustomAttribute aspect)
         {
             Aspect       = aspect ?? throw new ArgumentNullException(nameof(aspect));

@@ -59,7 +59,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト。</param>
+        /// <param name="aspect">アスペクト属性。</param>
         public IteratorStateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspect)
             : base(targetMethod, aspect)
         {

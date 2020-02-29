@@ -29,7 +29,7 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        /// <param name="aspect">アスペクト。</param>
+        /// <param name="aspect">アスペクト属性。</param>
         protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
             var asyncStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");

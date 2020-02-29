@@ -25,24 +25,24 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">注入対象の属性。</param>
-        public void Inject(MethodDefinition method, CustomAttribute attribute)
+        /// <param name="method">メソッド。</param>
+        /// <param name="aspect">アスペクト属性。</param>
+        public void Inject(MethodDefinition method, CustomAttribute aspect)
         {
             if (method == null)
             {
                 throw new ArgumentNullException(nameof(method));
             }
 
-            OnInject(method, attribute);
+            OnInject(method, aspect);
         }
 
         /// <summary>
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
-        /// <param name="method">注入対象のメソッド定義。</param>
-        /// <param name="attribute">注入対象の属性。</param>
-        protected abstract void OnInject(MethodDefinition method, CustomAttribute attribute);
+        /// <param name="method">メソッド。</param>
+        /// <param name="aspect">アスペクト属性。</param>
+        protected abstract void OnInject(MethodDefinition method, CustomAttribute aspect);
 
         #endregion
     }

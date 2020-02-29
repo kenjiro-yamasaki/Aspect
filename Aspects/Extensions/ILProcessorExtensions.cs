@@ -464,13 +464,13 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 命令の前に属性を追加する IL コードを追加します。
+        /// 命令の前にアスペクト属性を追加するコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">命令。</param>
-        /// <param name="attribute">属性。</param>
-        /// <returns>属性の変数インデックス。</returns>
-        internal static int InsertBefore(this ILProcessor processor, Instruction insert, CustomAttribute attribute)
+        /// <param name="aspect">アスペクト属性。</param>
+        /// <returns>アスペクト属性の変数インデックス。</returns>
+        internal static int InsertCreateAspectCodeBefore(this ILProcessor processor, Instruction insert, CustomAttribute aspect)
         {
             var method       = processor.Body.Method;
             var module       = method.DeclaringType.Module.Assembly.MainModule;
@@ -479,12 +479,12 @@ namespace SoftCube.Aspects
             /// ローカル変数を追加します。
             var variables      = method.Body.Variables;
             var attributeIndex = variables.Count();
-            var attributeType  = attribute.AttributeType.ToSystemType();
+            var attributeType  = aspect.AttributeType.ToSystemType();
             variables.Add(new VariableDefinition(module.ImportReference(attributeType)));
 
             /// 属性を生成して、ローカル変数にストアします。
-            var argumentTypes  = attribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
-            var argumentValues = attribute.ConstructorArguments.Select(a => a.Value);
+            var argumentTypes  = aspect.ConstructorArguments.Select(a => a.Type.ToSystemType());
+            var argumentValues = aspect.ConstructorArguments.Select(a => a.Value);
             foreach (var argumentValue in argumentValues)
             {
                 switch (argumentValue)
@@ -562,7 +562,7 @@ namespace SoftCube.Aspects
             processor.InsertBefore(insert, OpCodes.Stloc, attributeIndex);
 
             /// プロパティを設定します。
-            foreach (var property in attribute.Properties)
+            foreach (var property in aspect.Properties)
             {
                 var propertyName  = property.Name;
                 var propertyValue = property.Argument.Value;
@@ -663,7 +663,9 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction EmitBranch(this ILProcessor processor, OpCode opcode)
         {
-            return InsertBranchBefore(processor, null, opcode);
+            var instruction = processor.CreateBranch(opcode);
+            processor.Append(instruction);
+            return instruction;
         }
 
         /// <summary>
@@ -680,7 +682,9 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction EmitLeave(this ILProcessor processor, OpCode opcode)
         {
-            return InsertLeaveBefore(processor, null, opcode);
+            var instruction = processor.CreateLeave(opcode);
+            processor.Append(instruction);
+            return instruction;
         }
 
         /// <summary>
@@ -690,14 +694,28 @@ namespace SoftCube.Aspects
         /// <returns>追加された Nop 命令。</returns>
         public static Instruction EmitNop(this ILProcessor processor)
         {
-            return InsertNopBefore(processor, null);
+            var instruction = processor.Create(OpCodes.Nop);
+            processor.Append(instruction);
+            return instruction;
         }
 
         /// <summary>
-        /// 
+        /// 命令の前にアスペクト属性を追加するコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="typeReference"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">命令。</param>
+        /// <param name="aspect">アスペクト属性。</param>
+        /// <returns>アスペクト属性の変数インデックス。</returns>
+        internal static int EmitCreateAspectCode(this ILProcessor processor, CustomAttribute aspect)
+        {
+            return InsertCreateAspectCodeBefore(processor, null, aspect);
+        }
+
+        /// <summary>
+        /// 末尾に Ldind 命令を追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="typeReference">型参照。</param>
         internal static void EmitLdind(this ILProcessor processor, TypeReference typeReference)
         {
             if (!typeReference.IsValueType)
@@ -757,10 +775,10 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// 末尾に Stind 命令を追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="typeReference"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="typeReference">型参照。</param>
         internal static void EmitStind(this ILProcessor processor, TypeReference typeReference)
         {
             if (!typeReference.IsValueType)

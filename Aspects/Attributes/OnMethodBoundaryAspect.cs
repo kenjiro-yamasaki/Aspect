@@ -31,7 +31,7 @@ namespace SoftCube.Aspects
         /// アスペクトをメソッドに注入します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        /// <param name="aspect">アスペクト。</param>
+        /// <param name="aspect">アスペクト属性。</param>
         sealed protected override void OnInject(MethodDefinition method, CustomAttribute aspect)
         {
             var iteratorStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");

@@ -14,7 +14,7 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// アスペクト。
+        /// アスペクトの属性。
         /// </summary>
         public CustomAttribute Aspect { get; }
 
@@ -128,7 +128,7 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト。</param>
+        /// <param name="aspect">アスペクト属性。</param>
         public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspect)
         {
             Aspect           = aspect ?? throw new ArgumentNullException(nameof(aspect));
@@ -189,7 +189,7 @@ namespace SoftCube.Aspects
             var first        = instructions.First();
 
             /// アスペクトのインスタンスを生成し、ローカル変数にストアします。
-            var aspectVariable = processor.InsertBefore(first, Aspect);
+            var aspectVariable = processor.InsertCreateAspectCodeBefore(first, Aspect);
 
             /// アスペクトのインスタンスをフィールドにストアします。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
