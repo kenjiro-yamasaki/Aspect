@@ -489,12 +489,68 @@ namespace SoftCube.Aspects
             {
                 switch (argumentValue)
                 {
-                    case int @int:
-                        processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, @int));
+                    case bool value:
+                        if (value)
+                        {
+                            processor.Insert(insert, OpCodes.Ldc_I4_1);
+                        }
+                        else
+                        {
+                            processor.Insert(insert, OpCodes.Ldc_I4_0);
+                        }
                         break;
 
-                    case string @string:
-                        processor.InsertBefore(insert, processor.Create(OpCodes.Ldstr, @string));
+                    case sbyte value:
+                        processor.Insert(insert, OpCodes.Ldc_I4_S, value);
+                        break;
+
+                    case short value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case int value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case long value:
+                        processor.Insert(insert, OpCodes.Ldc_I8, value);
+                        break;
+
+                    case byte value:
+                        processor.Insert(insert, OpCodes.Ldc_I4_S, (sbyte)value);
+                        break;
+
+                    case ushort value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, (short)value);
+                        break;
+
+                    case uint value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, (int)value);
+                        break;
+
+                    case ulong value:
+                        processor.Insert(insert, OpCodes.Ldc_I8, (long)value);
+                        break;
+
+                    case float value:
+                        processor.Insert(insert, OpCodes.Ldc_R4, value);
+                        break;
+
+                    case double value:
+                        processor.Insert(insert, OpCodes.Ldc_R8, value);
+                        break;
+
+                    case char value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case string value:
+                        processor.Insert(insert, OpCodes.Ldstr, value);
+                        break;
+
+                    case TypeReference value:
+                        processor.Insert(insert, OpCodes.Ldtoken, module.ImportReference(value));
+                        processor.Insert(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
                         break;
 
                     default:
@@ -502,8 +558,8 @@ namespace SoftCube.Aspects
                 }
             }
 
-            processor.InsertBefore(insert, processor.Create(OpCodes.Newobj, module.ImportReference(attributeType.GetConstructor(argumentTypes.ToArray()))));
-            processor.InsertBefore(insert, processor.Create(OpCodes.Stloc, attributeIndex));
+            processor.Insert(insert, OpCodes.Newobj, module.ImportReference(attributeType.GetConstructor(argumentTypes.ToArray())));
+            processor.Insert(insert, OpCodes.Stloc, attributeIndex);
 
             /// プロパティを設定します。
             foreach (var property in attribute.Properties)
@@ -511,23 +567,79 @@ namespace SoftCube.Aspects
                 var propertyName  = property.Name;
                 var propertyValue = property.Argument.Value;
 
-                processor.InsertBefore(insert, processor.Create(OpCodes.Ldloc, attributeIndex));
+                processor.Insert(insert, OpCodes.Ldloc, attributeIndex);
 
                 switch (propertyValue)
                 {
-                    case int @int:
-                        processor.InsertBefore(insert, processor.Create(OpCodes.Ldc_I4, @int));
+                    case bool value:
+                        if (value)
+                        {
+                            processor.Insert(insert, OpCodes.Ldc_I4_1);
+                        }
+                        else
+                        {
+                            processor.Insert(insert, OpCodes.Ldc_I4_0);
+                        }
                         break;
 
-                    case string @string:
-                        processor.InsertBefore(insert, processor.Create(OpCodes.Ldstr, @string));
+                    case sbyte value:
+                        processor.Insert(insert, OpCodes.Ldc_I4_S, value);
+                        break;
+
+                    case short value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case int value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case long value:
+                        processor.Insert(insert, OpCodes.Ldc_I8, value);
+                        break;
+
+                    case byte value:
+                        processor.Insert(insert, OpCodes.Ldc_I4_S, (sbyte)value);
+                        break;
+
+                    case ushort value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, (short)value);
+                        break;
+
+                    case uint value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, (int)value);
+                        break;
+
+                    case ulong value:
+                        processor.Insert(insert, OpCodes.Ldc_I8, (long)value);
+                        break;
+
+                    case float value:
+                        processor.Insert(insert, OpCodes.Ldc_R4, value);
+                        break;
+
+                    case double value:
+                        processor.Insert(insert, OpCodes.Ldc_R8, value);
+                        break;
+
+                    case char value:
+                        processor.Insert(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case string value:
+                        processor.Insert(insert, OpCodes.Ldstr, value);
+                        break;
+
+                    case TypeReference value:
+                        processor.Insert(insert, OpCodes.Ldtoken, module.ImportReference(value));
+                        processor.Insert(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
                         break;
 
                     default:
                         throw new NotSupportedException();
                 }
 
-                processor.InsertBefore(insert, processor.Create(OpCodes.Callvirt, module.ImportReference(attributeType.GetProperty(propertyName).GetSetMethod())));
+                processor.Insert(insert, OpCodes.Callvirt, module.ImportReference(attributeType.GetProperty(propertyName).GetSetMethod()));
             }
 
             return attributeIndex;

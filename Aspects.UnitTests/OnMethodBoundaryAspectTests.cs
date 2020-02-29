@@ -3868,6 +3868,768 @@ namespace SoftCube.Aspects
 
         public class イテレーターメソッド
         {
+            public class アスペクトの初期化
+            {
+                #region コンストラクター引数
+
+                #region bool
+
+                private class BoolArgLogger : OnMethodBoundaryAspect
+                {
+                    public bool Arg { get; }
+                    public BoolArgLogger(bool arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [BoolArgLogger(true)]
+                private static IEnumerable<int> TrueArg() { yield break; }
+
+                [BoolArgLogger(false)]
+                private static IEnumerable<int> FalseArg() { yield break; }
+
+                [Fact]
+                public void TrueArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    TrueArg().ToList();
+
+                    Assert.Equal("True ", appender.ToString());
+                }
+
+                [Fact]
+                public void FalseArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    FalseArg().ToList();
+
+                    Assert.Equal("False ", appender.ToString());
+                }
+
+                #endregion
+
+                #region sbyte
+
+                private class SByteArgLogger : OnMethodBoundaryAspect
+                {
+                    public sbyte Arg { get; }
+                    public SByteArgLogger(sbyte arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [SByteArgLogger(-1)]
+                private static IEnumerable<int> SByteArg() { yield break; }
+
+                [Fact]
+                public static void SByteArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    SByteArg().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region short
+
+                private class ShortArgLogger : OnMethodBoundaryAspect
+                {
+                    public short Arg { get; }
+                    public ShortArgLogger(short arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [ShortArgLogger(-1)]
+                private static IEnumerable<int> ShortArg() { yield break; }
+
+                [Fact]
+                public void ShortArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    ShortArg().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region int
+
+                private class IntArgLogger : OnMethodBoundaryAspect
+                {
+                    public int Arg { get; }
+                    public IntArgLogger(int arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [IntArgLogger(-1)]
+                private static IEnumerable<int> IntArg() { yield break; }
+
+                [Fact]
+                public void IntArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    IntArg().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region long
+
+                private class LongArgLogger : OnMethodBoundaryAspect
+                {
+                    public long Arg { get; }
+                    public LongArgLogger(long arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [LongArgLogger(-1)]
+                private static IEnumerable<int> LongArg() { yield break; }
+
+                [Fact]
+                public void LongArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    LongArg().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region byte
+
+                private class ByteArgLogger : OnMethodBoundaryAspect
+                {
+                    public byte Arg { get; }
+                    public ByteArgLogger(byte arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [ByteArgLogger(0xFF)]
+                private static IEnumerable<int> ByteArg() { yield break; }
+
+                [Fact]
+                public void ByteArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    ByteArg().ToList();
+
+                    Assert.Equal("255 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region ushort
+
+                private class UShortArgLogger : OnMethodBoundaryAspect
+                {
+                    public ushort Arg { get; }
+                    public UShortArgLogger(ushort arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [UShortArgLogger(0xFFFF)]
+                private static IEnumerable<int> UShortArg() { yield break; }
+
+                [Fact]
+                public void UShortArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    UShortArg().ToList();
+
+                    Assert.Equal("65535 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region uint
+
+                private class UIntArgLogger : OnMethodBoundaryAspect
+                {
+                    public uint Arg { get; }
+                    public UIntArgLogger(uint arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [UIntArgLogger(0xFFFF_FFFF)]
+                private static IEnumerable<int> UIntArg() { yield break; }
+
+                [Fact]
+                public void UIntArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    UIntArg().ToList();
+
+                    Assert.Equal("4294967295 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region ulong
+
+                private class ULongArgLogger : OnMethodBoundaryAspect
+                {
+                    public ulong Arg { get; }
+                    public ULongArgLogger(ulong arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [ULongArgLogger(0xFFFF_FFFF_FFFF_FFFF)]
+                private static IEnumerable<int> ULongArg() { yield break; }
+
+                [Fact]
+                public void ULongArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    ULongArg().ToList();
+
+                    Assert.Equal("18446744073709551615 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region float
+
+                private class SingleArgLogger : OnMethodBoundaryAspect
+                {
+                    public float Arg { get; }
+                    public SingleArgLogger(float arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [SingleArgLogger(1.5f)]
+                private static IEnumerable<int> SingleArg() { yield break; }
+
+                [Fact]
+                public void SingleArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    SingleArg().ToList();
+
+                    Assert.Equal("1.5 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region double
+
+                private class DoubleArgLogger : OnMethodBoundaryAspect
+                {
+                    public double Arg { get; }
+                    public DoubleArgLogger(double arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [DoubleArgLogger(1.5)]
+                private static IEnumerable<int> DoubleArg() { yield break; }
+
+                [Fact]
+                public void DoubleArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    DoubleArg().ToList();
+
+                    Assert.Equal("1.5 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region char
+
+                private class CharArgLogger : OnMethodBoundaryAspect
+                {
+                    public char Arg { get; }
+                    public CharArgLogger(char arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [CharArgLogger('a')]
+                private static IEnumerable<int> CharArg() { yield break; }
+
+                [Fact]
+                public void CharArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    CharArg().ToList();
+
+                    Assert.Equal("a ", appender.ToString());
+                }
+
+                #endregion
+
+                #region string
+
+                private class StringArgLogger : OnMethodBoundaryAspect
+                {
+                    public string Arg { get; }
+                    public StringArgLogger(string arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [StringArgLogger("a")]
+                private static IEnumerable<int> StringArg() { yield break; }
+
+                [Fact]
+                public void StringArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    StringArg().ToList();
+
+                    Assert.Equal("a ", appender.ToString());
+                }
+
+                #endregion
+
+                #region type
+
+                private class TypeArgLogger : OnMethodBoundaryAspect
+                {
+                    public Type Arg { get; }
+                    public TypeArgLogger(Type arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [TypeArgLogger(typeof(int))]
+                private static IEnumerable<int> TypeArg() { yield break; }
+
+                [Fact]
+                public void TypeArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    TypeArg().ToList();
+
+                    Assert.Equal("System.Int32 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region enum
+
+                public enum Enum
+                {
+                    Value,
+                }
+
+                private class EnumArgLogger : OnMethodBoundaryAspect
+                {
+                    public Enum Arg { get; }
+                    public EnumArgLogger(Enum arg) => Arg = arg;
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+                }
+
+                [EnumArgLogger(Enum.Value)]
+                private static IEnumerable<int> EnumArg() { yield break; }
+
+                [Fact]
+                public void EnumArgTest()
+                {
+                    var appender = CreateAppender();
+
+                    EnumArg().ToList();
+
+                    Assert.Equal("Value ", appender.ToString());
+                }
+
+                #endregion
+
+                #endregion
+
+                #region プロパティ
+
+                #region bool
+
+                private class BoolPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public bool Property { get; set; }
+                    public BoolPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [BoolPropertyLogger(Property = true)]
+                private static IEnumerable<int> TrueProperty() { yield break; }
+
+                [BoolPropertyLogger(Property = false)]
+                private static IEnumerable<int> FalseProperty() { yield break; }
+
+                [Fact]
+                public void TruePropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    TrueProperty().ToList();
+
+                    Assert.Equal("True ", appender.ToString());
+                }
+
+                [Fact]
+                public void FalsePropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    FalseProperty().ToList();
+
+                    Assert.Equal("False ", appender.ToString());
+                }
+
+                #endregion
+
+                #region sbyte
+
+                private class SBytePropertyLogger : OnMethodBoundaryAspect
+                {
+                    public sbyte Property { get; set; }
+                    public SBytePropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [SBytePropertyLogger(Property = -1)]
+                private static IEnumerable<int> SByteProperty() { yield break; }
+
+                [Fact]
+                public void SBytePropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    SByteProperty().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region short
+
+                private class ShortPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public short Property { get; set; }
+                    public ShortPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [ShortPropertyLogger(Property = -1)]
+                private static IEnumerable<int> ShortProperty() { yield break; }
+
+                [Fact]
+                public void ShortPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    ShortProperty().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region int
+
+                private class IntPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public int Property { get; set; }
+                    public IntPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [IntPropertyLogger(Property = -1)]
+                private static IEnumerable<int> IntProperty() { yield break; }
+
+                [Fact]
+                public void IntPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    IntProperty().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region long
+
+                private class LongPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public long Property { get; set; }
+                    public LongPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [LongPropertyLogger(Property = -1)]
+                private static IEnumerable<int> LongProperty() { yield break; }
+
+                [Fact]
+                public void LongPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    LongProperty().ToList();
+
+                    Assert.Equal("-1 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region byte
+
+                private class BytePropertyLogger : OnMethodBoundaryAspect
+                {
+                    public byte Property { get; set; }
+                    public BytePropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [BytePropertyLogger(Property = 0xFF)]
+                private static IEnumerable<int> ByteProperty() { yield break; }
+
+                [Fact]
+                public void BytePropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    ByteProperty().ToList();
+
+                    Assert.Equal("255 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region ushort
+
+                private class UShortPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public ushort Property { get; set; }
+                    public UShortPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [UShortPropertyLogger(Property = 0xFFFF)]
+                private static IEnumerable<int> UShortProperty() { yield break; }
+
+                [Fact]
+                public void UShortPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    UShortProperty().ToList();
+
+                    Assert.Equal("65535 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region uint
+
+                private class UIntPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public uint Property { get; set; }
+                    public UIntPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [UIntPropertyLogger(Property = 0xFFFFFFFF)]
+                private static IEnumerable<int> UIntProperty() { yield break; }
+
+                [Fact]
+                public void UIntPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    UIntProperty().ToList();
+
+                    Assert.Equal("4294967295 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region ulong
+
+                private class ULongPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public ulong Property { get; set; }
+                    public ULongPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [ULongPropertyLogger(Property = 0xFFFFFFFFFFFFFFFF)]
+                private static IEnumerable<int> ULongProperty() { yield break; }
+
+                [Fact]
+                public void ULongPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    ULongProperty().ToList();
+
+                    Assert.Equal("18446744073709551615 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region float
+
+                private class SinglePropertyLogger : OnMethodBoundaryAspect
+                {
+                    public float Property { get; set; }
+                    public SinglePropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [SinglePropertyLogger(Property = 1.5f)]
+                private static IEnumerable<int> SingleProperty() { yield break; }
+
+                [Fact]
+                public void SinglePropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    SingleProperty().ToList();
+
+                    Assert.Equal("1.5 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region double
+
+                private class DoublePropertyLogger : OnMethodBoundaryAspect
+                {
+                    public double Property { get; set; }
+                    public DoublePropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [DoublePropertyLogger(Property = 1.5)]
+                private static IEnumerable<int> DoubleProperty() { yield break; }
+
+                [Fact]
+                public void DoublePropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    DoubleProperty().ToList();
+
+                    Assert.Equal("1.5 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region char
+
+                private class CharPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public char Property { get; set; }
+                    public CharPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [CharPropertyLogger(Property = 'a')]
+                private static IEnumerable<int> CharProperty() { yield break; }
+
+                [Fact]
+                public void CharPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    CharProperty().ToList();
+
+                    Assert.Equal("a ", appender.ToString());
+                }
+
+                #endregion
+
+                #region string
+
+                private class StringPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public string Property { get; set; }
+                    public StringPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [StringPropertyLogger(Property = "a")]
+                private static IEnumerable<int> StringProperty() { yield break; }
+
+                [Fact]
+                public void StringPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    StringProperty().ToList();
+
+                    Assert.Equal("a ", appender.ToString());
+                }
+
+                #endregion
+
+                #region Type
+
+                private class TypePropertyLogger : OnMethodBoundaryAspect
+                {
+                    public Type Property { get; set; }
+                    public TypePropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [TypePropertyLogger(Property = typeof(int))]
+                private static IEnumerable<int> TypeProperty() { yield break; }
+
+                [Fact]
+                public void TypePropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    TypeProperty().ToList();
+
+                    Assert.Equal("System.Int32 ", appender.ToString());
+                }
+
+                #endregion
+
+                #region enum
+
+                private class EnumPropertyLogger : OnMethodBoundaryAspect
+                {
+                    public Enum Property { get; set; }
+                    public EnumPropertyLogger() { }
+                    public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Property.ToString());
+                }
+
+                [EnumPropertyLogger(Property = Enum.Value)]
+                private static IEnumerable<int> EnumProperty() { yield break; }
+
+                [Fact]
+                public void EnumPropertyTest()
+                {
+                    var appender = CreateAppender();
+
+                    EnumProperty().ToList();
+
+                    Assert.Equal("Value ", appender.ToString());
+                }
+
+                #endregion
+
+                #endregion
+            }
+
             public class イベントハンドラーの呼びだし順序
             {
                 private class EventLogger : OnMethodBoundaryAspect

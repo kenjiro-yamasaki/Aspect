@@ -1,5 +1,6 @@
 ﻿using SoftCube.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,23 +17,31 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            var program = new Program();
-            program.TypeArg();
-
-            //program.Func(typeof(int));
+            var instance = new Program();
+            
+            foreach (var result in instance.IntArg())
+            {
+                Logger.Trace(result.ToString());
+            }
+            
+            Console.ReadKey();
         }
 
 
-        //private void Func(Type type) { }
-
-        private class TypeArgLogger : OnMethodBoundaryAspect
+        private class IntArgLogger : OnMethodBoundaryAspect
         {
-            public Type Arg { get; }
-            public TypeArgLogger(Type arg) => Arg = arg;
-            public override void OnEntry(MethodExecutionArgs args) => Logger.Trace(Arg.ToString());
+            public int Arg { get; }
+            public IntArgLogger(int arg) => Arg = arg;
+
+
+
+            public override void OnEntry(MethodExecutionArgs args)
+            {
+                Logger.Trace(Arg.ToString());
+            }
         }
 
-        [TypeArgLogger(typeof(int))]
-        private void TypeArg() { }
+        [IntArgLogger(-1)]
+        private IEnumerable<int> IntArg() { yield return 1; }
     }
 }
