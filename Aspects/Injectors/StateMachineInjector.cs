@@ -129,7 +129,8 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
-        public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
+        /// <param name="aspectArgsType">アスペクト引数の型。</param>
+        public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
         {
             Aspect           = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
             AspectType       = Aspect.AttributeType.Resolve();
@@ -139,7 +140,7 @@ namespace SoftCube.Aspects
 
             StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
             AspectField      = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
-            AspectArgsField  = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(typeof(MethodExecutionArgs)));
+            AspectArgsField  = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(aspectArgsType));
             ArgumentsField   = CreateField("*arguments*",  FieldAttributes.Private, Module.ImportReference(ArgumentsType));
             ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
@@ -152,9 +153,9 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 新たなメソッドを生成し、MoveNext メソッドの内容を移動します。
+        /// 新たなメソッドを生成し、MoveNext メソッドのコードをコピーします。
         /// </summary>
-        public void ReplaceMoveNextMethod()
+        public void CopyMoveNextMethod()
         {
             Assert.Null(OriginalMoveNextMethod);
 
@@ -368,7 +369,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// <see cref="MethodArgs.Exception"/> に例外を設定します。
+        /// AspectArgs.Exception に例外を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="exceptionVariable">例外のローカル変数。</param>
@@ -378,7 +379,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// <see cref="MethodArgs.Exception"/> に例外を設定します。
+        /// AspectArgs.Exception" に例外を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>

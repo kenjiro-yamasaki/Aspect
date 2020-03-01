@@ -39,14 +39,14 @@ namespace SoftCube.Aspects
 
             if (iteratorStateMachineAttribute != null)
             {
-                var iteratorStateMachineInjector = new IteratorStateMachineInjector(method, aspect);
+                var iteratorStateMachineInjector = new IteratorStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
 
                 iteratorStateMachineInjector.CreateAspectInstance();
                 ReplaceMoveNextMethod(iteratorStateMachineInjector);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var asyncStateMachineInjector = new AsyncStateMachineInjector(method, aspect);
+                var asyncStateMachineInjector = new AsyncStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
 
                 asyncStateMachineInjector.CreateAspectInstance();
                 ReplaceMoveNextMethod(asyncStateMachineInjector);
@@ -205,7 +205,7 @@ namespace SoftCube.Aspects
                 injector.InvokeEventHandler(processor, nameof(OnExit));
             });
 
-            injector.ReplaceMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            injector.InjectMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion

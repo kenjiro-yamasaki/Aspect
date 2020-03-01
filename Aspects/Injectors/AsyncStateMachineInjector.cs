@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System;
 using System.Linq;
 
 namespace SoftCube.Aspects
@@ -24,9 +25,10 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        public AsyncStateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspect)
-            : base(targetMethod, aspect)
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        /// <param name="aspectArgsType">アスペクト引数の型。</param>
+        public AsyncStateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
+            : base(targetMethod, aspectAttribute, aspectArgsType)
         {
         }
 
