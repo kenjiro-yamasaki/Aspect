@@ -480,7 +480,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void bool型_引数8つ_正しくアスペクトが適用される()
+                public void bool型_引数9つ_正しくアスペクトが適用される()
                 {
                     bool arg0 = false;
                     bool arg1 = true;
@@ -530,7 +530,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void sbyte型_引数8つ_正しくアスペクトが適用される()
+                public void sbyte型_引数9つ_正しくアスペクトが適用される()
                 {
                     sbyte arg0 = 0;
                     sbyte arg1 = 1;
@@ -580,7 +580,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void short型_引数8つ_正しくアスペクトが適用される()
+                public void short型_引数9つ_正しくアスペクトが適用される()
                 {
                     short arg0 = 0;
                     short arg1 = 1;
@@ -630,7 +630,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void int型_引数8つ_正しくアスペクトが適用される()
+                public void int型_引数9つ_正しくアスペクトが適用される()
                 {
                     int arg0 = 0;
                     int arg1 = 1;
@@ -680,7 +680,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void long型_引数8つ_正しくアスペクトが適用される()
+                public void long型_引数9つ_正しくアスペクトが適用される()
                 {
                     long arg0 = 0;
                     long arg1 = 1;
@@ -730,7 +730,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void byte型_引数8つ_正しくアスペクトが適用される()
+                public void byte型_引数9つ_正しくアスペクトが適用される()
                 {
                     byte arg0 = 0;
                     byte arg1 = 1;
@@ -780,7 +780,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void ushort型_引数8つ_正しくアスペクトが適用される()
+                public void ushort型_引数9つ_正しくアスペクトが適用される()
                 {
                     ushort arg0 = 0;
                     ushort arg1 = 1;
@@ -830,7 +830,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void uint型_引数8つ_正しくアスペクトが適用される()
+                public void uint型_引数9つ_正しくアスペクトが適用される()
                 {
                     uint arg0 = 0;
                     uint arg1 = 1;
@@ -880,7 +880,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void float型_引数8つ_正しくアスペクトが適用される()
+                public void float型_引数9つ_正しくアスペクトが適用される()
                 {
                     float arg0 = 0;
                     float arg1 = 1;
@@ -930,7 +930,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void double型_引数8つ_正しくアスペクトが適用される()
+                public void double型_引数9つ_正しくアスペクトが適用される()
                 {
                     double arg0 = 0;
                     double arg1 = 1;
@@ -980,7 +980,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void decimal型_引数8つ_正しくアスペクトが適用される()
+                public void decimal型_引数9つ_正しくアスペクトが適用される()
                 {
                     decimal arg0 = 0;
                     decimal arg1 = 1;
@@ -1030,7 +1030,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void char型_引数8つ_正しくアスペクトが適用される()
+                public void char型_引数9つ_正しくアスペクトが適用される()
                 {
                     char arg0 = '0';
                     char arg1 = '1';
@@ -1080,7 +1080,7 @@ namespace SoftCube.Aspects
                 }
 
                 [Fact]
-                public void string型_引数8つ_正しくアスペクトが適用される()
+                public void string型_引数9つ_正しくアスペクトが適用される()
                 {
                     string arg0 = "0";
                     string arg1 = "1";

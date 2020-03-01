@@ -106,11 +106,6 @@ namespace SoftCube.Aspects
         /// </summary>
         protected int AspectArgsVariable { get; set; } = -1;
 
-        /// <summary>
-        /// Objects のローカル変数。
-        /// </summary>
-        protected int ObjectsVariable { get; set; } = -1;
-
         #endregion
 
         #endregion
@@ -278,10 +273,6 @@ namespace SoftCube.Aspects
             }
             else
             {
-                Assert.Equal(ObjectsVariable, -1);
-                ObjectsVariable = Variables.Count();
-                Variables.Add(new VariableDefinition(Module.ImportReference(typeof(object[]))));
-
                 Processor.Emit(OpCodes.Ldc_I4, Parameters.Count);
                 Processor.Emit(OpCodes.Newarr, Module.ImportReference(typeof(object)));
                 for (int parameterIndex = 0; parameterIndex < Parameters.Count; parameterIndex++)
@@ -320,9 +311,7 @@ namespace SoftCube.Aspects
                     }
                     Processor.Emit(OpCodes.Stelem_Ref);
                 }
-                Processor.Emit(OpCodes.Stloc, ObjectsVariable);
 
-                Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
                 Processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                 Processor.Emit(OpCodes.Stloc, ArgumentsVariable);
             }
@@ -436,9 +425,9 @@ namespace SoftCube.Aspects
                             Processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         }
 
-                        Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
+                        Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         Processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        Processor.Emit(OpCodes.Ldelem_Ref);
+                        Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                         if (elementType.IsValueType)
                         {
                             Processor.Emit(OpCodes.Unbox, elementType);
@@ -448,9 +437,9 @@ namespace SoftCube.Aspects
                     }
                     else if (!pointerOnly)
                     {
-                        Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
+                        Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         Processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        Processor.Emit(OpCodes.Ldelem_Ref);
+                        Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
                         if (parameterType.IsValueType)
                         {
                             Processor.Emit(OpCodes.Unbox_Any, parameterType);
@@ -529,7 +518,7 @@ namespace SoftCube.Aspects
                     {
                         var elementType = parameterType.GetElementType();
 
-                        Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
+                        Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         Processor.Emit(OpCodes.Ldc_I4, parameterIndex);
                         if (Method.IsStatic)
                         {
@@ -544,11 +533,11 @@ namespace SoftCube.Aspects
                         {
                             Processor.Emit(OpCodes.Box, elementType);
                         }
-                        Processor.Emit(OpCodes.Stelem_Ref);
+                        Processor.Emit(OpCodes.Callvirt, Module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
                     }
-                    else if (!pointerOnly)
+                    else
                     {
-                        Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
+                        Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
                         Processor.Emit(OpCodes.Ldc_I4, parameterIndex);
                         if (Method.IsStatic)
                         {
@@ -562,7 +551,7 @@ namespace SoftCube.Aspects
                         {
                             Processor.Emit(OpCodes.Box, parameterType);
                         }
-                        Processor.Emit(OpCodes.Stelem_Ref);
+                        Processor.Emit(OpCodes.Callvirt, Module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
                     }
                 }
             }
