@@ -25,57 +25,57 @@ namespace SoftCube.Aspects
 
         #region メソッド
 
-        #region アスペクトの注入
+        #region アドバイスの注入
 
         /// <summary>
-        /// アスペクトをメソッドに注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="method">メソッド。</param>
+        /// <param name="method">対象メソッド。</param>
         /// <param name="aspect">アスペクト属性。</param>
-        sealed protected override void OnInject(MethodDefinition method, CustomAttribute aspect)
+        sealed protected override void InjectAdvice(MethodDefinition method, CustomAttribute aspect)
         {
-            var iteratorStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
-            var asyncStateMachineAttribute    = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
+            var iteratorStateMachineAttribute = method.GetIteratorStateMachineAttribute();
+            var asyncStateMachineAttribute    = method.GetAsyncStateMachineAttribute();
 
             if (iteratorStateMachineAttribute != null)
             {
-                var injector = new IteratorStateMachineInjector(method, aspect);
+                var iteratorStateMachineInjector = new IteratorStateMachineInjector(method, aspect);
 
-                injector.CreateAspectInstance();
-                ReplaceMoveNextMethod(injector);
-                ReplaceDisposeMethod(injector);
+                iteratorStateMachineInjector.CreateAspectInstance();
+                ReplaceMoveNextMethod(iteratorStateMachineInjector);
+                ReplaceDisposeMethod(iteratorStateMachineInjector);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var injector = new AsyncStateMachineInjector(method, aspect);
+                var asyncStateMachineInjector = new AsyncStateMachineInjector(method, aspect);
 
-                injector.CreateAspectInstance();
-                ReplaceMoveNextMethod(injector);
+                asyncStateMachineInjector.CreateAspectInstance();
+                ReplaceMoveNextMethod(asyncStateMachineInjector);
             }
             else
             {
-                var injector = new MethodInjector(method, aspect);
+                var methodInjector = new MethodInjector(method, aspect);
 
-                ReplaceMethod(injector);
+                ReplaceMethod(methodInjector);
             }
         }
 
         #region 通常のメソッド
 
         /// <summary>
-        /// メソッドを書き換えます。
+        /// 対象メソッドを書き換えます。
         /// </summary>
-        /// <param name="injector">メソッドへの注入。</param>
-        private void ReplaceMethod(MethodInjector injector)
+        /// <param name="methodInjector">対象メソッドへの注入。</param>
+        private void ReplaceMethod(MethodInjector methodInjector)
         {
-            /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-            injector.ReplaceMethod();
+            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
+            methodInjector.ReplaceMethod();
 
-            /// 元々のメソッドを書き換えます。
+            /// 対象メソッドのコードを書き換えます。
             {
-                var method    = injector.TargetMethod;
-                var module    = injector.Module;
-                var processor = injector.Processor;
+                var method    = methodInjector.TargetMethod;
+                var module    = methodInjector.Module;
+                var processor = methodInjector.Processor;
 
                 /// 例外ハンドラーを追加します。
                 var handlers = method.Body.ExceptionHandlers;
@@ -90,11 +90,11 @@ namespace SoftCube.Aspects
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnEntry(aspectArgs);
                 {
-                    injector.CreateAspectVariable();
-                    injector.CreateArgumentsVariable();
-                    injector.CreateAspectArgsVariable(module.ImportReference(typeof(MethodExecutionArgs)));
-                    injector.SetMethod();
-                    injector.InvokeEventHandler(nameof(OnEntry));
+                    methodInjector.CreateAspectVariable();
+                    methodInjector.CreateArgumentsVariable();
+                    methodInjector.CreateAspectArgsVariable(module.ImportReference(typeof(MethodExecutionArgs)));
+                    methodInjector.SetMethod();
+                    methodInjector.InvokeEventHandler(nameof(OnEntry));
                 }
 
                 /// try
@@ -104,9 +104,9 @@ namespace SoftCube.Aspects
                 Instruction leave;
                 {
                     @catch.TryStart = @finally.TryStart = processor.EmitNop();
-                    injector.InvokeOriginalMethod();
-                    injector.InvokeEventHandler(nameof(OnSuccess));
-                    injector.SetAspectArguments(pointerOnly: true);
+                    methodInjector.InvokeOriginalMethod();
+                    methodInjector.InvokeEventHandler(nameof(OnSuccess));
+                    methodInjector.SetAspectArguments(pointerOnly: true);
                     leave = processor.EmitLeave(OpCodes.Leave);
                 }
 
@@ -118,8 +118,8 @@ namespace SoftCube.Aspects
                 ///     throw;
                 {
                     @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-                    injector.SetException();
-                    injector.InvokeEventHandler(nameof(OnException));
+                    methodInjector.SetException();
+                    methodInjector.InvokeEventHandler(nameof(OnException));
                     processor.Emit(OpCodes.Rethrow);
                 }
 
@@ -129,7 +129,7 @@ namespace SoftCube.Aspects
                 ///     aspect.OnExit(aspectArgs);
                 {
                     @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                    injector.InvokeEventHandler(nameof(OnExit));
+                    methodInjector.InvokeEventHandler(nameof(OnExit));
                     processor.Emit(OpCodes.Endfinally);
                 }
 
@@ -137,11 +137,11 @@ namespace SoftCube.Aspects
                 /// return (TResult)aspectArgs.ReturnValue;
                 {
                     leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    injector.Return();
+                    methodInjector.Return();
                 }
 
                 /// IL を最適化します。
-                method.OptimizeIL();
+                method.Optimize();
             }
         }
 
@@ -374,7 +374,7 @@ namespace SoftCube.Aspects
                 }
 
                 /// IL を最適化します。
-                moveNextMethod.OptimizeIL();
+                moveNextMethod.Optimize();
             }
         }
 
@@ -654,7 +654,7 @@ namespace SoftCube.Aspects
             }
 
             /// IL を最適化します。
-            moveNextMethod.OptimizeIL();
+            moveNextMethod.Optimize();
         }
 
         #endregion

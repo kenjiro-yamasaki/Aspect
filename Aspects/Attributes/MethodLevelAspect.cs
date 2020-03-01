@@ -34,7 +34,7 @@ namespace SoftCube.Aspects
                 throw new ArgumentNullException(nameof(method));
             }
 
-            OnInject(method, aspect);
+            InjectAdvice(method, aspect);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="method">メソッド。</param>
         /// <param name="aspect">アスペクト属性。</param>
-        protected abstract void OnInject(MethodDefinition method, CustomAttribute aspect);
+        protected abstract void InjectAdvice(MethodDefinition method, CustomAttribute aspect);
 
         #endregion
     }

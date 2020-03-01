@@ -23,21 +23,21 @@ namespace SoftCube.Aspects
 
         #region メソッド
 
-        #region アスペクト (カスタムコード) の注入
+        #region アドバイスの注入
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="method">メソッド。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        protected sealed override void OnInject(MethodDefinition method, CustomAttribute aspect)
+        /// <param name="method">対象メソッド。</param>
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        protected sealed override void InjectAdvice(MethodDefinition method, CustomAttribute aspectAttribute)
         {
-            var asyncStateMachineAttribute = method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
-            var isInvokeAsyncOverridden    = aspect.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
+            var asyncStateMachineAttribute = method.GetAsyncStateMachineAttribute();
+            var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                var methodInjector     = new AsyncMethodInjector(method, aspect);
-                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspect);
+                var methodInjector     = new AsyncMethodInjector(method, aspectAttribute);
+                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspectAttribute);
 
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
@@ -46,13 +46,13 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.OverrideTaskResultProperty();
 
                 /// アスペクト属性を削除します。
-                method.CustomAttributes.Remove(aspect);
+                method.CustomAttributes.Remove(aspectAttribute);
                 method.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
-                var methodInjector     = new MethodInjector(method, aspect);
-                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspect);
+                var methodInjector     = new MethodInjector(method, aspectAttribute);
+                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspectAttribute);
 
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
@@ -60,29 +60,30 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalMethod);
 
                 /// アスペクト属性を削除します。
-                method.CustomAttributes.Remove(aspect);
+                method.CustomAttributes.Remove(aspectAttribute);
             }
         }
 
         /// <summary>
-        /// 注入対象のメソッドを書き換えます。
+        /// 対象メソッドを書き換えます。
         /// </summary>
-        /// <param name="methodInjector">メソッドへの注入。</param>
+        /// <param name="methodInjector">対象メソッドへの注入。</param>
+        /// <param name="aspectArgsInjector">アスペクト引数への注入。</param>
         /// <remarks>
-        /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-        /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
+        /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
+        /// 対象メソッドのコードを、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
         private void ReplaceMethod(MethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
         {
-            /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
+            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
             methodInjector.ReplaceMethod();
 
-            /// 元々のメソッドを書き換えます。
+            /// 対象メソッドのコードを書き換えます。
             {
                 /// var aspect     = new Aspect(...) { ... };
                 /// var arguments  = new Arguments(...);
-                /// var aspectArgs = new MethodExecutionArgs(this, arguments);
+                /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnInvoke(aspectArgs);
                 /// return (TResult)aspectArgs.ReturnValue;
@@ -97,24 +98,25 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 注入対象の非同期メソッドを書き換えます。
+        /// 非同期メソッドを書き換えます。
         /// </summary>
-        /// <param name="methodInjector">メソッドへの注入。</param>
+        /// <param name="methodInjector">対象メソッドへの注入。</param>
+        /// <param name="aspectArgsInjector">アスペクト引数への注入。</param>
         /// <remarks>
-        /// 新たなメソッドを生成し、元々のメソッドの内容を移動します。
-        /// 元々のメソッドの内容を、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
+        /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
+        /// 対象メソッドのコードを、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
         /// </remarks>
         private void ReplaceAsyncMethod(AsyncMethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
         {
-            /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
+            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
             methodInjector.ReplaceMethod();
 
-            /// 元々のメソッドを書き換えます。
+            /// 対象メソッドのコードを書き換えます。
             {
                 /// var aspect     = new Aspect(...) {...};
                 /// var arguments  = new Arguments(...);
-                /// var aspectArgs = new MethodExecutionArgs(this, arguments);
+                /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 methodInjector.CreateAspectVariable();
                 methodInjector.CreateArgumentsVariable();

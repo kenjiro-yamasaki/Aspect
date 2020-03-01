@@ -1,8 +1,7 @@
 ﻿using SoftCube.Logging;
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace SoftCube.Aspects
 {
@@ -18,30 +17,53 @@ namespace SoftCube.Aspects
         static void Main(string[] args)
         {
             var instance = new Program();
-            
-            foreach (var result in instance.IntArg())
-            {
-                Logger.Trace(result.ToString());
-            }
-            
+
+            instance.正常().ToList();
+
             Console.ReadKey();
         }
 
-
-        private class IntArgLogger : OnMethodBoundaryAspect
+        private class EventLogger : OnMethodBoundaryAspect
         {
-            public int Arg { get; }
-            public IntArgLogger(int arg) => Arg = arg;
-
-
-
             public override void OnEntry(MethodExecutionArgs args)
             {
-                Logger.Trace(Arg.ToString());
+                Logger.Trace("OnEntry");
+            }
+
+            public override void OnSuccess(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnSuccess");
+            }
+
+            public override void OnException(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnException");
+            }
+
+            public override void OnExit(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnExit");
+            }
+
+            public override void OnResume(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnResume");
+            }
+
+            public override void OnYield(MethodExecutionArgs args)
+            {
+                Logger.Trace("OnYield");
             }
         }
 
-        [IntArgLogger(-1)]
-        private IEnumerable<int> IntArg() { yield return 1; }
+        [EventLogger]
+        private IEnumerable<int> 正常()
+        {
+            Logger.Trace("A");
+            yield return 0;
+            Logger.Trace("B");
+            yield return 1;
+            Logger.Trace("C");
+        }
     }
 }

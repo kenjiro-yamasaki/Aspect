@@ -49,10 +49,10 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        public static void Inject(this MethodDefinition method)
+        public static void InjectAdvice(this MethodDefinition method)
         {
             var baseFullName  = $"{nameof(SoftCube)}.{nameof(Aspects)}.{nameof(MethodLevelAspect)}";
             var baseScopeName = $"{nameof(SoftCube)}.{nameof(Aspects)}.dll";
@@ -76,10 +76,30 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// IL を最適化します。
+        /// イテレーターステートマシン属性を取得します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        public static void OptimizeIL(this MethodDefinition method)
+        /// <returns>イテレーターステートマシン属性。</returns>
+        public static CustomAttribute GetIteratorStateMachineAttribute(this MethodDefinition method)
+        {
+            return method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
+        }
+
+        /// <summary>
+        /// 非同期ステートマシン属性を取得します。
+        /// </summary>
+        /// <param name="method">メソッド。</param>
+        /// <returns>非同期ステートマシン属性。</returns>
+        public static CustomAttribute GetAsyncStateMachineAttribute(this MethodDefinition method)
+        {
+            return method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.AsyncStateMachineAttribute");
+        }
+
+        /// <summary>
+        /// IL コードを最適化します。
+        /// </summary>
+        /// <param name="method">メソッド。</param>
+        public static void Optimize(this MethodDefinition method)
         {
             var processor = method.Body.GetILProcessor();
 

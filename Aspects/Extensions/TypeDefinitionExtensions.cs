@@ -18,7 +18,7 @@ namespace SoftCube.Aspects
         {
             foreach (var method in type.Methods.ToArray())
             {
-                method.Inject();
+                method.InjectAdvice();
             }
 
             foreach (var nestedType in type.NestedTypes)
