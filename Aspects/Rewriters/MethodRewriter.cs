@@ -614,16 +614,12 @@ namespace SoftCube.Aspects
                 Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             }
 
-            /// Arguments の内容で引数を更新します。
-            UpdateArgs(pointerOnly: false);
-
             /// 引数をスタックにロードします。
             /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
             if (!Method.IsStatic)
             {
                 Processor.Emit(OpCodes.Ldarg_0);
             }
-
             for (int parameterIndex = 0; parameterIndex < Parameters.Count; parameterIndex++)
             {
                 if (Method.IsStatic)
@@ -647,9 +643,6 @@ namespace SoftCube.Aspects
                 }
                 Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
             }
-
-            /// 引数の内容で Arguments を更新します (ポインタ引数のみ)。
-            UpdateArguments(pointerOnly: true);
         }
 
         /// <summary>

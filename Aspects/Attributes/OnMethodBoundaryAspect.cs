@@ -71,16 +71,27 @@ namespace SoftCube.Aspects
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnEntry(aspectArgs);
+                /// arg0 = (TArg0)arguments[0];
+                /// arg1 = (TArg1)arguments[1];
+                /// ...
                 rewriter.NewAspectAttribute();
                 rewriter.NewArguments();
                 rewriter.NewAspectArgs(rewriter.Module.ImportReference(typeof(MethodExecutionArgs)));
                 rewriter.UpdateMethod();
                 rewriter.InvokeEventHandler(nameof(OnEntry));
+                rewriter.UpdateArgs(pointerOnly: false);
             });
 
             var onSuccess = new Action<ILProcessor>(processor =>
             {
+                /// arguments[0] = arg0;
+                /// arguments[1] = arg1;
+                /// ...
                 /// aspect.OnSuccess(aspectArgs);
+                /// arg0 = (TArg0)arguments[0];
+                /// arg1 = (TArg1)arguments[1];
+                /// ...
+                rewriter.UpdateArguments(pointerOnly: true);
                 rewriter.InvokeEventHandler(nameof(OnSuccess));
                 rewriter.UpdateArgs(pointerOnly: true);
             });
