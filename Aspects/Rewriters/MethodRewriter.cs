@@ -348,7 +348,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// MethodArgs.Method にメソッド情報を設定します。
         /// </summary>
-        public void SetMethod()
+        public void UpdateMethod()
         {
             Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
@@ -356,14 +356,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Arguments の内容で引数を更新します。
+        /// 引数を更新します。
         /// </summary>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを更新対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
         /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        public void UpdateArguments(bool pointerOnly)
+        public void UpdateArgs(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -458,14 +458,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 引数の内容で Arguments を更新します。
+        /// Arguments を更新します。
         /// </summary>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを更新対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
         /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        public void UpdateAspectArguments(bool pointerOnly)
+        public void UpdateArguments(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -558,6 +558,21 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
+        /// 例外を更新します。
+        /// </summary>
+        public void UpdateException()
+        {
+            int exceptionVariable = Variables.Count;
+            Variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
+
+            Processor.Emit(OpCodes.Stloc, exceptionVariable);
+
+            Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+            Processor.Emit(OpCodes.Ldloc, exceptionVariable);
+            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
+        }
+
+        /// <summary>
         /// イベントハンドラーを呼びだします。
         /// </summary>
         /// <param name="eventHandlerName">イベントハンドラー名。</param>
@@ -600,7 +615,7 @@ namespace SoftCube.Aspects
             }
 
             /// Arguments の内容で引数を更新します。
-            UpdateArguments(pointerOnly: false);
+            UpdateArgs(pointerOnly: false);
 
             /// 引数をスタックにロードします。
             /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
@@ -634,22 +649,7 @@ namespace SoftCube.Aspects
             }
 
             /// 引数の内容で Arguments を更新します (ポインタ引数のみ)。
-            UpdateAspectArguments(pointerOnly: true);
-        }
-
-        /// <summary>
-        /// AspectArgs.Exception に例外を設定します。
-        /// </summary>
-        public void SetException()
-        {
-            int exceptionVariable = Variables.Count;
-            Variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
-
-            Processor.Emit(OpCodes.Stloc, exceptionVariable);
-
-            Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-            Processor.Emit(OpCodes.Ldloc, exceptionVariable);
-            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
+            UpdateArguments(pointerOnly: true);
         }
 
         /// <summary>
@@ -660,7 +660,7 @@ namespace SoftCube.Aspects
             if (Method.HasReturnValue())
             {
                 Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-                Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetGetMethod()));
+                Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetGetMethod()));
                 if (Method.ReturnType.IsValueType)
                 {
                     Processor.Emit(OpCodes.Unbox_Any, Method.ReturnType);

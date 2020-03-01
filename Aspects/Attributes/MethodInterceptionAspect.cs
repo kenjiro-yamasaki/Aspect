@@ -90,9 +90,9 @@ namespace SoftCube.Aspects
                 methodInjector.NewAspectAttribute();
                 methodInjector.NewArguments();
                 methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
-                methodInjector.SetMethod();
+                methodInjector.UpdateMethod();
                 methodInjector.InvokeEventHandler(nameof(OnInvoke));
-                methodInjector.UpdateArguments(pointerOnly: true);
+                methodInjector.UpdateArgs(pointerOnly: true);
                 methodInjector.Return();
             }
         }
@@ -121,7 +121,7 @@ namespace SoftCube.Aspects
                 methodInjector.NewAspectAttribute();
                 methodInjector.NewArguments();
                 methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
-                methodInjector.SetMethod();
+                methodInjector.UpdateMethod();
 
                 var taskType = methodInjector.Method.ReturnType;
                 if (taskType is GenericInstanceType genericInstanceType)
