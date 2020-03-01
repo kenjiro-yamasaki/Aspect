@@ -14,14 +14,19 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// アスペクトの属性。
+        /// アスペクト属性。
         /// </summary>
-        public CustomAttribute Aspect { get; }
+        public CustomAttribute AspectAttribute { get; }
 
         /// <summary>
-        /// アスペクトの型。
+        /// アスペクト属性の型。
         /// </summary>
-        public TypeDefinition AspectType { get; }
+        public TypeDefinition AspectAttributeType { get; }
+
+        /// <summary>
+        /// アスペクト引数の型。
+        /// </summary>
+        public Type AspectArgsType { get; }
 
         /// <summary>
         /// ターゲットメソッド。
@@ -61,7 +66,7 @@ namespace SoftCube.Aspects
         #region ステートマシン
 
         /// <summary>
-        /// ステートマシンの属性。
+        /// ステートマシン属性。
         /// </summary>
         public abstract CustomAttribute StateMachineAttribute { get; }
 
@@ -114,9 +119,9 @@ namespace SoftCube.Aspects
         public MethodDefinition MoveNextMethod { get; }
 
         /// <summary>
-        /// MoveNext メソッドの内容を移動したメソッド。
+        /// MoveNext メソッドのコードをコピーしたメソッド。
         /// </summary>
-        public MethodDefinition OriginalMoveNextMethod { get; private set; }
+        public MethodDefinition CopiedMoveNextMethod { get; private set; }
 
         #endregion
 
@@ -132,20 +137,21 @@ namespace SoftCube.Aspects
         /// <param name="aspectArgsType">アスペクト引数の型。</param>
         public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
         {
-            Aspect           = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
-            AspectType       = Aspect.AttributeType.Resolve();
-            TargetMethod     = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
-            Module           = TargetMethod.Module;
-            StateMachineType = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
+            AspectAttribute     = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
+            AspectAttributeType = AspectAttribute.AttributeType.Resolve();
+            AspectArgsType      = aspectArgsType ?? throw new ArgumentNullException(nameof(aspectArgsType));
+            TargetMethod        = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
+            Module              = TargetMethod.Module;
+            StateMachineType    = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
 
-            StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
-            AspectField      = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(Aspect.AttributeType));
-            AspectArgsField  = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(aspectArgsType));
-            ArgumentsField   = CreateField("*arguments*",  FieldAttributes.Private, Module.ImportReference(ArgumentsType));
-            ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
+            StateField          = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
+            AspectField         = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(AspectAttribute.AttributeType));
+            AspectArgsField     = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(AspectArgsType));
+            ArgumentsField      = CreateField("*arguments*",  FieldAttributes.Private, Module.ImportReference(ArgumentsType));
+            ResumeFlagField     = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
-            Constructor      = StateMachineType.Methods.Single(m => m.Name == ".ctor");
-            MoveNextMethod   = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
+            Constructor         = StateMachineType.Methods.Single(m => m.Name == ".ctor");
+            MoveNextMethod      = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }
 
         #endregion
@@ -157,62 +163,59 @@ namespace SoftCube.Aspects
         /// </summary>
         public void CopyMoveNextMethod()
         {
-            Assert.Null(OriginalMoveNextMethod);
+            Assert.Null(CopiedMoveNextMethod);
 
             var moveNextMethod = MoveNextMethod;
 
-            OriginalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
+            CopiedMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
             foreach (var parameter in moveNextMethod.Parameters)
             {
-                OriginalMoveNextMethod.Parameters.Add(parameter);
+                CopiedMoveNextMethod.Parameters.Add(parameter);
             }
 
-            OriginalMoveNextMethod.Body = moveNextMethod.Body;
+            CopiedMoveNextMethod.Body = moveNextMethod.Body;
 
             foreach (var sequencePoint in moveNextMethod.DebugInformation.SequencePoints)
             {
-                OriginalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                CopiedMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            StateMachineType.Methods.Add(OriginalMoveNextMethod);
+            StateMachineType.Methods.Add(CopiedMoveNextMethod);
         }
 
         /// <summary>
-        /// Aspect フィールドのインスタンスを生成します。
+        /// Aspect 属性のインスタンスを生成し、フォール度にストアします。
         /// </summary>
-        /// <param name="stateMachineType">ステートマシンの型。</param>
-        /// <param name="aspect">アスペクト。</param>
-        /// <param name="aspectField">アスペクトのフィールド。</param>
-        public void CreateAspectInstance()
+        public void NewAspectAttribute()
         {
             var processor    = Constructor.Body.GetILProcessor();
             var instructions = Constructor.Body.Instructions;
             var first        = instructions.First();
 
-            /// アスペクトのインスタンスを生成し、ローカル変数にストアします。
-            var aspectVariable = processor.InsertCreateAspectCodeBefore(first, Aspect);
+            /// アスペクト属性のインスタンスを生成し、ローカル変数にストアします。
+            var aspectAttributeVariable = processor.InsertNewAspectAttributeBefore(first, AspectAttribute);
 
-            /// アスペクトのインスタンスをフィールドにストアします。
+            /// アスペクト属性のインスタンスをフィールドにストアします。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectVariable));
+            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectAttributeVariable));
             processor.InsertBefore(first, processor.Create(OpCodes.Stfld, AspectField));
         }
 
         /// <summary>
         /// AspectArgs フィールドのインスタンスを生成します。
         /// </summary>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void CreateAspectArgsInstance(ILProcessor processor)
+        /// <param name="processor">IL プロセッサー。</param>
+        public void NewAspectArgs(ILProcessor processor)
         {
-            CreateAspectArgsInstance(processor, null);
+            NewAspectArgs(processor, null);
         }
 
         /// <summary>
-        /// AspectArgs フィールドのインスタンスを生成します。
+        /// AspectArgs フィールドのインスタンスを生成し、フィールドにストアします。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void CreateAspectArgsInstance(ILProcessor processor, Instruction insert)
+        public void NewAspectArgs(ILProcessor processor, Instruction insert)
         {
             processor.InsertBefore(insert, OpCodes.Ldarg_0);
 
@@ -329,6 +332,34 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
+        /// AspectArgs.Exception に例外を設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        public void SetException(ILProcessor processor)
+        {
+            SetException(processor, null);
+        }
+
+        /// <summary>
+        /// AspectArgs.Exception" に例外を設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
+        public void SetException(ILProcessor processor, Instruction insert)
+        {
+            var variables = processor.Body.Variables;
+            int exceptionVariable = variables.Count;
+            variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
+
+            processor.InsertBefore(insert, OpCodes.Stloc, exceptionVariable);
+
+            processor.InsertBefore(insert, OpCodes.Ldarg_0);
+            processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
+            processor.InsertBefore(insert, OpCodes.Ldloc, exceptionVariable);
+            processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
+        }
+
+        /// <summary>
         /// イベントハンドラーを呼びだします。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
@@ -351,7 +382,7 @@ namespace SoftCube.Aspects
             processor.InsertBefore(insert, OpCodes.Ldarg_0);
             processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
 
-            var aspectType = AspectType;
+            var aspectType = AspectAttributeType;
             while (true)
             {
                 var eventHandler = aspectType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);
@@ -369,43 +400,13 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs.Exception に例外を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="exceptionVariable">例外のローカル変数。</param>
-        public void SetException(ILProcessor processor)
-        {
-            SetException(processor, null);
-        }
-
-        /// <summary>
-        /// AspectArgs.Exception" に例外を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        /// <param name="exceptionVariable">例外のローカル変数。</param>
-        public void SetException(ILProcessor processor, Instruction insert)
-        {
-            var variables = processor.Body.Variables;
-            int exceptionVariable = variables.Count;
-            variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
-
-            processor.InsertBefore(insert, OpCodes.Stloc, exceptionVariable);
-
-            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-            processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
-            processor.InsertBefore(insert, OpCodes.Ldloc, exceptionVariable);
-            processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
-        }
-
-        /// <summary>
         /// フィールドを生成します。
         /// </summary>
         /// <param name="fieldName">フィールドの名前。</param>
         /// <param name="fieldAttributes">フィールドの属性。</param>
         /// <param name="fieldType">フィールドの型。</param>
         /// <returns>フィールド。</returns>
-        protected FieldDefinition CreateField(string fieldName, FieldAttributes fieldAttributes, TypeReference fieldType)
+        public FieldDefinition CreateField(string fieldName, FieldAttributes fieldAttributes, TypeReference fieldType)
         {
             var field = new FieldDefinition(fieldName, fieldAttributes, fieldType);
             StateMachineType.Fields.Add(field);

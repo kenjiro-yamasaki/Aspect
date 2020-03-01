@@ -468,9 +468,9 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">命令。</param>
-        /// <param name="aspect">アスペクト属性。</param>
+        /// <param name="aspectAttribute">アスペクト属性。</param>
         /// <returns>アスペクト属性の変数インデックス。</returns>
-        internal static int InsertCreateAspectCodeBefore(this ILProcessor processor, Instruction insert, CustomAttribute aspect)
+        internal static int InsertNewAspectAttributeBefore(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
         {
             var method       = processor.Body.Method;
             var module       = method.DeclaringType.Module.Assembly.MainModule;
@@ -479,12 +479,12 @@ namespace SoftCube.Aspects
             /// ローカル変数を追加します。
             var variables      = method.Body.Variables;
             var attributeIndex = variables.Count();
-            var attributeType  = aspect.AttributeType.ToSystemType();
+            var attributeType  = aspectAttribute.AttributeType.ToSystemType();
             variables.Add(new VariableDefinition(module.ImportReference(attributeType)));
 
             /// 属性を生成して、ローカル変数にストアします。
-            var argumentTypes  = aspect.ConstructorArguments.Select(a => a.Type.ToSystemType());
-            var argumentValues = aspect.ConstructorArguments.Select(a => a.Value);
+            var argumentTypes  = aspectAttribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
+            var argumentValues = aspectAttribute.ConstructorArguments.Select(a => a.Value);
             foreach (var argumentValue in argumentValues)
             {
                 switch (argumentValue)
@@ -562,7 +562,7 @@ namespace SoftCube.Aspects
             processor.InsertBefore(insert, OpCodes.Stloc, attributeIndex);
 
             /// プロパティを設定します。
-            foreach (var property in aspect.Properties)
+            foreach (var property in aspectAttribute.Properties)
             {
                 var propertyName  = property.Name;
                 var propertyValue = property.Argument.Value;
@@ -708,7 +708,7 @@ namespace SoftCube.Aspects
         /// <returns>アスペクト属性の変数インデックス。</returns>
         internal static int EmitCreateAspectCode(this ILProcessor processor, CustomAttribute aspect)
         {
-            return InsertCreateAspectCodeBefore(processor, null, aspect);
+            return InsertNewAspectAttributeBefore(processor, null, aspect);
         }
 
         /// <summary>

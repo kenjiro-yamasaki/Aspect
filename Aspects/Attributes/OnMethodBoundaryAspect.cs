@@ -41,14 +41,14 @@ namespace SoftCube.Aspects
             {
                 var iteratorStateMachineInjector = new IteratorStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
 
-                iteratorStateMachineInjector.CreateAspectInstance();
+                iteratorStateMachineInjector.NewAspectAttribute();
                 ReplaceMoveNextMethod(iteratorStateMachineInjector);
             }
             else if (asyncStateMachineAttribute != null)
             {
                 var asyncStateMachineInjector = new AsyncStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
 
-                asyncStateMachineInjector.CreateAspectInstance();
+                asyncStateMachineInjector.NewAspectAttribute();
                 ReplaceMoveNextMethod(asyncStateMachineInjector);
             }
             else
@@ -161,7 +161,7 @@ namespace SoftCube.Aspects
                 /// _aspect.OnEntry(aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
-                injector.CreateAspectArgsInstance(processor);
+                injector.NewAspectArgs(processor);
                 injector.InvokeEventHandler(processor, nameof(OnEntry));
                 injector.SetArgumentFields(processor);
             });
@@ -180,9 +180,9 @@ namespace SoftCube.Aspects
                 /// _aspectArgs.YieldValue = <> 2__current;
                 /// _aspect.OnYield(aspectArgs);
                 /// <>2__current = (TResult)aspectArgs.YieldValue;
-                injector.SetYieldValue(processor);
+                SetYieldValue(processor, injector);
                 injector.InvokeEventHandler(processor, nameof(OnYield));
-                injector.SetCurrentField(processor);
+                SetCurrentField(processor, injector);
             });
 
             var onSuccess = new Action<ILProcessor>(processor =>
@@ -208,6 +208,41 @@ namespace SoftCube.Aspects
             injector.InjectMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
+        /// <summary>
+        /// AspectArgs.YieldValue フィールドに値を設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        private void SetYieldValue(ILProcessor processor, IteratorStateMachineInjector injector)
+        {
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldfld, injector.AspectArgsField);
+            processor.Emit(OpCodes.Ldarg_0);
+            processor.Emit(OpCodes.Ldfld, injector.CurrentField);
+            if (injector.CurrentField.FieldType.IsValueType)
+            {
+                processor.Emit(OpCodes.Box, injector.CurrentField.FieldType);
+            }
+            processor.Emit(OpCodes.Call, injector.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
+        }
+
+        /// <summary>
+        /// Current フィールドに値を設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        private void SetCurrentField(ILProcessor processor, IteratorStateMachineInjector injector)
+        {
+            processor.Emit(OpCodes.Ldarg_0);
+
+            processor.Emit(OpCodes.Dup);
+            processor.Emit(OpCodes.Ldfld, injector.AspectArgsField);
+            processor.Emit(OpCodes.Call, injector.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetGetMethod()));
+            if (injector.CurrentField.FieldType.IsValueType)
+            {
+                processor.Emit(OpCodes.Unbox_Any, injector.CurrentField.FieldType);
+            }
+            processor.Emit(OpCodes.Stfld, injector.CurrentField);
+        }
+
         #endregion
 
         #region 非同期メソッド
@@ -218,195 +253,62 @@ namespace SoftCube.Aspects
         /// <param name="injector">非同期ステートマシンへの注入。</param>
         private void ReplaceMoveNextMethod(AsyncStateMachineInjector injector)
         {
-            var module         = injector.Module;
-            var moveNextMethod = injector.MoveNextMethod;
-            var processor      = moveNextMethod.Body.GetILProcessor();
-            var instructions   = moveNextMethod.Body.Instructions;
-
-            /// ローカル変数を追加します。
-            var variables = moveNextMethod.Body.Variables;
-            int resultVariable = 1;
-
-            /// 例外ハンドラーを追加します。
-            /// 内側の例外ハンドラーが先になるように並び変えます。
-            /// この順番を間違えるとランタイムエラーが発生します。
-            var handlers = moveNextMethod.Body.ExceptionHandlers;
-
-            var outerCatch      = handlers[0];
-            var innerCatch      = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
-            var innerFinally    = new ExceptionHandler(ExceptionHandlerType.Finally);
-            innerCatch.TryStart = innerFinally.TryStart = outerCatch.TryStart;
-
-            handlers.Clear();
-            handlers.Add(innerCatch);
-            handlers.Add(innerFinally);
-            handlers.Add(outerCatch);
-
-            /// try
-            /// {
-            ///     if (!resumeFlag)
-            ///     {
-            ///         var instance = <> 4__this;
-            ///         arguments = new Arguments(...);
-            ///         aspectArgs = new MethodExecutionArgs(instance, arguments);
-            ///         aspect.OnEntry(aspectArgs);
-            ///         resumeFlag = true;
-            ///     }
-            ///     else
-            ///     {
-            ///         aspect.OnResume(aspectArgs);
-            ///     }
-            ///     arg0 = arguments.Arg0;
-            ///     arg1 = arguments.Arg1;
-            ///     try
-            ///     {
+            var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                var branch = new Instruction[2];
-                var insert = innerCatch.TryStart;
-
-                outerCatch.TryStart = processor.InsertNopBefore(insert);
-
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, injector.ResumeFlagField);
-                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Brtrue_S);
-
-                injector.CreateAspectArgsInstance(processor, insert);
+                /// var instance = <> 4__this;
+                /// arguments = new Arguments(...);
+                /// aspectArgs = new MethodExecutionArgs(instance, arguments);
+                /// aspect.OnEntry(aspectArgs);
+                /// arg0 = arguments.Arg0;
+                /// arg1 = arguments.Arg1;
+                /// ...
+                injector.NewAspectArgs(processor, insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnEntry));
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
-                processor.InsertBefore(insert, OpCodes.Stfld, injector.ResumeFlagField);
-                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br_S);
-
-                branch[0].Operand = processor.InsertNopBefore(insert);
-                injector.InvokeEventHandler(processor, insert, nameof(OnResume));
-
-                branch[1].Operand = processor.InsertNopBefore(insert);
                 injector.SetArgumentFields(processor, insert);
-            }
+            });
 
-            ///         IL_XXXX: // leaveTarget
-            ///         if (<> 1__state != -1)
-            ///         {
-            ///             aspect.OnYield(aspectArgs);
-            ///         }
-            ///         else
-            ///         {
-            ///             aspectArgs.ReturnValue = result;
-            ///             aspect.OnSuccess(aspectArgs);
-            ///             result = (TResult)aspectArgs.ReturnValue;
-            ///         }
-            Instruction leave;
+            var onResume = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                var instruction = outerCatch.HandlerStart.Previous;
-                if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
-                {
-                    leave = instruction;
-                }
-                else if (instruction.OpCode == OpCodes.Throw)
-                {
-                    leave = processor.InsertLeaveBefore(instruction.Next, OpCodes.Leave);
-                }
-                else
-                {
-                    throw new NotSupportedException();
-                }
-            }
+                /// aspect.OnResume(aspectArgs);
+                /// arg0 = arguments.Arg0;
+                /// arg1 = arguments.Arg1;
+                /// ...
+                injector.InvokeEventHandler(processor, insert, nameof(OnResume));
+                injector.SetArgumentFields(processor, insert);
+            });
+
+            var onYield = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                var insert = leave;
-                var branch = new Instruction[2];
-
-                var leaveTarget = processor.InsertNopBefore(insert);                                      // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, injector.StateField);
-                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
-
+                /// aspect.OnYield(aspectArgs);
                 injector.InvokeEventHandler(processor, insert, nameof(OnYield));
-                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br_S);
-                branch[1].Operand = leave;
+            });
 
-                branch[0].Operand = processor.InsertNopBefore(insert);
+            var onSuccess = new Action<ILProcessor, Instruction>((processor, insert) =>
+            {
+                /// aspectArgs.ReturnValue = result;
+                /// aspect.OnSuccess(aspectArgs);
+                /// result = (TResult)aspectArgs.ReturnValue;
+                int resultVariable = 1;
                 injector.SetReturnValue(processor, insert, resultVariable);
                 injector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
                 injector.SetReturnVariable(processor, insert, resultVariable);
+            });
 
-                /// try 内の Leave 命令の転送先を書き換えます。
-                /// この書き換えにより OnYield と OnSuccess の呼びだし処理に転送します。
-                for (var instruction = innerCatch.TryStart; instruction != leaveTarget; instruction = instruction.Next)
-                {
-                    if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
-                    {
-                        instruction.OpCode  = OpCodes.Br;
-                        instruction.Operand = leaveTarget;
-                    }
-                }
-            }
-
-            ///     }
-            ///     catch (Exception exception)
-            ///     {
-            ///         aspectArgs.Exception = exception;
-            ///         aspect.OnException(aspectArgs);
-            ///         throw;
-            ///     }
+            var onException = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                var insert = outerCatch.HandlerStart;
-
-                innerCatch.TryEnd = innerCatch.HandlerStart = processor.InsertNopBefore(insert);
+                /// aspectArgs.Exception = exception;
+                /// aspect.OnException(aspectArgs);
                 injector.SetException(processor, insert);
                 injector.InvokeEventHandler(processor, insert, nameof(OnException));
-                processor.InsertBefore(insert, OpCodes.Rethrow);
-            }
+            });
 
-            ///     finally
-            ///     {
-            ///         if (<>1__state == -1)
-            ///         {
-            ///             aspect.OnExit(aspectArgs);
-            ///         }
-            ///     }
+            var onExit = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                var insert = outerCatch.HandlerStart;
-                var branch = new Instruction[2];
-
-                innerCatch.HandlerEnd = innerFinally.TryEnd = innerFinally.HandlerStart = processor.InsertNopBefore(insert);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, injector.StateField);
-                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
-                branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
-                branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br);
-
-                branch[0].Operand = processor.InsertNopBefore(insert);
+                /// aspect.OnExit(aspectArgs);
                 injector.InvokeEventHandler(processor, insert, nameof(OnExit));
+            });
 
-                branch[1].Operand = processor.InsertNopBefore(insert);
-                processor.InsertBefore(insert, OpCodes.Endfinally);
-                innerFinally.HandlerEnd = insert;
-            }
-
-            /// }
-            /// catch (Exception exception)
-            /// {
-            ///     ...
-            /// }
-            /// if (<> 1__state == -1)
-            /// {
-            ///     ...
-            /// }
-            {
-                var insert = outerCatch.HandlerEnd;
-
-                leave.Operand = outerCatch.HandlerEnd = processor.InsertNopBefore(insert);
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, injector.StateField);
-                processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);
-                processor.InsertBefore(insert, OpCodes.Beq, insert);
-
-                processor.InsertBefore(insert, OpCodes.Br, instructions.Last());
-            }
-
-            /// IL を最適化します。
-            moveNextMethod.Optimize();
+            injector.InjectMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion

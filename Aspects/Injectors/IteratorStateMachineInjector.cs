@@ -14,7 +14,7 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// ステートマシンの属性。
+        /// ステートマシン属性。
         /// </summary>
         public override CustomAttribute StateMachineAttribute => TargetMethod.CustomAttributes.Single(ca => ca.AttributeType.FullName == "System.Runtime.CompilerServices.IteratorStateMachineAttribute");
 
@@ -40,14 +40,14 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// <see cref="IDisposable.Dispose"/> メソッド。
+        /// Dispose メソッド。
         /// </summary>
         public MethodDefinition DisposeMethod => StateMachineType.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
 
         /// <summary>
         /// Dispose メソッドの内容を移動したメソッド。
         /// </summary>
-        public MethodDefinition OriginalDisposeMethod { get; private set; }
+        public MethodDefinition CopiedDisposeMethod { get; set; }
 
         #endregion
 
@@ -134,13 +134,7 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldfld, ResumeFlagField);
                     branch[2] = processor.EmitBranch(OpCodes.Brtrue_S);
-
-                    ////////////////////////////////////////////////////////////////////////////////
                     onEntry(processor);
-                    //CreateAspectArgsInstance(processor);
-                    //InvokeEventHandler(processor, "OnEntry");
-                    //SetArgumentFields(processor);
-                    ////////////////////////////////////////////////////////////////////////////////
 
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldc_I4_1);
@@ -148,11 +142,7 @@ namespace SoftCube.Aspects
                     branch[3] = processor.EmitBranch(OpCodes.Br_S);
 
                     branch[2].Operand = processor.EmitNop();
-                    ////////////////////////////////////////////////////////////////////////////////
                     onResume(processor);
-                    //InvokeEventHandler(processor, "OnResume");
-                    //SetArgumentFields(processor);
-                    ////////////////////////////////////////////////////////////////////////////////
 
                     branch[0].Operand = branch[1].Operand = branch[3].Operand = processor.EmitNop();
                 }
@@ -196,7 +186,7 @@ namespace SoftCube.Aspects
                     branch[0] = processor.EmitBranch(OpCodes.Beq_S);
 
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, OriginalMoveNextMethod);
+                    processor.Emit(OpCodes.Call, CopiedMoveNextMethod);
                     processor.Emit(OpCodes.Stloc, resultVariable);
 
                     branch[0].Operand = processor.EmitNop();
@@ -226,20 +216,11 @@ namespace SoftCube.Aspects
 
                     processor.Emit(OpCodes.Ldloc, exitVariable);
                     branch[6] = processor.EmitBranch(OpCodes.Brfalse_S);
-                    ////////////////////////////////////////////////////////////////////////////////
                     onSuccess(processor);
-                    //InvokeEventHandler(processor, "OnSuccess");
-                    ////////////////////////////////////////////////////////////////////////////////
                     branch[7] = processor.EmitBranch(OpCodes.Br_S);
 
                     branch[6].Operand = processor.EmitNop();
-                    ////////////////////////////////////////////////////////////////////////////////
                     onYield(processor);
-                    //SetYieldValue(processor);
-                    //InvokeEventHandler(processor, "OnYield");
-                    //SetCurrentField(processor);
-                    ////////////////////////////////////////////////////////////////////////////////
-
                     branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
                 }
 
@@ -250,11 +231,7 @@ namespace SoftCube.Aspects
                 ///     throw;
                 {
                     @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-                    ////////////////////////////////////////////////////////////////////////////////
                     onException(processor);
-                    //SetException(processor);
-                    //InvokeEventHandler(processor, "OnException");
-                    ////////////////////////////////////////////////////////////////////////////////
                     processor.Emit(OpCodes.Rethrow);
                 }
 
@@ -284,10 +261,7 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldc_I4_1);
                     processor.Emit(OpCodes.Stfld, ExitFlagField);
-                    ////////////////////////////////////////////////////////////////////////////////
                     onExit(processor);
-                    //InvokeEventHandler(processor, "OnExit");
-                    ////////////////////////////////////////////////////////////////////////////////
 
                     branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitNop();
                     processor.Emit(OpCodes.Endfinally);
@@ -311,41 +285,6 @@ namespace SoftCube.Aspects
                 /// IL を最適化します。
                 moveNextMethod.Optimize();
             }
-        }
-
-        /// <summary>
-        /// AspectArgs.YieldValue フィールドに値を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        public void SetYieldValue(ILProcessor processor)
-        {
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldfld, AspectArgsField);
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldfld, CurrentField);
-            if (CurrentField.FieldType.IsValueType)
-            {
-                processor.Emit(OpCodes.Box, CurrentField.FieldType);
-            }
-            processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
-        }
-
-        /// <summary>
-        /// Current フィールドに値を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        public void SetCurrentField(ILProcessor processor)
-        {
-            processor.Emit(OpCodes.Ldarg_0);
-
-            processor.Emit(OpCodes.Dup);
-            processor.Emit(OpCodes.Ldfld, AspectArgsField);
-            processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetGetMethod()));
-            if (CurrentField.FieldType.IsValueType)
-            {
-                processor.Emit(OpCodes.Unbox_Any, CurrentField.FieldType);
-            }
-            processor.Emit(OpCodes.Stfld, CurrentField);
         }
 
         /// <summary>
@@ -390,7 +329,7 @@ namespace SoftCube.Aspects
                 {
                     @finally.TryStart = processor.EmitNop();
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, OriginalDisposeMethod);
+                    processor.Emit(OpCodes.Call, CopiedDisposeMethod);
                     leave = processor.EmitLeave(OpCodes.Leave_S);
                 }
 
@@ -431,21 +370,21 @@ namespace SoftCube.Aspects
         private void CopyDisposeMethod()
         {
             Assert.NotNull(DisposeMethod);
-            Assert.Null(OriginalDisposeMethod);
+            Assert.Null(CopiedDisposeMethod);
 
-            OriginalDisposeMethod = new MethodDefinition(DisposeMethod.Name + "<Original>", DisposeMethod.Attributes, DisposeMethod.ReturnType);
+            CopiedDisposeMethod = new MethodDefinition(DisposeMethod.Name + "<Original>", DisposeMethod.Attributes, DisposeMethod.ReturnType);
             foreach (var parameter in DisposeMethod.Parameters)
             {
-                OriginalDisposeMethod.Parameters.Add(parameter);
+                CopiedDisposeMethod.Parameters.Add(parameter);
             }
 
-            OriginalDisposeMethod.Body = DisposeMethod.Body;
+            CopiedDisposeMethod.Body = DisposeMethod.Body;
             foreach (var sequencePoint in DisposeMethod.DebugInformation.SequencePoints)
             {
-                OriginalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                CopiedDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            StateMachineType.Methods.Add(OriginalDisposeMethod);
+            StateMachineType.Methods.Add(CopiedDisposeMethod);
         }
 
         #endregion
