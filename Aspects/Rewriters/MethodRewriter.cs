@@ -226,7 +226,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Aspect ローカル変数のインスタンスを生成します。
+        /// AspectAttribute を生成し、ローカル変数にストアします。
         /// </summary>
         public void NewAspectAttribute()
         {
@@ -235,7 +235,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Arguments ローカル変数のインスタンスを生成します。
+        /// Arguments を生成し、ローカル変数にストアします。
         /// </summary>
         public void NewArguments()
         {
@@ -245,7 +245,7 @@ namespace SoftCube.Aspects
             ArgumentsVariable = Variables.Count();
             Variables.Add(new VariableDefinition(Module.ImportReference(ArgumentsType)));
 
-            // Arguments を生成して、ローカル変数にストアします。
+            /// Arguments を生成して、ローカル変数にストアします。
             if (Parameters.Count <= 8)
             {
                 for (int parameterIndex = 0; parameterIndex < Parameters.Count; parameterIndex++)
@@ -318,19 +318,19 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs ローカル変数のインスタンスを生成します。
+        /// AspectArgs を生成し、ローカル変数にストアします。
         /// </summary>
-        /// <param name="aspectArgsType">AspectArgs の型参照。</param>
+        /// <param name="aspectArgsType">AspectArgs の型。</param>
         public void NewAspectArgs(TypeReference aspectArgsType)
         {
             Assert.Equal(AspectArgsVariable, -1);
             Assert.NotEqual(ArgumentsVariable, -1);
 
-            // ローカル変数を追加します。
+            /// ローカル変数を追加します。
             AspectArgsVariable = Variables.Count();
             Variables.Add(new VariableDefinition(aspectArgsType));
 
-            // AspectArgs を生成し、ローカル変数にストアします。
+            /// AspectArgs を生成し、ローカル変数にストアします。
             if (Method.IsStatic)
             {
                 Processor.Emit(OpCodes.Ldnull);
@@ -356,14 +356,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs.Argument の内容を引数に設定します。
+        /// Arguments の内容で引数を更新します。
         /// </summary>
         /// <param name="pointerOnly">
-        /// ポインタ引数のみを設定対象とするか。
-        /// <c>true</c> の場合、in/ref/out 引数のみを設定します。
-        /// <c>false</c> の場合、すべての引数を設定します。
+        /// ポインタ引数のみを更新対象とするか。
+        /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
+        /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        public void SetArguments(bool pointerOnly)
+        public void UpdateArguments(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -458,14 +458,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 引数の内容を AspectArgs.Argument に設定します。
+        /// 引数の内容で Arguments を更新します。
         /// </summary>
         /// <param name="pointerOnly">
-        /// ポインタ引数のみを設定対象とするか。
-        /// <c>true</c> の場合、in/ref/out 引数のみを設定します。
-        /// <c>false</c> の場合、すべての引数を設定します。
+        /// ポインタ引数のみを更新対象とするか。
+        /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
+        /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        public void SetAspectArguments(bool pointerOnly)
+        public void UpdateAspectArguments(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -599,8 +599,8 @@ namespace SoftCube.Aspects
                 Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             }
 
-            /// 引数に aspectArgs.Argument の内容を設定します。
-            SetArguments(pointerOnly: false);
+            /// Arguments の内容で引数を更新します。
+            UpdateArguments(pointerOnly: false);
 
             /// 引数をスタックにロードします。
             /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
@@ -633,8 +633,8 @@ namespace SoftCube.Aspects
                 Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
             }
 
-            /// aspectArgs.Argument に引数の内容を設定します (ポインタ引数のみ)。
-            SetAspectArguments(pointerOnly: true);
+            /// 引数の内容で Arguments を更新します (ポインタ引数のみ)。
+            UpdateAspectArguments(pointerOnly: true);
         }
 
         /// <summary>

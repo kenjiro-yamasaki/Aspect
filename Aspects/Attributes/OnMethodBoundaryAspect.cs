@@ -82,7 +82,7 @@ namespace SoftCube.Aspects
             {
                 /// aspect.OnSuccess(aspectArgs);
                 rewriter.InvokeEventHandler(nameof(OnSuccess));
-                rewriter.SetArguments(pointerOnly: true);
+                rewriter.UpdateArguments(pointerOnly: true);
             });
 
             var onException = new Action<ILProcessor>(processor =>

@@ -92,7 +92,7 @@ namespace SoftCube.Aspects
                 methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
                 methodInjector.SetMethod();
                 methodInjector.InvokeEventHandler(nameof(OnInvoke));
-                methodInjector.SetArguments(pointerOnly: true);
+                methodInjector.UpdateArguments(pointerOnly: true);
                 methodInjector.Return();
             }
         }
