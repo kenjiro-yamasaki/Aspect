@@ -4,9 +4,9 @@ using System;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// アドバイス引数の書き換え。
+    /// アスペクト引数の書き換え。
     /// </summary>
-    public class AdviceArgsRewriter
+    public class AspectArgsRewriter
     {
         #region プロパティ
 
@@ -44,7 +44,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
-        public AdviceArgsRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
+        public AspectArgsRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
             AspectAttribute = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
             TargetMethod    = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));

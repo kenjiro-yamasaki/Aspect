@@ -1,9 +1,9 @@
 ﻿namespace SoftCube.Aspects
 {
     /// <summary>
-    /// アドバイス引数。
+    /// アスペクト引数。
     /// </summary>
-    public class AdviceArgs
+    public class AspectArgs
     {
         #region プロパティ
 
@@ -20,7 +20,7 @@
         /// コンストラクター。
         /// </summary>
         /// <param name="instance">メソッドが実行されたインスタンス (静的メッソドが実行された場合、<c>null</c>)。</param>
-        public AdviceArgs(object instance)
+        public AspectArgs(object instance)
         {
             Instance = instance;
         }

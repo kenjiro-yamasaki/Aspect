@@ -6,7 +6,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッド引数。
     /// </summary>
-    public class MethodArgs : AdviceArgs
+    public class MethodArgs : AspectArgs
     {
         #region プロパティ
 

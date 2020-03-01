@@ -346,13 +346,13 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs.Method にメソッド情報を設定します。
+        /// MethodArgs.Method にメソッド情報を設定します。
         /// </summary>
         public void SetMethod()
         {
             Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
-            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.Method)).GetSetMethod()));
+            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Method)).GetSetMethod()));
         }
 
         /// <summary>

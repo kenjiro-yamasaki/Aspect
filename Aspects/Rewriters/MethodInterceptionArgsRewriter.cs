@@ -9,7 +9,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプト引数の書き換え。
     /// </summary>
-    public class MethodInterceptionArgsRewriter : AdviceArgsRewriter
+    public class MethodInterceptionArgsRewriter : AspectArgsRewriter
     {
         #region プロパティ
 
@@ -173,7 +173,7 @@ namespace SoftCube.Aspects
                 if (!originalMethod.IsStatic)
                 {
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                    processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AspectArgs).GetProperty(nameof(AspectArgs.Instance)).GetGetMethod()));
                 }
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
@@ -262,7 +262,7 @@ namespace SoftCube.Aspects
 
                 /// return ((TInstance)base.Instance).OriginalMethod((TArg0)arguments[0], (TArg1)arguments[1], ...);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AdviceArgs).GetProperty(nameof(AdviceArgs.Instance)).GetGetMethod()));
+                processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AspectArgs).GetProperty(nameof(AspectArgs.Instance)).GetGetMethod()));
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
