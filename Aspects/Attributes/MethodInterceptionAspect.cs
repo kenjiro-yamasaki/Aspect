@@ -67,17 +67,17 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 対象メソッドを書き換えます。
         /// </summary>
-        /// <param name="methodInjector">対象メソッドへの注入。</param>
+        /// <param name="rewriter">対象メソッドへの注入。</param>
         /// <param name="aspectArgsInjector">アスペクト引数への注入。</param>
         /// <remarks>
         /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
         /// 対象メソッドのコードを、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodRewriter)"/> を呼びだしてください。
         /// </remarks>
-        private void ReplaceMethod(MethodRewriter methodInjector, MethodInterceptionArgsRewriter aspectArgsInjector)
+        private void ReplaceMethod(MethodRewriter rewriter, MethodInterceptionArgsRewriter aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            methodInjector.CopyMethod();
+            rewriter.CopyMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
@@ -87,13 +87,13 @@ namespace SoftCube.Aspects
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnInvoke(aspectArgs);
                 /// return (TResult)aspectArgs.ReturnValue;
-                methodInjector.NewAspectAttributeVariable();
-                methodInjector.NewArgumentsVariable();
-                methodInjector.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
-                methodInjector.UpdateMethodProperty();
-                methodInjector.InvokeEventHandler(nameof(OnInvoke));
-                methodInjector.UpdateArguments(pointerOnly: true);
-                methodInjector.Return();
+                rewriter.NewAspectAttributeVariable();
+                rewriter.NewArgumentsVariable();
+                rewriter.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
+                rewriter.UpdateMethodProperty();
+                rewriter.InvokeEventHandler(nameof(OnInvoke));
+                rewriter.UpdateArguments(pointerOnly: true);
+                rewriter.ReturnProperty();
             }
         }
 

@@ -106,6 +106,11 @@ namespace SoftCube.Aspects
         /// </summary>
         protected int AspectArgsVariable { get; set; } = -1;
 
+        /// <summary>
+        /// 戻り値のローカル変数。
+        /// </summary>
+        protected int ReturnValueVariable { get; set; } = -1;
+
         #endregion
 
         #endregion
@@ -194,7 +199,7 @@ namespace SoftCube.Aspects
                 /// return (TResult)aspectArgs.ReturnValue;
                 {
                     leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    Return();
+                    ReturnVariable();
                 }
 
                 /// IL コードを最適化します。
@@ -558,7 +563,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs.Exception を更新します。
+        /// AspectArgs.ReturnValue を更新します。
         /// </summary>
         public void UpdateExceptionProperty()
         {
@@ -570,6 +575,40 @@ namespace SoftCube.Aspects
             Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             Processor.Emit(OpCodes.Ldloc, exceptionVariable);
             Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
+        }
+
+        /// <summary>
+        /// 戻り値を更新します。
+        /// </summary>
+        public void UpdateReturnValueVariable()
+        {
+            if (Method.HasReturnValue())
+            {
+                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+                Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetGetMethod()));
+                if (Method.ReturnType.IsValueType)
+                {
+                    Processor.Emit(OpCodes.Unbox_Any, Method.ReturnType);
+                }
+                Processor.Emit(OpCodes.Stloc, ReturnValueVariable);
+            }
+        }
+
+        /// <summary>
+        /// AspectArgs.ReturnValue を更新します。
+        /// </summary>
+        public void UpdateReturnValueProperty()
+        {
+            if (Method.HasReturnValue())
+            {
+                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+                Processor.Emit(OpCodes.Ldloc, ReturnValueVariable);
+                if (Method.ReturnType.IsValueType)
+                {
+                    Processor.Emit(OpCodes.Box, Method.ReturnType);
+                }
+                Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
+            }
         }
 
         /// <summary>
@@ -631,24 +670,22 @@ namespace SoftCube.Aspects
                     Processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                 }
             }
-
             Processor.Emit(OpCodes.Call, OriginalMethod);
 
-            /// 戻り値を AspectArgs.ReturnValue に設定します。
-            if (OriginalMethod.HasReturnValue())
+            /// 戻り値をローカル変数にストアします。
+            if (Method.HasReturnValue())
             {
-                if (OriginalMethod.ReturnType.IsValueType)
-                {
-                    Processor.Emit(OpCodes.Box, OriginalMethod.ReturnType);
-                }
-                Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetSetMethod()));
+                ReturnValueVariable = Variables.Count;
+                Variables.Add(new VariableDefinition(Module.ImportReference(Method.ReturnType)));
+
+                Processor.Emit(OpCodes.Stloc, ReturnValueVariable);
             }
         }
 
         /// <summary>
-        /// 戻り値を戻します。
+        /// AspectArgs.ReturnValue を戻します。
         /// </summary>
-        public void Return()
+        public void ReturnProperty()
         {
             if (Method.HasReturnValue())
             {
@@ -659,6 +696,22 @@ namespace SoftCube.Aspects
                     Processor.Emit(OpCodes.Unbox_Any, Method.ReturnType);
                 }
 
+                Processor.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                Processor.Emit(OpCodes.Ret);
+            }
+        }
+
+        /// <summary>
+        /// 戻り値を戻します。
+        /// </summary>
+        public void ReturnVariable()
+        {
+            if (Method.HasReturnValue())
+            {
+                Processor.Emit(OpCodes.Ldloc, ReturnValueVariable);
                 Processor.Emit(OpCodes.Ret);
             }
             else

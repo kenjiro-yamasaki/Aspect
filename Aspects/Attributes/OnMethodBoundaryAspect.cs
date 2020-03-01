@@ -91,9 +91,9 @@ namespace SoftCube.Aspects
                 /// arg0 = (TArg0)arguments[0];
                 /// arg1 = (TArg1)arguments[1];
                 /// ...
+                rewriter.UpdateReturnValueProperty();
                 rewriter.UpdateArgumentsProperty(pointerOnly: true);
                 rewriter.InvokeEventHandler(nameof(OnSuccess));
-                rewriter.UpdateArguments(pointerOnly: true);
             });
 
             var onException = new Action<ILProcessor>(processor =>
@@ -108,6 +108,8 @@ namespace SoftCube.Aspects
             {
                 /// aspect.OnExit(aspectArgs);
                 rewriter.InvokeEventHandler(nameof(OnExit));
+                rewriter.UpdateArguments(pointerOnly: true);
+                rewriter.UpdateReturnValueVariable();
             });
 
             rewriter.RewriteMethod(onEntry, onSuccess, onException, onExit);
