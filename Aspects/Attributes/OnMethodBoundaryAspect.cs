@@ -74,12 +74,12 @@ namespace SoftCube.Aspects
                 /// arg0 = (TArg0)arguments[0];
                 /// arg1 = (TArg1)arguments[1];
                 /// ...
-                rewriter.NewAspectAttribute();
-                rewriter.NewArguments();
-                rewriter.NewAspectArgs(rewriter.Module.ImportReference(typeof(MethodExecutionArgs)));
-                rewriter.UpdateMethod();
+                rewriter.NewAspectAttributeVariable();
+                rewriter.NewArgumentsVariable();
+                rewriter.NewAspectArgsVariable(rewriter.Module.ImportReference(typeof(MethodExecutionArgs)));
+                rewriter.UpdateMethodProperty();
                 rewriter.InvokeEventHandler(nameof(OnEntry));
-                rewriter.UpdateArgs(pointerOnly: false);
+                rewriter.UpdateArguments(pointerOnly: false);
             });
 
             var onSuccess = new Action<ILProcessor>(processor =>
@@ -91,16 +91,16 @@ namespace SoftCube.Aspects
                 /// arg0 = (TArg0)arguments[0];
                 /// arg1 = (TArg1)arguments[1];
                 /// ...
-                rewriter.UpdateArguments(pointerOnly: true);
+                rewriter.UpdateArgumentsProperty(pointerOnly: true);
                 rewriter.InvokeEventHandler(nameof(OnSuccess));
-                rewriter.UpdateArgs(pointerOnly: true);
+                rewriter.UpdateArguments(pointerOnly: true);
             });
 
             var onException = new Action<ILProcessor>(processor =>
             {
                 /// aspectArgs.Exception = ex;
                 /// aspect.OnException(aspectArgs);
-                rewriter.UpdateException();
+                rewriter.UpdateExceptionProperty();
                 rewriter.InvokeEventHandler(nameof(OnException));
             });
 

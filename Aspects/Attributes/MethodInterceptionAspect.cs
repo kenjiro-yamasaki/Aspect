@@ -87,12 +87,12 @@ namespace SoftCube.Aspects
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnInvoke(aspectArgs);
                 /// return (TResult)aspectArgs.ReturnValue;
-                methodInjector.NewAspectAttribute();
-                methodInjector.NewArguments();
-                methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
-                methodInjector.UpdateMethod();
+                methodInjector.NewAspectAttributeVariable();
+                methodInjector.NewArgumentsVariable();
+                methodInjector.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
+                methodInjector.UpdateMethodProperty();
                 methodInjector.InvokeEventHandler(nameof(OnInvoke));
-                methodInjector.UpdateArgs(pointerOnly: true);
+                methodInjector.UpdateArguments(pointerOnly: true);
                 methodInjector.Return();
             }
         }
@@ -118,10 +118,10 @@ namespace SoftCube.Aspects
                 /// var arguments  = new Arguments(...);
                 /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-                methodInjector.NewAspectAttribute();
-                methodInjector.NewArguments();
-                methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
-                methodInjector.UpdateMethod();
+                methodInjector.NewAspectAttributeVariable();
+                methodInjector.NewArgumentsVariable();
+                methodInjector.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
+                methodInjector.UpdateMethodProperty();
 
                 var taskType = methodInjector.Method.ReturnType;
                 if (taskType is GenericInstanceType genericInstanceType)

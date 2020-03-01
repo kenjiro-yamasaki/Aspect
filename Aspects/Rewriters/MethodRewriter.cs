@@ -228,7 +228,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// AspectAttribute を生成し、ローカル変数にストアします。
         /// </summary>
-        public void NewAspectAttribute()
+        public void NewAspectAttributeVariable()
         {
             Assert.Equal(AspectAttributeVariable, -1);
             AspectAttributeVariable = Processor.EmitCreateAspectCode(AspectAttribute);
@@ -237,7 +237,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// Arguments を生成し、ローカル変数にストアします。
         /// </summary>
-        public void NewArguments()
+        public void NewArgumentsVariable()
         {
             Assert.Equal(ArgumentsVariable, -1);
 
@@ -321,7 +321,7 @@ namespace SoftCube.Aspects
         /// AspectArgs を生成し、ローカル変数にストアします。
         /// </summary>
         /// <param name="aspectArgsType">AspectArgs の型。</param>
-        public void NewAspectArgs(TypeReference aspectArgsType)
+        public void NewAspectArgsVariable(TypeReference aspectArgsType)
         {
             Assert.Equal(AspectArgsVariable, -1);
             Assert.NotEqual(ArgumentsVariable, -1);
@@ -346,9 +346,9 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// MethodArgs.Method にメソッド情報を設定します。
+        /// AspectArgs.Method にメソッド情報を設定します。
         /// </summary>
-        public void UpdateMethod()
+        public void UpdateMethodProperty()
         {
             Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
@@ -363,7 +363,7 @@ namespace SoftCube.Aspects
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
         /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        public void UpdateArgs(bool pointerOnly)
+        public void UpdateArguments(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -458,14 +458,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Arguments を更新します。
+        /// AspectArgs.Arguments を更新します。
         /// </summary>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを更新対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
         /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        public void UpdateArguments(bool pointerOnly)
+        public void UpdateArgumentsProperty(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -558,9 +558,9 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 例外を更新します。
+        /// AspectArgs.Exception を更新します。
         /// </summary>
-        public void UpdateException()
+        public void UpdateExceptionProperty()
         {
             int exceptionVariable = Variables.Count;
             Variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
