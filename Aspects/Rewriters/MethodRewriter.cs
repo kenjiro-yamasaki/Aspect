@@ -120,12 +120,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        public MethodRewriter(MethodDefinition targetMethod, CustomAttribute aspect)
+        /// <param name="method">メソッド。</param>
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        public MethodRewriter(MethodDefinition method, CustomAttribute aspectAttribute)
         {
-            AspectAttribute       = aspect ?? throw new ArgumentNullException(nameof(aspect));
-            Method = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
+            Method          = method ?? throw new ArgumentNullException(nameof(method));
+            AspectAttribute = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
         }
 
         #endregion
@@ -367,14 +367,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 引数に AspectArgs.Argument の内容を設定します。
+        /// AspectArgs.Argument の内容を引数に設定します。
         /// </summary>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを設定対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを設定します。
         /// <c>false</c> の場合、すべての引数を設定します。
         /// </param>
-        public void SetAspectArguments(bool pointerOnly)
+        public void SetArguments(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -469,14 +469,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs.Argument に引数の内容を設定します。
+        /// 引数の内容を AspectArgs.Argument に設定します。
         /// </summary>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを設定対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを設定します。
         /// <c>false</c> の場合、すべての引数を設定します。
         /// </param>
-        public void SetArguments(bool pointerOnly)
+        public void SetAspectArguments(bool pointerOnly)
         {
             if (Parameters.Count <= 8)
             {
@@ -611,7 +611,7 @@ namespace SoftCube.Aspects
             }
 
             /// 引数に aspectArgs.Argument の内容を設定します。
-            SetAspectArguments(pointerOnly: false);
+            SetArguments(pointerOnly: false);
 
             /// 引数をスタックにロードします。
             /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
@@ -645,7 +645,7 @@ namespace SoftCube.Aspects
             }
 
             /// aspectArgs.Argument に引数の内容を設定します (ポインタ引数のみ)。
-            SetArguments(pointerOnly: true);
+            SetAspectArguments(pointerOnly: true);
         }
 
         /// <summary>
