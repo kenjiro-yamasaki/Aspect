@@ -36,8 +36,8 @@ namespace SoftCube.Aspects
             var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                var methodInjector     = new AsyncMethodInjector(method, aspectAttribute);
-                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspectAttribute);
+                var methodInjector     = new AsyncMethodRewriter(method, aspectAttribute);
+                var aspectArgsInjector = new MethodInterceptionArgsRewriter(method, aspectAttribute);
 
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
@@ -51,8 +51,8 @@ namespace SoftCube.Aspects
             }
             else
             {
-                var methodInjector     = new MethodInjector(method, aspectAttribute);
-                var aspectArgsInjector = new MethodInterceptionArgsInjector(method, aspectAttribute);
+                var methodInjector     = new MethodRewriter(method, aspectAttribute);
+                var aspectArgsInjector = new MethodInterceptionArgsRewriter(method, aspectAttribute);
 
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
@@ -72,9 +72,9 @@ namespace SoftCube.Aspects
         /// <remarks>
         /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
         /// 対象メソッドのコードを、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
+        /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodRewriter)"/> を呼びだしてください。
         /// </remarks>
-        private void ReplaceMethod(MethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
+        private void ReplaceMethod(MethodRewriter methodInjector, MethodInterceptionArgsRewriter aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
             methodInjector.CopyMethod();
@@ -105,9 +105,9 @@ namespace SoftCube.Aspects
         /// <remarks>
         /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
         /// 対象メソッドのコードを、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodInjector)"/> を呼びだしてください。
+        /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodRewriter)"/> を呼びだしてください。
         /// </remarks>
-        private void ReplaceAsyncMethod(AsyncMethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
+        private void ReplaceAsyncMethod(AsyncMethodRewriter methodInjector, MethodInterceptionArgsRewriter aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
             methodInjector.CopyMethod();
@@ -123,7 +123,7 @@ namespace SoftCube.Aspects
                 methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
                 methodInjector.SetMethod();
 
-                var taskType = methodInjector.TargetMethod.ReturnType;
+                var taskType = methodInjector.Method.ReturnType;
                 if (taskType is GenericInstanceType genericInstanceType)
                 {
                     /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);

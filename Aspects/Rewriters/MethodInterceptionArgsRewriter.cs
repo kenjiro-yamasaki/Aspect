@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// メソッドインターセプト引数への注入。
+    /// メソッドインターセプト引数の書き換え。
     /// </summary>
-    public class MethodInterceptionArgsInjector : AdviceArgsInjector
+    public class MethodInterceptionArgsRewriter : AdviceArgsRewriter
     {
         #region プロパティ
 
@@ -18,9 +18,8 @@ namespace SoftCube.Aspects
         /// </summary>
         public TypeDefinition DerivedAspectArgsType => DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
 
-
         /// <summary>
-        /// <see cref="MethodInterceptionArgs"/> の派生クラスの型名。
+        /// MethodInterceptionArgs の派生クラスの型名。
         /// </summary>
         private string MethodInterceptionArgsImplTypeName => TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs);
 
@@ -32,9 +31,9 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        public MethodInterceptionArgsInjector(MethodDefinition targetMethod, CustomAttribute aspect)
-            : base(targetMethod, aspect)
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        public MethodInterceptionArgsRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
+            : base(targetMethod, aspectAttribute)
         {
         }
 
@@ -91,7 +90,7 @@ namespace SoftCube.Aspects
         /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
         /// <see cref="MethodInterceptionArgs.InvokeImpl(Arguments)"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodInjector)"/> を呼びだしてください。
+        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodRewriter)"/> を呼びだしてください。
         /// </remarks>
         public void OverrideInvokeImplMethod(MethodDefinition originalMethod)
         {
@@ -238,7 +237,7 @@ namespace SoftCube.Aspects
         /// <param name="injector">メソッドへの注入。</param>
         /// <remarks>
         /// <see cref="MethodInterceptionArgs.InvokeAsyncImpl(Arguments)"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodInjector)"/> を呼びだしてください。
+        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodRewriter)"/> を呼びだしてください。
         /// </remarks>
         public void OverrideInvokeAsyncImplMethod(MethodDefinition originalMethod)
         {

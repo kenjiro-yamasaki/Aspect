@@ -9,67 +9,62 @@ using System.Reflection;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// メソッドの注入。
+    /// メソッドの書き換え。
     /// </summary>
-    public class MethodInjector
+    public class MethodRewriter
     {
         #region プロパティ
 
         /// <summary>
-        /// アスペクトの属性。
+        /// アスペクト属性。
         /// </summary>
-        public CustomAttribute Aspect { get; }
+        public CustomAttribute AspectAttribute { get; }
 
         /// <summary>
-        /// アスペクトの型。
+        /// アスペクト属性の型。
         /// </summary>
-        public TypeDefinition AspectType => Aspect.AttributeType.Resolve();
+        public TypeDefinition AspectAttribueType => AspectAttribute.AttributeType.Resolve();
 
         /// <summary>
-        /// アスペクトの <see cref="Type"/>。
+        /// メソッド。
         /// </summary>
-        public Type AspectSystemType => Aspect.AttributeType.ToSystemType();
+        public MethodDefinition Method { get; }
 
         /// <summary>
-        /// ターゲットメソッド。
+        /// メソッドのコードをコピーしたメソッド。
         /// </summary>
-        public MethodDefinition TargetMethod { get; }
+        public MethodDefinition OriginalMethod { get; private set; }
 
         /// <summary>
-        /// ターゲットメソッドの宣言型。
+        /// メソッドの宣言型。
         /// </summary>
-        public TypeDefinition DeclaringType => TargetMethod.DeclaringType;
+        public TypeDefinition DeclaringType => Method.DeclaringType;
 
         /// <summary>
         /// モジュール。
         /// </summary>
-        public ModuleDefinition Module => TargetMethod.Module;
+        public ModuleDefinition Module => Method.Module;
 
         /// <summary>
         /// IL プロセッサー。
         /// </summary>
-        public ILProcessor Processor => TargetMethod.Body.GetILProcessor();
-
-        /// <summary>
-        /// ターゲットメソッドの内容を移動したメソッド。
-        /// </summary>
-        public MethodDefinition OriginalMethod { get; private set; }
+        public ILProcessor Processor => Method.Body.GetILProcessor();
 
         #region パラメーター
 
         /// <summary>
         /// パラメーターコレクション。
         /// </summary>
-        protected Collection<ParameterDefinition> Parameters => TargetMethod.Parameters;
+        protected Collection<ParameterDefinition> Parameters => Method.Parameters;
 
         /// <summary>
-        /// Arguments の <see cref="Type"/>。
+        /// Arguments の型。
         /// </summary>
-        protected Type ArgumentsSystemType
+        protected Type ArgumentsType
         {
             get
             {
-                var parameters = TargetMethod.Parameters;
+                var parameters = Method.Parameters;
                 var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
                 return parameters.Count switch
                 {
@@ -94,25 +89,25 @@ namespace SoftCube.Aspects
         /// <summary>
         /// ローカル変数コレクション。
         /// </summary>
-        protected Collection<VariableDefinition> Variables => TargetMethod.Body.Variables;
+        protected Collection<VariableDefinition> Variables => Method.Body.Variables;
 
         /// <summary>
-        /// aspect のローカル変数。
+        /// AspectAttribute のローカル変数。
         /// </summary>
-        protected int AspectVariable { get; set; } = -1;
+        protected int AspectAttributeVariable { get; set; } = -1;
 
         /// <summary>
-        /// arguments のローカル変数。
+        /// Arguments のローカル変数。
         /// </summary>
         protected int ArgumentsVariable { get; set; } = -1;
 
         /// <summary>
-        /// aspectArgs のローカル変数。
+        /// AspectArgs のローカル変数。
         /// </summary>
         protected int AspectArgsVariable { get; set; } = -1;
 
         /// <summary>
-        /// objects のローカル変数。
+        /// Objects のローカル変数。
         /// </summary>
         protected int ObjectsVariable { get; set; } = -1;
 
@@ -127,10 +122,10 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspect">アスペクト属性。</param>
-        public MethodInjector(MethodDefinition targetMethod, CustomAttribute aspect)
+        public MethodRewriter(MethodDefinition targetMethod, CustomAttribute aspect)
         {
-            Aspect       = aspect ?? throw new ArgumentNullException(nameof(aspect));
-            TargetMethod = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
+            AspectAttribute       = aspect ?? throw new ArgumentNullException(nameof(aspect));
+            Method = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
         }
 
         #endregion
@@ -138,20 +133,20 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// ターゲットメソッドを書き換えます。
+        /// メソッドを書き換えます。
         /// </summary>
         /// <param name="onEntry">OnEntory のアドバイス注入処理。</param>
         /// <param name="onSuccess">OnSuccess のアドバイス注入処理。</param>
         /// <param name="onException">OnException のアドバイス注入処理。</param>
         /// <param name="onExit">OnExit のアドバイス注入処理。</param>
-        public void RewriteTargetMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
+        public void RewriteMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
             CopyMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
-                var method    = TargetMethod;
+                var method    = Method;
                 var module    = Module;
                 var processor = Processor;
 
@@ -213,39 +208,39 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 新たなメソッドを生成し、ターゲットメソッドのコードをコピーします。
+        /// 新たなメソッドを生成し、メソッドのコードをコピーします。
         /// </summary>
         public void CopyMethod()
         {
             Assert.Null(OriginalMethod);
 
-            OriginalMethod = new MethodDefinition(TargetMethod.Name + "<Original>", TargetMethod.Attributes, TargetMethod.ReturnType);
-            foreach (var parameter in TargetMethod.Parameters)
+            OriginalMethod = new MethodDefinition(Method.Name + "<Original>", Method.Attributes, Method.ReturnType);
+            foreach (var parameter in Method.Parameters)
             {
                 OriginalMethod.Parameters.Add(parameter);
             }
-            OriginalMethod.Body = TargetMethod.Body;
+            OriginalMethod.Body = Method.Body;
 
-            foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
+            foreach (var sequencePoint in Method.DebugInformation.SequencePoints)
             {
                 OriginalMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
             DeclaringType.Methods.Add(OriginalMethod);
 
-            TargetMethod.Body = new Mono.Cecil.Cil.MethodBody(TargetMethod);
+            Method.Body = new Mono.Cecil.Cil.MethodBody(Method);
         }
 
         /// <summary>
-        /// aspect ローカル変数のインスタンスを生成します。
+        /// Aspect ローカル変数のインスタンスを生成します。
         /// </summary>
         public void NewAspectAttribute()
         {
-            Assert.Equal(AspectVariable, -1);
-            AspectVariable = Processor.EmitCreateAspectCode(Aspect);
+            Assert.Equal(AspectAttributeVariable, -1);
+            AspectAttributeVariable = Processor.EmitCreateAspectCode(AspectAttribute);
         }
 
         /// <summary>
-        /// arguments ローカル変数のインスタンスを生成します。
+        /// Arguments ローカル変数のインスタンスを生成します。
         /// </summary>
         public void NewArguments()
         {
@@ -253,7 +248,7 @@ namespace SoftCube.Aspects
 
             /// ローカル変数を追加します。
             ArgumentsVariable = Variables.Count();
-            Variables.Add(new VariableDefinition(Module.ImportReference(ArgumentsSystemType)));
+            Variables.Add(new VariableDefinition(Module.ImportReference(ArgumentsType)));
 
             // Arguments を生成して、ローカル変数にストアします。
             if (Parameters.Count <= 8)
@@ -263,7 +258,7 @@ namespace SoftCube.Aspects
                     var parameter     = Parameters[parameterIndex];
                     var parameterType = parameter.ParameterType;
 
-                    if (TargetMethod.IsStatic)
+                    if (Method.IsStatic)
                     {
                         Processor.Emit(OpCodes.Ldarg, parameterIndex);
                     }
@@ -278,7 +273,7 @@ namespace SoftCube.Aspects
                         Processor.EmitLdind(elementType);
                     }
                 }
-                Processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsSystemType.GetConstructor(Parameters.Select(p => p.ParameterType.ToSystemType(removePointer: true)).ToArray())));
+                Processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(Parameters.Select(p => p.ParameterType.ToSystemType(removePointer: true)).ToArray())));
                 Processor.Emit(OpCodes.Stloc, ArgumentsVariable);
             }
             else
@@ -297,7 +292,7 @@ namespace SoftCube.Aspects
                     Processor.Emit(OpCodes.Dup);
                     Processor.Emit(OpCodes.Ldc_I4, parameterIndex);
 
-                    if (TargetMethod.IsStatic)
+                    if (Method.IsStatic)
                     {
                         Processor.Emit(OpCodes.Ldarg, parameterIndex);
                     }
@@ -328,13 +323,13 @@ namespace SoftCube.Aspects
                 Processor.Emit(OpCodes.Stloc, ObjectsVariable);
 
                 Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
-                Processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsSystemType.GetConstructor(new Type[] { typeof(object[]) })));
+                Processor.Emit(OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
                 Processor.Emit(OpCodes.Stloc, ArgumentsVariable);
             }
         }
 
         /// <summary>
-        /// aspectArgs ローカル変数のインスタンスを生成します。
+        /// AspectArgs ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="aspectArgsType">AspectArgs の型参照。</param>
         public void NewAspectArgs(TypeReference aspectArgsType)
@@ -347,7 +342,7 @@ namespace SoftCube.Aspects
             Variables.Add(new VariableDefinition(aspectArgsType));
 
             // AspectArgs を生成し、ローカル変数にストアします。
-            if (TargetMethod.IsStatic)
+            if (Method.IsStatic)
             {
                 Processor.Emit(OpCodes.Ldnull);
             }
@@ -362,7 +357,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// aspectArgs.Method にメソッド情報を設定します。
+        /// AspectArgs.Method にメソッド情報を設定します。
         /// </summary>
         public void SetMethod()
         {
@@ -372,7 +367,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 引数に aspectArgs.Argument の内容を設定します。
+        /// 引数に AspectArgs.Argument の内容を設定します。
         /// </summary>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを設定対象とするか。
@@ -394,7 +389,7 @@ namespace SoftCube.Aspects
                     {
                         var elementType = parameterType.GetElementType();
 
-                        if (TargetMethod.IsStatic)
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Ldarg, parameterIndex);
                         }
@@ -403,14 +398,14 @@ namespace SoftCube.Aspects
                             Processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         }
                         Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
-                        Processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsSystemType.GetField(fieldNames[parameterIndex])));
+                        Processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(fieldNames[parameterIndex])));
                         Processor.EmitStind(elementType);
                     }
                     else if (!pointerOnly)
                     {
                         Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
-                        Processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsSystemType.GetField(fieldNames[parameterIndex])));
-                        if (TargetMethod.IsStatic)
+                        Processor.Emit(OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(fieldNames[parameterIndex])));
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Starg, parameterIndex);
                         }
@@ -432,7 +427,7 @@ namespace SoftCube.Aspects
                     {
                         var elementType = parameterType.GetElementType();
 
-                        if (TargetMethod.IsStatic)
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Ldarg, parameterIndex);
                         }
@@ -460,7 +455,7 @@ namespace SoftCube.Aspects
                         {
                             Processor.Emit(OpCodes.Unbox_Any, parameterType);
                         }
-                        if (TargetMethod.IsStatic)
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Starg, parameterIndex);
                         }
@@ -474,7 +469,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// aspectArgs.Argument に引数の内容を設定します。
+        /// AspectArgs.Argument に引数の内容を設定します。
         /// </summary>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを設定対象とするか。
@@ -497,7 +492,7 @@ namespace SoftCube.Aspects
                         var elementType = parameterType.GetElementType();
 
                         Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
-                        if (TargetMethod.IsStatic)
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Ldarg, parameterIndex);
                         }
@@ -506,12 +501,12 @@ namespace SoftCube.Aspects
                             Processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         }
                         Processor.EmitLdind(elementType);
-                        Processor.Emit(OpCodes.Stfld, Module.ImportReference(ArgumentsSystemType.GetField(fieldNames[parameterIndex])));
+                        Processor.Emit(OpCodes.Stfld, Module.ImportReference(ArgumentsType.GetField(fieldNames[parameterIndex])));
                     }
                     else if (!pointerOnly)
                     {
                         Processor.Emit(OpCodes.Ldloc, ArgumentsVariable);
-                        if (TargetMethod.IsStatic)
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Ldarg, parameterIndex);
                         }
@@ -519,7 +514,7 @@ namespace SoftCube.Aspects
                         {
                             Processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                         }
-                        Processor.Emit(OpCodes.Stfld, Module.ImportReference(ArgumentsSystemType.GetField(fieldNames[parameterIndex])));
+                        Processor.Emit(OpCodes.Stfld, Module.ImportReference(ArgumentsType.GetField(fieldNames[parameterIndex])));
                     }
                 }
             }
@@ -536,7 +531,7 @@ namespace SoftCube.Aspects
 
                         Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
                         Processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        if (TargetMethod.IsStatic)
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Ldarg, parameterIndex);
                         }
@@ -555,7 +550,7 @@ namespace SoftCube.Aspects
                     {
                         Processor.Emit(OpCodes.Ldloc, ObjectsVariable);
                         Processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        if (TargetMethod.IsStatic)
+                        if (Method.IsStatic)
                         {
                             Processor.Emit(OpCodes.Ldarg, parameterIndex);
                         }
@@ -579,13 +574,13 @@ namespace SoftCube.Aspects
         /// <param name="eventHandlerName">イベントハンドラー名。</param>
         public void InvokeEventHandler(string eventHandlerName)
         {
-            Assert.NotEqual(AspectVariable, -1);
+            Assert.NotEqual(AspectAttributeVariable, -1);
             Assert.NotEqual(AspectArgsVariable, -1);
 
-            Processor.Emit(OpCodes.Ldloc, AspectVariable);
+            Processor.Emit(OpCodes.Ldloc, AspectAttributeVariable);
             Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
 
-            var aspectType = AspectType;
+            var aspectType = AspectAttribueType;
             while (true)
             {
                 var eventHandler = aspectType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);
@@ -603,7 +598,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
+        /// メソッドのコードをコピーしたメソッドを呼びだします。
         /// </summary>
         public void InvokeOriginalMethod()
         {
@@ -620,14 +615,14 @@ namespace SoftCube.Aspects
 
             /// 引数をスタックにロードします。
             /// ターゲットメソッドの内容を移動したメソッドを呼びだします。
-            if (!TargetMethod.IsStatic)
+            if (!Method.IsStatic)
             {
                 Processor.Emit(OpCodes.Ldarg_0);
             }
 
             for (int parameterIndex = 0; parameterIndex < Parameters.Count; parameterIndex++)
             {
-                if (TargetMethod.IsStatic)
+                if (Method.IsStatic)
                 {
                     Processor.Emit(OpCodes.Ldarg, parameterIndex);
                 }
@@ -654,7 +649,7 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// aspectArgs.Exception に例外を設定します。
+        /// AspectArgs.Exception に例外を設定します。
         /// </summary>
         public void SetException()
         {
@@ -673,13 +668,13 @@ namespace SoftCube.Aspects
         /// </summary>
         public void Return()
         {
-            if (TargetMethod.HasReturnValue())
+            if (Method.HasReturnValue())
             {
                 Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
                 Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.ReturnValue)).GetGetMethod()));
-                if (TargetMethod.ReturnType.IsValueType)
+                if (Method.ReturnType.IsValueType)
                 {
-                    Processor.Emit(OpCodes.Unbox_Any, TargetMethod.ReturnType);
+                    Processor.Emit(OpCodes.Unbox_Any, Method.ReturnType);
                 }
 
                 Processor.Emit(OpCodes.Ret);

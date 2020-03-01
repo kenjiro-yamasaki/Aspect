@@ -9,7 +9,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// ステートマシンへの注入。
     /// </summary>
-    public abstract class StateMachineInjector
+    public abstract class StateMachineRewriter
     {
         #region プロパティ
 
@@ -130,7 +130,7 @@ namespace SoftCube.Aspects
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
         /// <param name="aspectArgsType">アスペクト引数の型。</param>
-        public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
+        public StateMachineRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
         {
             AspectAttribute  = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
             AspectArgsType   = aspectArgsType ?? throw new ArgumentNullException(nameof(aspectArgsType));

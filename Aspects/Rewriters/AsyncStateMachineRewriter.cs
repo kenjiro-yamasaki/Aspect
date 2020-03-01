@@ -6,9 +6,9 @@ using System.Linq;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// 非同期ステートマシンへの注入。
+    /// 非同期ステートマシンの書き換え。
     /// </summary>
-    public class AsyncStateMachineInjector : StateMachineInjector
+    public class AsyncStateMachineRewriter : StateMachineRewriter
     {
         #region プロパティ
 
@@ -27,7 +27,7 @@ namespace SoftCube.Aspects
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
         /// <param name="aspectArgsType">アスペクト引数の型。</param>
-        public AsyncStateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
+        public AsyncStateMachineRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
             : base(targetMethod, aspectAttribute, aspectArgsType)
         {
         }

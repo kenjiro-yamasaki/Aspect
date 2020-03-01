@@ -7,9 +7,9 @@ using System.Linq;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// イテレーターステートマシンへの注入。
+    /// イテレーターステートマシンの書き換え。
     /// </summary>
-    public class IteratorStateMachineInjector : StateMachineInjector
+    public class IteratorStateMachineRewriter : StateMachineRewriter
     {
         #region プロパティ
 
@@ -45,7 +45,7 @@ namespace SoftCube.Aspects
         public MethodDefinition DisposeMethod => StateMachineType.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
 
         /// <summary>
-        /// Dispose メソッドの内容を移動したメソッド。
+        /// Dispose メソッドのコードをコピーしたメソッド。
         /// </summary>
         public MethodDefinition OriginalDisposeMethod { get; set; }
 
@@ -61,7 +61,7 @@ namespace SoftCube.Aspects
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
         /// <param name="aspectArgsType">アスペクト引数の型。</param>
-        public IteratorStateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
+        public IteratorStateMachineRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
             : base(targetMethod, aspectAttribute, aspectArgsType)
         {
             ExitFlagField    = CreateField("*exitFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
