@@ -39,109 +39,70 @@ namespace SoftCube.Aspects
 
             if (iteratorStateMachineAttribute != null)
             {
-                var iteratorStateMachineInjector = new IteratorStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
+                var stateMachineInjector = new IteratorStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
 
-                iteratorStateMachineInjector.NewAspectAttribute();
-                ReplaceMoveNextMethod(iteratorStateMachineInjector);
+                stateMachineInjector.NewAspectAttribute();
+                RewriteMoveNextMethod(stateMachineInjector);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var asyncStateMachineInjector = new AsyncStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
+                var stateMachineInjector = new AsyncStateMachineInjector(method, aspect, typeof(MethodExecutionArgs));
 
-                asyncStateMachineInjector.NewAspectAttribute();
-                ReplaceMoveNextMethod(asyncStateMachineInjector);
+                stateMachineInjector.NewAspectAttribute();
+                RewriteMoveNextMethod(stateMachineInjector);
             }
             else
             {
                 var methodInjector = new MethodInjector(method, aspect);
 
-                ReplaceMethod(methodInjector);
+                RewriteTargetMethod(methodInjector);
             }
         }
 
         #region 通常のメソッド
 
         /// <summary>
-        /// 対象メソッドを書き換えます。
+        /// ターゲットメソッドを書き換えます。
         /// </summary>
-        /// <param name="methodInjector">対象メソッドへの注入。</param>
-        private void ReplaceMethod(MethodInjector methodInjector)
+        /// <param name="methodInjector">ターゲットメソッドへの注入。</param>
+        private void RewriteTargetMethod(MethodInjector methodInjector)
         {
-            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            methodInjector.ReplaceMethod();
-
-            /// 対象メソッドのコードを書き換えます。
+            var onEntry = new Action<ILProcessor>(processor =>
             {
-                var method    = methodInjector.TargetMethod;
-                var module    = methodInjector.Module;
-                var processor = methodInjector.Processor;
-
-                /// 例外ハンドラーを追加します。
-                var handlers = method.Body.ExceptionHandlers;
-                var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
-                var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
-                handlers.Add(@catch);
-                handlers.Add(@finally);
-
                 /// var aspect     = new Aspect(...) {...};
                 /// var arguments  = new Arguments(...);
                 /// var aspectArgs = new MethodExecutionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnEntry(aspectArgs);
-                {
-                    methodInjector.CreateAspectVariable();
-                    methodInjector.CreateArgumentsVariable();
-                    methodInjector.CreateAspectArgsVariable(module.ImportReference(typeof(MethodExecutionArgs)));
-                    methodInjector.SetMethod();
-                    methodInjector.InvokeEventHandler(nameof(OnEntry));
-                }
+                methodInjector.NewAspectAttribute();
+                methodInjector.NewArguments();
+                methodInjector.NewAspectArgs(methodInjector.Module.ImportReference(typeof(MethodExecutionArgs)));
+                methodInjector.SetMethod();
+                methodInjector.InvokeEventHandler(nameof(OnEntry));
+            });
 
-                /// try
-                /// {
-                ///     aspectArgs.ReturnValue = OriginalMethod(...);
-                ///     aspect.OnSuccess(aspectArgs);
-                Instruction leave;
-                {
-                    @catch.TryStart = @finally.TryStart = processor.EmitNop();
-                    methodInjector.InvokeOriginalMethod();
-                    methodInjector.InvokeEventHandler(nameof(OnSuccess));
-                    methodInjector.SetAspectArguments(pointerOnly: true);
-                    leave = processor.EmitLeave(OpCodes.Leave);
-                }
+            var onSuccess = new Action<ILProcessor>(processor =>
+            {
+                /// aspect.OnSuccess(aspectArgs);
+                methodInjector.InvokeEventHandler(nameof(OnSuccess));
+                methodInjector.SetAspectArguments(pointerOnly: true);
+            });
 
-                /// }
-                /// catch (Exception ex)
-                /// {
-                ///     aspectArgs.Exception = ex;
-                ///     aspect.OnException(aspectArgs);
-                ///     throw;
-                {
-                    @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-                    methodInjector.SetException();
-                    methodInjector.InvokeEventHandler(nameof(OnException));
-                    processor.Emit(OpCodes.Rethrow);
-                }
+            var onException = new Action<ILProcessor>(processor =>
+            {
+                /// aspectArgs.Exception = ex;
+                /// aspect.OnException(aspectArgs);
+                methodInjector.SetException();
+                methodInjector.InvokeEventHandler(nameof(OnException));
+            });
 
-                /// }
-                /// finally
-                /// {
-                ///     aspect.OnExit(aspectArgs);
-                {
-                    @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                    methodInjector.InvokeEventHandler(nameof(OnExit));
-                    processor.Emit(OpCodes.Endfinally);
-                }
+            var onExit = new Action<ILProcessor>(processor =>
+            {
+                /// aspect.OnExit(aspectArgs);
+                methodInjector.InvokeEventHandler(nameof(OnExit));
+            });
 
-                /// }
-                /// return (TResult)aspectArgs.ReturnValue;
-                {
-                    leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    methodInjector.Return();
-                }
-
-                /// IL を最適化します。
-                method.Optimize();
-            }
+            methodInjector.RewriteTargetMethod(onEntry, onSuccess, onException, onExit);
         }
 
         #endregion
@@ -149,10 +110,10 @@ namespace SoftCube.Aspects
         #region イテレーターメソッド
 
         /// <summary>
-        /// <see cref="IEnumerator.MoveNext"/> を書き換えます。
+        /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="injector">イテレーターステートマシンへの注入。</param>
-        private void ReplaceMoveNextMethod(IteratorStateMachineInjector injector)
+        /// <param name="stateMachineInjector">イテレーターステートマシンへの注入。</param>
+        private void RewriteMoveNextMethod(IteratorStateMachineInjector stateMachineInjector)
         {
             var onEntry = new Action<ILProcessor>(processor =>
             {
@@ -161,9 +122,9 @@ namespace SoftCube.Aspects
                 /// _aspect.OnEntry(aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
-                injector.NewAspectArgs(processor);
-                injector.InvokeEventHandler(processor, nameof(OnEntry));
-                injector.SetArgumentFields(processor);
+                stateMachineInjector.NewAspectArgs(processor);
+                stateMachineInjector.InvokeEventHandler(processor, nameof(OnEntry));
+                stateMachineInjector.SetArgumentFields(processor);
             });
 
             var onResume = new Action<ILProcessor>(processor =>
@@ -171,8 +132,8 @@ namespace SoftCube.Aspects
                 /// _aspect.OnResume(aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
-                injector.InvokeEventHandler(processor, nameof(OnResume));
-                injector.SetArgumentFields(processor);
+                stateMachineInjector.InvokeEventHandler(processor, nameof(OnResume));
+                stateMachineInjector.SetArgumentFields(processor);
             });
 
             var onYield = new Action<ILProcessor>(processor =>
@@ -180,67 +141,67 @@ namespace SoftCube.Aspects
                 /// _aspectArgs.YieldValue = <> 2__current;
                 /// _aspect.OnYield(aspectArgs);
                 /// <>2__current = (TResult)aspectArgs.YieldValue;
-                SetYieldValue(processor, injector);
-                injector.InvokeEventHandler(processor, nameof(OnYield));
-                SetCurrentField(processor, injector);
+                SetYieldValue(processor, stateMachineInjector);
+                stateMachineInjector.InvokeEventHandler(processor, nameof(OnYield));
+                SetCurrentField(processor, stateMachineInjector);
             });
 
             var onSuccess = new Action<ILProcessor>(processor =>
             {
                 /// _aspect.OnSuccess(aspectArgs);
-                injector.InvokeEventHandler(processor, nameof(OnSuccess));
+                stateMachineInjector.InvokeEventHandler(processor, nameof(OnSuccess));
             });
 
             var onException = new Action<ILProcessor>(processor =>
             {
                 /// _aspectArgs.Exception = exception;
                 /// _aspect.OnException(aspectArgs);
-                injector.SetException(processor);
-                injector.InvokeEventHandler(processor, nameof(OnException));
+                stateMachineInjector.SetException(processor);
+                stateMachineInjector.InvokeEventHandler(processor, nameof(OnException));
             });
 
             var onExit = new Action<ILProcessor>(processor =>
             {
                 /// _aspect.OnExit(aspectArgs);
-                injector.InvokeEventHandler(processor, nameof(OnExit));
+                stateMachineInjector.InvokeEventHandler(processor, nameof(OnExit));
             });
 
-            injector.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            stateMachineInjector.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         /// <summary>
         /// AspectArgs.YieldValue フィールドに値を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        private void SetYieldValue(ILProcessor processor, IteratorStateMachineInjector injector)
+        private void SetYieldValue(ILProcessor processor, IteratorStateMachineInjector stateMachineInjector)
         {
             processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldfld, injector.AspectArgsField);
+            processor.Emit(OpCodes.Ldfld, stateMachineInjector.AspectArgsField);
             processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldfld, injector.CurrentField);
-            if (injector.CurrentField.FieldType.IsValueType)
+            processor.Emit(OpCodes.Ldfld, stateMachineInjector.CurrentField);
+            if (stateMachineInjector.CurrentField.FieldType.IsValueType)
             {
-                processor.Emit(OpCodes.Box, injector.CurrentField.FieldType);
+                processor.Emit(OpCodes.Box, stateMachineInjector.CurrentField.FieldType);
             }
-            processor.Emit(OpCodes.Call, injector.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
+            processor.Emit(OpCodes.Call, stateMachineInjector.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
         }
 
         /// <summary>
         /// Current フィールドに値を設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        private void SetCurrentField(ILProcessor processor, IteratorStateMachineInjector injector)
+        private void SetCurrentField(ILProcessor processor, IteratorStateMachineInjector stateMachineInjector)
         {
             processor.Emit(OpCodes.Ldarg_0);
 
             processor.Emit(OpCodes.Dup);
-            processor.Emit(OpCodes.Ldfld, injector.AspectArgsField);
-            processor.Emit(OpCodes.Call, injector.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetGetMethod()));
-            if (injector.CurrentField.FieldType.IsValueType)
+            processor.Emit(OpCodes.Ldfld, stateMachineInjector.AspectArgsField);
+            processor.Emit(OpCodes.Call, stateMachineInjector.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetGetMethod()));
+            if (stateMachineInjector.CurrentField.FieldType.IsValueType)
             {
-                processor.Emit(OpCodes.Unbox_Any, injector.CurrentField.FieldType);
+                processor.Emit(OpCodes.Unbox_Any, stateMachineInjector.CurrentField.FieldType);
             }
-            processor.Emit(OpCodes.Stfld, injector.CurrentField);
+            processor.Emit(OpCodes.Stfld, stateMachineInjector.CurrentField);
         }
 
         #endregion
@@ -248,10 +209,10 @@ namespace SoftCube.Aspects
         #region 非同期メソッド
 
         /// <summary>
-        /// <see cref="IAsyncStateMachine.MoveNext"> を書き換えます。
+        /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="injector">非同期ステートマシンへの注入。</param>
-        private void ReplaceMoveNextMethod(AsyncStateMachineInjector injector)
+        /// <param name="stateMachineInjector">非同期ステートマシンへの注入。</param>
+        private void RewriteMoveNextMethod(AsyncStateMachineInjector stateMachineInjector)
         {
             var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
@@ -262,9 +223,9 @@ namespace SoftCube.Aspects
                 /// arg0 = arguments.Arg0;
                 /// arg1 = arguments.Arg1;
                 /// ...
-                injector.NewAspectArgs(processor, insert);
-                injector.InvokeEventHandler(processor, insert, nameof(OnEntry));
-                injector.SetArgumentFields(processor, insert);
+                stateMachineInjector.NewAspectArgs(processor, insert);
+                stateMachineInjector.InvokeEventHandler(processor, insert, nameof(OnEntry));
+                stateMachineInjector.SetArgumentFields(processor, insert);
             });
 
             var onResume = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -273,14 +234,14 @@ namespace SoftCube.Aspects
                 /// arg0 = arguments.Arg0;
                 /// arg1 = arguments.Arg1;
                 /// ...
-                injector.InvokeEventHandler(processor, insert, nameof(OnResume));
-                injector.SetArgumentFields(processor, insert);
+                stateMachineInjector.InvokeEventHandler(processor, insert, nameof(OnResume));
+                stateMachineInjector.SetArgumentFields(processor, insert);
             });
 
             var onYield = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
                 /// aspect.OnYield(aspectArgs);
-                injector.InvokeEventHandler(processor, insert, nameof(OnYield));
+                stateMachineInjector.InvokeEventHandler(processor, insert, nameof(OnYield));
             });
 
             var onSuccess = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -289,26 +250,26 @@ namespace SoftCube.Aspects
                 /// aspect.OnSuccess(aspectArgs);
                 /// result = (TResult)aspectArgs.ReturnValue;
                 int resultVariable = 1;
-                injector.SetReturnValue(processor, insert, resultVariable);
-                injector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
-                injector.SetReturnVariable(processor, insert, resultVariable);
+                stateMachineInjector.SetReturnValue(processor, insert, resultVariable);
+                stateMachineInjector.InvokeEventHandler(processor, insert, nameof(OnSuccess));
+                stateMachineInjector.SetReturnVariable(processor, insert, resultVariable);
             });
 
             var onException = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
                 /// aspectArgs.Exception = exception;
                 /// aspect.OnException(aspectArgs);
-                injector.SetException(processor, insert);
-                injector.InvokeEventHandler(processor, insert, nameof(OnException));
+                stateMachineInjector.SetException(processor, insert);
+                stateMachineInjector.InvokeEventHandler(processor, insert, nameof(OnException));
             });
 
             var onExit = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
                 /// aspect.OnExit(aspectArgs);
-                injector.InvokeEventHandler(processor, insert, nameof(OnExit));
+                stateMachineInjector.InvokeEventHandler(processor, insert, nameof(OnExit));
             });
 
-            injector.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            stateMachineInjector.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion

@@ -214,7 +214,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Br, instructions.Last());
             }
 
-            /// IL を最適化します。
+            /// IL コードを最適化します。
             MoveNextMethod.Optimize();
         }
 

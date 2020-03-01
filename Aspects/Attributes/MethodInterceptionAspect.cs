@@ -77,7 +77,7 @@ namespace SoftCube.Aspects
         private void ReplaceMethod(MethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            methodInjector.ReplaceMethod();
+            methodInjector.CopyMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
@@ -87,9 +87,9 @@ namespace SoftCube.Aspects
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
                 /// aspect.OnInvoke(aspectArgs);
                 /// return (TResult)aspectArgs.ReturnValue;
-                methodInjector.CreateAspectVariable();
-                methodInjector.CreateArgumentsVariable();
-                methodInjector.CreateAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
+                methodInjector.NewAspectAttribute();
+                methodInjector.NewArguments();
+                methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
                 methodInjector.SetMethod();
                 methodInjector.InvokeEventHandler(nameof(OnInvoke));
                 methodInjector.SetAspectArguments(pointerOnly: true);
@@ -110,7 +110,7 @@ namespace SoftCube.Aspects
         private void ReplaceAsyncMethod(AsyncMethodInjector methodInjector, MethodInterceptionArgsInjector aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            methodInjector.ReplaceMethod();
+            methodInjector.CopyMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
@@ -118,9 +118,9 @@ namespace SoftCube.Aspects
                 /// var arguments  = new Arguments(...);
                 /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
                 /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-                methodInjector.CreateAspectVariable();
-                methodInjector.CreateArgumentsVariable();
-                methodInjector.CreateAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
+                methodInjector.NewAspectAttribute();
+                methodInjector.NewArguments();
+                methodInjector.NewAspectArgs(aspectArgsInjector.DerivedAspectArgsType);
                 methodInjector.SetMethod();
 
                 var taskType = methodInjector.TargetMethod.ReturnType;

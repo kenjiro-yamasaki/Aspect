@@ -282,7 +282,7 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ret);
                 }
 
-                /// IL を最適化します。
+                /// IL コードを最適化します。
                 moveNextMethod.Optimize();
             }
         }

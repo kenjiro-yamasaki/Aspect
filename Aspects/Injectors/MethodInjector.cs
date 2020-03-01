@@ -138,9 +138,84 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 新たなメソッドを生成し、ターゲットメソッドの内容を移動します。
+        /// ターゲットメソッドを書き換えます。
         /// </summary>
-        public void ReplaceMethod()
+        /// <param name="onEntry">OnEntory のアドバイス注入処理。</param>
+        /// <param name="onSuccess">OnSuccess のアドバイス注入処理。</param>
+        /// <param name="onException">OnException のアドバイス注入処理。</param>
+        /// <param name="onExit">OnExit のアドバイス注入処理。</param>
+        public void RewriteTargetMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
+        {
+            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
+            CopyMethod();
+
+            /// 対象メソッドのコードを書き換えます。
+            {
+                var method    = TargetMethod;
+                var module    = Module;
+                var processor = Processor;
+
+                /// 例外ハンドラーを追加します。
+                var handlers = method.Body.ExceptionHandlers;
+                var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
+                var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
+                handlers.Add(@catch);
+                handlers.Add(@finally);
+
+                /// onEntry();
+                {
+                    onEntry(processor);
+                }
+
+                /// try
+                /// {
+                ///     aspectArgs.ReturnValue = OriginalMethod(...);
+                ///     onSuccess();
+                Instruction leave;
+                {
+                    @catch.TryStart = @finally.TryStart = processor.EmitNop();
+                    InvokeOriginalMethod();
+                    onSuccess(processor);
+                    leave = processor.EmitLeave(OpCodes.Leave);
+                }
+
+                /// }
+                /// catch (Exception ex)
+                /// {
+                ///     onException();
+                ///     throw;
+                {
+                    @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
+                    onException(processor);
+                    processor.Emit(OpCodes.Rethrow);
+                }
+
+                /// }
+                /// finally
+                /// {
+                ///     onExit();
+                {
+                    @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
+                    onExit(processor);
+                    processor.Emit(OpCodes.Endfinally);
+                }
+
+                /// }
+                /// return (TResult)aspectArgs.ReturnValue;
+                {
+                    leave.Operand = @finally.HandlerEnd = processor.EmitNop();
+                    Return();
+                }
+
+                /// IL コードを最適化します。
+                method.Optimize();
+            }
+        }
+
+        /// <summary>
+        /// 新たなメソッドを生成し、ターゲットメソッドのコードをコピーします。
+        /// </summary>
+        public void CopyMethod()
         {
             Assert.Null(OriginalMethod);
 
@@ -163,7 +238,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// aspect ローカル変数のインスタンスを生成します。
         /// </summary>
-        public void CreateAspectVariable()
+        public void NewAspectAttribute()
         {
             Assert.Equal(AspectVariable, -1);
             AspectVariable = Processor.EmitCreateAspectCode(Aspect);
@@ -172,7 +247,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// arguments ローカル変数のインスタンスを生成します。
         /// </summary>
-        public void CreateArgumentsVariable()
+        public void NewArguments()
         {
             Assert.Equal(ArgumentsVariable, -1);
 
@@ -262,7 +337,7 @@ namespace SoftCube.Aspects
         /// aspectArgs ローカル変数のインスタンスを生成します。
         /// </summary>
         /// <param name="aspectArgsType">AspectArgs の型参照。</param>
-        public void CreateAspectArgsVariable(TypeReference aspectArgsType)
+        public void NewAspectArgs(TypeReference aspectArgsType)
         {
             Assert.Equal(AspectArgsVariable, -1);
             Assert.NotEqual(ArgumentsVariable, -1);
