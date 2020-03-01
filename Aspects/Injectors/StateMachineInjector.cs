@@ -128,10 +128,10 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspect)
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
-            Aspect           = aspect ?? throw new ArgumentNullException(nameof(aspect));
+            Aspect           = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
             AspectType       = Aspect.AttributeType.Resolve();
             TargetMethod     = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
             Module           = TargetMethod.Module;
@@ -154,7 +154,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 新たなメソッドを生成し、MoveNext メソッドの内容を移動します。
         /// </summary>
-        public void ReplaceMoveNext()
+        public void ReplaceMoveNextMethod()
         {
             Assert.Null(OriginalMoveNextMethod);
 

@@ -43,7 +43,6 @@ namespace SoftCube.Aspects
 
                 iteratorStateMachineInjector.CreateAspectInstance();
                 ReplaceMoveNextMethod(iteratorStateMachineInjector);
-                ReplaceDisposeMethod(iteratorStateMachineInjector);
             }
             else if (asyncStateMachineAttribute != null)
             {
@@ -155,305 +154,58 @@ namespace SoftCube.Aspects
         /// <param name="injector">イテレーターステートマシンへの注入。</param>
         private void ReplaceMoveNextMethod(IteratorStateMachineInjector injector)
         {
-            /// 新たなメソッドを生成し、MoveNext メソッドの内容を移動します。
-            injector.ReplaceMoveNext();
-
-            /// 元々の MoveNext メソッドを書き換えます。
+            var onEntry = new Action<ILProcessor>(processor =>
             {
-                var module = injector.Module;
+                /// _arguments  = new Arguments(...);
+                /// _aspectArgs = new MethodExecutionArgs(instance, arguments);
+                /// _aspect.OnEntry(aspectArgs);
+                /// arg0 = _arguments.Arg0;
+                /// arg1 = _arguments.Arg1;
+                injector.CreateAspectArgsInstance(processor);
+                injector.InvokeEventHandler(processor, nameof(OnEntry));
+                injector.SetArgumentFields(processor);
+            });
 
-                var moveNextMethod = injector.MoveNextMethod;
-                moveNextMethod.Body = new MethodBody(moveNextMethod);
-
-                /// ローカル変数を追加します。
-                var variables = moveNextMethod.Body.Variables;
-
-                int exitVariable = variables.Count;
-                variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
-
-                /// 例外ハンドラーを追加します。
-                var handlers = moveNextMethod.Body.ExceptionHandlers;
-                var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
-                var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
-                handlers.Add(@catch);
-                handlers.Add(@finally);
-
-                var processor = moveNextMethod.Body.GetILProcessor();
-
-                /// if (!exitFlag && isDisposing == 0)
-                /// {
-                ///     if (!resumeFlag)
-                ///     {
-                ///         arguments = new Arguments(...);
-                ///         aspectArgs = new MethodExecutionArgs(instance, arguments);
-                ///         aspect.OnEntry(aspectArgs);
-                ///         resumeFlag = true;
-                ///     }
-                ///     else
-                ///     {
-                ///         aspect.OnResume(aspectArgs);
-                ///     }
-                ///     arg0 = arguments.Arg0;
-                ///     arg1 = arguments.Arg1;
-                ///     ...
-                /// }
-                {
-                    var branch = new Instruction[4];
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
-                    branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
-                    branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
-                    branch[2] = processor.EmitBranch(OpCodes.Brtrue_S);
-
-                    injector.CreateAspectArgsInstance(processor);
-                    injector.InvokeEventHandler(processor, nameof(OnEntry));
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldc_I4_1);
-                    processor.Emit(OpCodes.Stfld, injector.ResumeFlagField);
-                    branch[3] = processor.EmitBranch(OpCodes.Br_S);
-
-                    branch[2].Operand = processor.EmitNop();
-                    injector.InvokeEventHandler(processor, nameof(OnResume));
-
-                    branch[3].Operand = processor.EmitNop();
-                    injector.SetArgumentFields(processor);
-
-                    branch[0].Operand = branch[1].Operand = processor.EmitNop();
-                }
-
-                /// bool exit;
-                /// try
-                /// {
-                ///     exit = true;
-                ///     bool result;
-                ///     if (isDisposing != 2)
-                ///     {
-                ///         result = MoveNext<Original>();
-                ///     }
-                ///     exit = isDisposing != 0 || !result;
-                ///     if (!exitFlag && resumeFlag)
-                ///     {
-                ///         if (exit)
-                ///         {
-                ///             aspect.OnSuccess(aspectArgs);
-                ///         }
-                ///         else
-                ///         {
-                ///             aspectArgs.YieldValue = <> 2__current;
-                ///             aspect.OnYield(aspectArgs);
-                ///             <>2__current = (TResult)aspectArgs.YieldValue;
-                ///         }
-                ///     }
-                Instruction leave;
-                {
-                    var branch = new Instruction[8];
-
-                    @catch.TryStart = @finally.TryStart = processor.EmitNop();
-
-                    processor.Emit(OpCodes.Ldc_I4_1);
-                    processor.Emit(OpCodes.Stloc, exitVariable);
-
-                    int resultVariable = variables.Count;
-                    variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
-                    processor.Emit(OpCodes.Ldc_I4_2);
-                    branch[0] = processor.EmitBranch(OpCodes.Beq_S);
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, injector.OriginalMoveNextMethod);
-                    processor.Emit(OpCodes.Stloc, resultVariable);
-
-                    branch[0].Operand = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
-                    branch[1] = processor.EmitBranch(OpCodes.Brtrue_S);
-
-                    processor.Emit(OpCodes.Ldloc, resultVariable);
-                    branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
-
-                    processor.Emit(OpCodes.Ldc_I4_0);
-                    processor.Emit(OpCodes.Stloc, exitVariable);
-                    branch[3] = processor.EmitBranch(OpCodes.Br_S);
-
-                    branch[1].Operand = branch[2].Operand = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldc_I4_1);
-                    processor.Emit(OpCodes.Stloc, exitVariable);
-
-                    branch[3].Operand = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
-                    branch[4] = processor.EmitBranch(OpCodes.Brtrue_S);
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
-                    branch[5] = processor.EmitBranch(OpCodes.Brfalse_S);
-
-                    processor.Emit(OpCodes.Ldloc, exitVariable);
-                    branch[6] = processor.EmitBranch(OpCodes.Brfalse_S);
-
-                    injector.InvokeEventHandler(processor, nameof(OnSuccess));
-                    branch[7] = processor.EmitBranch(OpCodes.Br_S);
-
-                    branch[6].Operand = processor.EmitNop();
-                    injector.SetYieldValue(processor);
-                    injector.InvokeEventHandler(processor, nameof(OnYield));
-                    injector.SetCurrentField(processor);
-
-                    branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
-                }
-
-                /// }
-                /// catch (Exception exception)
-                /// {
-                ///     aspectArgs.Exception = exception;
-                ///     aspect.OnException(aspectArgs);
-                ///     throw;
-                {
-                    @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-                    injector.SetException(processor);
-                    injector.InvokeEventHandler(processor, nameof(OnException));
-                    processor.Emit(OpCodes.Rethrow);
-                }
-
-                /// }
-                /// finally
-                /// {
-                ///     if (!exitFlag && resumeFlag && exit)
-                ///     {
-                ///         exitFlag = true;
-                ///         aspect.OnExit(aspectArgs);
-                ///     }
-                {
-                    var branch = new Instruction[3];
-
-                    @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.ExitFlagField);
-                    branch[0] = processor.EmitBranch(OpCodes.Brtrue_S);
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.ResumeFlagField);
-                    branch[1] = processor.EmitBranch(OpCodes.Brfalse_S);
-
-                    processor.Emit(OpCodes.Ldloc, exitVariable);
-                    branch[2] = processor.EmitBranch(OpCodes.Brfalse_S);
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldc_I4_1);
-                    processor.Emit(OpCodes.Stfld, injector.ExitFlagField);
-
-                    injector.InvokeEventHandler(processor, nameof(OnExit));
-
-                    branch[0].Operand = branch[1].Operand = branch[2].Operand = processor.EmitNop();
-                    processor.Emit(OpCodes.Endfinally);
-                }
-
-                /// }
-                /// return !exit;
-                {
-                    int resultVariable = variables.Count;
-                    variables.Add(new VariableDefinition(module.TypeSystem.Boolean));
-
-                    leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldloc, exitVariable);
-                    processor.Emit(OpCodes.Ldc_I4_0);
-                    processor.Emit(OpCodes.Ceq);
-                    processor.Emit(OpCodes.Stloc, resultVariable);
-                    processor.Emit(OpCodes.Ldloc, resultVariable);
-                    processor.Emit(OpCodes.Ret);
-                }
-
-                /// IL を最適化します。
-                moveNextMethod.Optimize();
-            }
-        }
-
-        /// <summary>
-        /// <see cref="IDisposable.Dispose"/> を書き換えます。
-        /// </summary>
-        /// <param name="injector">イテレーターステートマシンへの注入。</param>
-        private void ReplaceDisposeMethod(IteratorStateMachineInjector injector)
-        {
-            /// 新たなメソッドを生成し、Dispose メソッドの内容を移動します。
-            injector.ReplaceDispose();
-
-            /// Dispose のメソッドを書き換えます。
+            var onResume = new Action<ILProcessor>(processor =>
             {
-                var disposeMethod = injector.DisposeMethod;
-                disposeMethod.Body = new MethodBody(disposeMethod);
+                /// _aspect.OnResume(aspectArgs);
+                /// arg0 = _arguments.Arg0;
+                /// arg1 = _arguments.Arg1;
+                injector.InvokeEventHandler(processor, nameof(OnResume));
+                injector.SetArgumentFields(processor);
+            });
 
-                /// 例外ハンドラーを追加します。
-                var handlers = disposeMethod.Body.ExceptionHandlers;
-                var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
-                handlers.Add(@finally);
+            var onYield = new Action<ILProcessor>(processor =>
+            {
+                /// _aspectArgs.YieldValue = <> 2__current;
+                /// _aspect.OnYield(aspectArgs);
+                /// <>2__current = (TResult)aspectArgs.YieldValue;
+                injector.SetYieldValue(processor);
+                injector.InvokeEventHandler(processor, nameof(OnYield));
+                injector.SetCurrentField(processor);
+            });
 
-                var processor = disposeMethod.Body.GetILProcessor();
+            var onSuccess = new Action<ILProcessor>(processor =>
+            {
+                /// _aspect.OnSuccess(aspectArgs);
+                injector.InvokeEventHandler(processor, nameof(OnSuccess));
+            });
 
-                /// if (isDisposing == 0)
-                /// {
-                ///     isDisposing = 1;
-                {
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldfld, injector.IsDisposingField);
-                    var branch = processor.EmitBranch(OpCodes.Brfalse_S);
-                    processor.Emit(OpCodes.Ret);
+            var onException = new Action<ILProcessor>(processor =>
+            {
+                /// _aspectArgs.Exception = exception;
+                /// _aspect.OnException(aspectArgs);
+                injector.SetException(processor);
+                injector.InvokeEventHandler(processor, nameof(OnException));
+            });
 
-                    branch.Operand = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldc_I4_1);
-                    processor.Emit(OpCodes.Stfld, injector.IsDisposingField);
-                }
+            var onExit = new Action<ILProcessor>(processor =>
+            {
+                /// _aspect.OnExit(aspectArgs);
+                injector.InvokeEventHandler(processor, nameof(OnExit));
+            });
 
-                ///     try
-                ///     {
-                ///         System.IDisposable.Dispose<Original>();
-                Instruction leave;
-                {
-                    @finally.TryStart = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, injector.OriginalDisposeMethod);
-                    leave = processor.EmitLeave(OpCodes.Leave_S);
-                }
-
-                ///     }
-                ///     finally
-                ///     {
-                ///         isDisposing = 2;
-                ///         MoveNext();
-                ///         isDisposing = 0;
-                {
-                    @finally.HandlerStart = @finally.TryEnd = processor.EmitNop();
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldc_I4_2);
-                    processor.Emit(OpCodes.Stfld, injector.IsDisposingField);
-
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Callvirt, injector.MoveNextMethod);
-
-                    processor.Emit(OpCodes.Pop);
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Ldc_I4_0);
-                    processor.Emit(OpCodes.Stfld, injector.IsDisposingField);
-                    processor.Emit(OpCodes.Endfinally);
-                }
-
-                ///     }
-                /// }
-                {
-                    leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    processor.Emit(OpCodes.Ret);
-                }
-            }
+            injector.ReplaceMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion
