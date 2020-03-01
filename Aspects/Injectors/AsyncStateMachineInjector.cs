@@ -37,10 +37,15 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// <see cref="IAsyncStateMachine.MoveNext"> を書き換えます。
+        /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="injector">非同期ステートマシンへの注入。</param>
-        public void InjectMoveNextMethod(Action<ILProcessor, Instruction> onEntry, Action<ILProcessor, Instruction> onResume, Action<ILProcessor, Instruction> onYield, Action<ILProcessor, Instruction> onSuccess, Action<ILProcessor, Instruction> onException, Action<ILProcessor, Instruction> onExit)
+        /// <param name="onEntry">OnEntory のアドバイス注入処理。</param>
+        /// <param name="onResume">OnResume のアドバイス注入処理。</param>
+        /// <param name="onYield">OnYield のアドバイス注入処理。</param>
+        /// <param name="onSuccess">OnSuccess のアドバイス注入処理。</param>
+        /// <param name="onException">OnException のアドバイス注入処理。</param>
+        /// <param name="onExit">OnExit のアドバイス注入処理。</param>
+        public void RewriteMoveNextMethod(Action<ILProcessor, Instruction> onEntry, Action<ILProcessor, Instruction> onResume, Action<ILProcessor, Instruction> onYield, Action<ILProcessor, Instruction> onSuccess, Action<ILProcessor, Instruction> onException, Action<ILProcessor, Instruction> onExit)
         {
             var processor    = MoveNextMethod.Body.GetILProcessor();
             var instructions = MoveNextMethod.Body.Instructions;

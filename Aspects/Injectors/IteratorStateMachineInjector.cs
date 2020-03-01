@@ -47,7 +47,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// Dispose メソッドの内容を移動したメソッド。
         /// </summary>
-        public MethodDefinition CopiedDisposeMethod { get; set; }
+        public MethodDefinition OriginalDisposeMethod { get; set; }
 
         #endregion
 
@@ -67,7 +67,7 @@ namespace SoftCube.Aspects
             ExitFlagField    = CreateField("*exitFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
             IsDisposingField = CreateField("*isDisposing*", FieldAttributes.Private, Module.TypeSystem.Int32);
 
-            InjectDisposeMethod();
+            RewriteDisposeMethod();
         }
 
         #endregion
@@ -75,15 +75,15 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// MoveNext メソッドにアドバイスを注入します。
+        /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="onEntry">OnEntory の注入処理。</param>
-        /// <param name="onResume">OnResume の注入処理。</param>
-        /// <param name="onYield">OnYield の注入処理。</param>
-        /// <param name="onSuccess">OnSuccess の注入処理。</param>
-        /// <param name="onException">OnException の注入処理。</param>
-        /// <param name="onExit">OnExit の注入処理。</param>
-        public void InjectMoveNextMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onResume, Action<ILProcessor> onYield, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
+        /// <param name="onEntry">OnEntory のアドバイス注入処理。</param>
+        /// <param name="onResume">OnResume のアドバイス注入処理。</param>
+        /// <param name="onYield">OnYield のアドバイス注入処理。</param>
+        /// <param name="onSuccess">OnSuccess のアドバイス注入処理。</param>
+        /// <param name="onException">OnException のアドバイス注入処理。</param>
+        /// <param name="onExit">OnExit のアドバイス注入処理。</param>
+        public void RewriteMoveNextMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onResume, Action<ILProcessor> onYield, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
         {
             /// 新たなメソッドを生成し、MoveNext メソッドのコードをコピーします。
             CopyMoveNextMethod();
@@ -186,7 +186,7 @@ namespace SoftCube.Aspects
                     branch[0] = processor.EmitBranch(OpCodes.Beq_S);
 
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, CopiedMoveNextMethod);
+                    processor.Emit(OpCodes.Call, OriginalMoveNextMethod);
                     processor.Emit(OpCodes.Stloc, resultVariable);
 
                     branch[0].Operand = processor.EmitNop();
@@ -288,9 +288,9 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Dispose メソッドにアドバイスを注入します。
+        /// Dispose メソッドを書き換えます。
         /// </summary>
-        private void InjectDisposeMethod()
+        private void RewriteDisposeMethod()
         {
             /// 新たな Dispose メソッドを生成し、Dispose メソッドのコードをコピーします。
             CopyDisposeMethod();
@@ -329,7 +329,7 @@ namespace SoftCube.Aspects
                 {
                     @finally.TryStart = processor.EmitNop();
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, CopiedDisposeMethod);
+                    processor.Emit(OpCodes.Call, OriginalDisposeMethod);
                     leave = processor.EmitLeave(OpCodes.Leave_S);
                 }
 
@@ -370,21 +370,21 @@ namespace SoftCube.Aspects
         private void CopyDisposeMethod()
         {
             Assert.NotNull(DisposeMethod);
-            Assert.Null(CopiedDisposeMethod);
+            Assert.Null(OriginalDisposeMethod);
 
-            CopiedDisposeMethod = new MethodDefinition(DisposeMethod.Name + "<Original>", DisposeMethod.Attributes, DisposeMethod.ReturnType);
+            OriginalDisposeMethod = new MethodDefinition(DisposeMethod.Name + "<Original>", DisposeMethod.Attributes, DisposeMethod.ReturnType);
             foreach (var parameter in DisposeMethod.Parameters)
             {
-                CopiedDisposeMethod.Parameters.Add(parameter);
+                OriginalDisposeMethod.Parameters.Add(parameter);
             }
 
-            CopiedDisposeMethod.Body = DisposeMethod.Body;
+            OriginalDisposeMethod.Body = DisposeMethod.Body;
             foreach (var sequencePoint in DisposeMethod.DebugInformation.SequencePoints)
             {
-                CopiedDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                OriginalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            StateMachineType.Methods.Add(CopiedDisposeMethod);
+            StateMachineType.Methods.Add(OriginalDisposeMethod);
         }
 
         #endregion

@@ -19,11 +19,6 @@ namespace SoftCube.Aspects
         public CustomAttribute AspectAttribute { get; }
 
         /// <summary>
-        /// アスペクト属性の型。
-        /// </summary>
-        public TypeDefinition AspectAttributeType { get; }
-
-        /// <summary>
         /// アスペクト引数の型。
         /// </summary>
         public Type AspectArgsType { get; }
@@ -121,7 +116,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// MoveNext メソッドのコードをコピーしたメソッド。
         /// </summary>
-        public MethodDefinition CopiedMoveNextMethod { get; private set; }
+        public MethodDefinition OriginalMoveNextMethod { get; private set; }
 
         #endregion
 
@@ -137,21 +132,20 @@ namespace SoftCube.Aspects
         /// <param name="aspectArgsType">アスペクト引数の型。</param>
         public StateMachineInjector(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
         {
-            AspectAttribute     = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
-            AspectAttributeType = AspectAttribute.AttributeType.Resolve();
-            AspectArgsType      = aspectArgsType ?? throw new ArgumentNullException(nameof(aspectArgsType));
-            TargetMethod        = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
-            Module              = TargetMethod.Module;
-            StateMachineType    = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
+            AspectAttribute  = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
+            AspectArgsType   = aspectArgsType ?? throw new ArgumentNullException(nameof(aspectArgsType));
+            TargetMethod     = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
+            Module           = TargetMethod.Module;
+            StateMachineType = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
 
-            StateField          = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
-            AspectField         = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(AspectAttribute.AttributeType));
-            AspectArgsField     = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(AspectArgsType));
-            ArgumentsField      = CreateField("*arguments*",  FieldAttributes.Private, Module.ImportReference(ArgumentsType));
-            ResumeFlagField     = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
+            StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
+            AspectField      = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(AspectAttribute.AttributeType));
+            AspectArgsField  = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(AspectArgsType));
+            ArgumentsField   = CreateField("*arguments*",  FieldAttributes.Private, Module.ImportReference(ArgumentsType));
+            ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
-            Constructor         = StateMachineType.Methods.Single(m => m.Name == ".ctor");
-            MoveNextMethod      = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
+            Constructor      = StateMachineType.Methods.Single(m => m.Name == ".ctor");
+            MoveNextMethod   = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }
 
         #endregion
@@ -163,24 +157,24 @@ namespace SoftCube.Aspects
         /// </summary>
         public void CopyMoveNextMethod()
         {
-            Assert.Null(CopiedMoveNextMethod);
+            Assert.Null(OriginalMoveNextMethod);
 
             var moveNextMethod = MoveNextMethod;
 
-            CopiedMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
+            OriginalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
             foreach (var parameter in moveNextMethod.Parameters)
             {
-                CopiedMoveNextMethod.Parameters.Add(parameter);
+                OriginalMoveNextMethod.Parameters.Add(parameter);
             }
 
-            CopiedMoveNextMethod.Body = moveNextMethod.Body;
+            OriginalMoveNextMethod.Body = moveNextMethod.Body;
 
             foreach (var sequencePoint in moveNextMethod.DebugInformation.SequencePoints)
             {
-                CopiedMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                OriginalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
 
-            StateMachineType.Methods.Add(CopiedMoveNextMethod);
+            StateMachineType.Methods.Add(OriginalMoveNextMethod);
         }
 
         /// <summary>
@@ -382,7 +376,7 @@ namespace SoftCube.Aspects
             processor.InsertBefore(insert, OpCodes.Ldarg_0);
             processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
 
-            var aspectType = AspectAttributeType;
+            var aspectType = AspectAttribute.AttributeType.Resolve();
             while (true)
             {
                 var eventHandler = aspectType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);

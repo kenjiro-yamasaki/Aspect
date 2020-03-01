@@ -205,7 +205,7 @@ namespace SoftCube.Aspects
                 injector.InvokeEventHandler(processor, nameof(OnExit));
             });
 
-            injector.InjectMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            injector.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         /// <summary>
@@ -308,7 +308,7 @@ namespace SoftCube.Aspects
                 injector.InvokeEventHandler(processor, insert, nameof(OnExit));
             });
 
-            injector.InjectMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            injector.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion
