@@ -88,7 +88,7 @@ namespace SoftCube.Aspects
 
             var onInvoke = new Action<ILProcessor>(_ =>
             {
-                /// var returnValue = Method(arg0, arg1);
+                /// var returnValue = OriginalMethod(arg0, arg1, ...);
                 /// aspectArgs.ReturnValue = returnValue;
                 /// arguments[0] = arg0;
                 /// arguments[1] = arg1;
@@ -109,7 +109,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Rethrow);
             });
 
-            var onFinally = new Action<ILProcessor>(_ =>
+            var onExit = new Action<ILProcessor>(_ =>
             {
                 /// arg0 = (TArg0)arguments[0];
                 /// arg1 = (TArg1)arguments[1];
@@ -125,7 +125,7 @@ namespace SoftCube.Aspects
                 rewriter.ReturnProperty();
             });
 
-            rewriter.RewriteMethod(onEntry, onInvoke, onException, onFinally, onReturn);
+            rewriter.RewriteMethod(onEntry, onInvoke, onException, onExit, onReturn);
         }
 
         #endregion

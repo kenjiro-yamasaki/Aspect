@@ -143,7 +143,7 @@ namespace SoftCube.Aspects
         /// <param name="onEntry">OnEntory アドバイスの注入処理。</param>
         /// <param name="onInvoke">OnInvoke アドバイスの注入処理。</param>
         /// <param name="onException">OnException アドバイスの注入処理。</param>
-        /// <param name="onFinally">OnFinally アドバイスの注入処理。</param>
+        /// <param name="onExit">OnFinally アドバイスの注入処理。</param>
         /// <remarks>
         /// メソッドを以下のように書き換えます。
         /// <code>
@@ -163,7 +163,7 @@ namespace SoftCube.Aspects
         /// ...OnReturn アドバイス...
         /// </code>
         /// </remarks>
-        public void RewriteMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onInvoke, Action<ILProcessor> onException, Action<ILProcessor> onFinally, Action<ILProcessor> onReturn)
+        public void RewriteMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onInvoke, Action<ILProcessor> onException, Action<ILProcessor> onExit, Action<ILProcessor> onReturn)
         {
             var method = TargetMethod;
             var module = Module;
@@ -207,7 +207,7 @@ namespace SoftCube.Aspects
             /// }
             {
                 @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                onFinally(processor);
+                onExit(processor);
                 processor.Emit(OpCodes.Endfinally);
             }
 
@@ -585,6 +585,8 @@ namespace SoftCube.Aspects
         /// </summary>
         public void UpdateExceptionProperty()
         {
+            Assert.NotEqual(AspectArgsVariable, -1);
+
             int exceptionVariable = Variables.Count;
             Variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
 
