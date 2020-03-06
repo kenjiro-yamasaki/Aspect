@@ -90,7 +90,7 @@ namespace SoftCube.Aspects
                 rewriter.NewAspectAttributeVariable();
                 rewriter.NewArgumentsVariable();
                 rewriter.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
-                rewriter.UpdateMethodProperty();
+                rewriter.StoreMethodProperty(rewriter.LoadTargetMethod);
                 rewriter.InvokeAspectHandler(nameof(OnInvoke));
                 rewriter.UpdateArguments(pointerOnly: true);
                 rewriter.ReturnProperty();
@@ -121,7 +121,7 @@ namespace SoftCube.Aspects
                 methodInjector.NewAspectAttributeVariable();
                 methodInjector.NewArgumentsVariable();
                 methodInjector.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
-                methodInjector.UpdateMethodProperty();
+                methodInjector.StoreMethodProperty(methodInjector.LoadTargetMethod);
 
                 var taskType = methodInjector.TargetMethod.ReturnType;
                 if (taskType is GenericInstanceType genericInstanceType)

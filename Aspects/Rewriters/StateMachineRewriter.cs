@@ -188,11 +188,17 @@ namespace SoftCube.Aspects
         public void NewAspectAttribute()
         {
             var processor    = Constructor.Body.GetILProcessor();
+            var variables    = Constructor.Body.Variables;
             var instructions = Constructor.Body.Instructions;
             var first        = instructions.First();
 
             /// アスペクト属性のインスタンスを生成し、ローカル変数にストアします。
-            var aspectAttributeVariable = processor.InsertNewAspectAttributeBefore(first, AspectAttribute);
+            var aspectAttributeVariable = Constructor.Body.Variables.Count();
+            var attributeType = AspectAttribute.AttributeType.ToSystemType();
+            variables.Add(new VariableDefinition(Module.ImportReference(attributeType)));
+
+            processor.InsertNewAspectAttributeBefore(first, AspectAttribute);
+            processor.InsertBefore(first, OpCodes.Stloc, aspectAttributeVariable);
 
             /// アスペクト属性のインスタンスをフィールドにストアします。
             processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));

@@ -112,9 +112,9 @@ namespace SoftCube.Aspects
         protected int AspectArgsVariable { get; set; } = -1;
 
         /// <summary>
-        /// 戻り値のローカル変数。
+        /// 例外のローカル変数。
         /// </summary>
-        protected int ReturnValueVariable { get; set; } = -1;
+        protected int ExceptionVariable { get; set; } = -1;
 
         #endregion
 
@@ -198,6 +198,11 @@ namespace SoftCube.Aspects
             /// }
             {
                 @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
+
+                ExceptionVariable = Variables.Count;
+                Variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
+                Processor.Emit(OpCodes.Stloc, ExceptionVariable);
+
                 onException(processor);
             }
 
@@ -254,7 +259,13 @@ namespace SoftCube.Aspects
         public void NewAspectAttributeVariable()
         {
             Assert.Equal(AspectAttributeVariable, -1);
-            AspectAttributeVariable = Processor.EmitCreateAspectCode(AspectAttribute);
+
+            AspectAttributeVariable = Variables.Count();
+            var attributeType = AspectAttribute.AttributeType.ToSystemType();
+            Variables.Add(new VariableDefinition(Module.ImportReference(attributeType)));
+
+            Processor.EmitNewAspectAttribute(AspectAttribute);
+            Processor.Emit(OpCodes.Stloc, AspectAttributeVariable);
         }
 
         /// <summary>
@@ -366,16 +377,6 @@ namespace SoftCube.Aspects
 
             Processor.Emit(OpCodes.Newobj, Module.ImportReference(aspectArgsType.Resolve().Methods.Single(m => m.Name == ".ctor")));
             Processor.Emit(OpCodes.Stloc, AspectArgsVariable);
-        }
-
-        /// <summary>
-        /// AspectArgs.Method にメソッド情報を設定します。
-        /// </summary>
-        public void UpdateMethodProperty()
-        {
-            Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
-            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Method)).GetSetMethod()));
         }
 
         /// <summary>
@@ -581,54 +582,60 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs.ReturnValue を更新します。
+        /// ターゲットメソッド情報をロードします。
         /// </summary>
-        public void UpdateExceptionProperty()
+        public void LoadTargetMethod()
+        {
+            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodBase).GetMethod(nameof(MethodBase.GetCurrentMethod), new Type[] { })));
+        }
+
+        /// <summary>
+        /// 例外ローカル変数をロードします。
+        /// </summary>
+        public void LoadExceptionVariable()
+        {
+            Processor.Emit(OpCodes.Ldloc, ExceptionVariable);
+        }
+
+        /// <summary>
+        /// AspectArgs.Method にメソッド情報をストアします。
+        /// </summary>
+        /// <param name="load">値のロード。</param>
+        public void StoreMethodProperty(Action load)
+        {
+            Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+            load();
+            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Method)).GetSetMethod()));
+        }
+
+        /// <summary>
+        /// AspectArgs.ReturnValue をストアします。
+        /// </summary>
+        /// <param name="load">値のロード。</param>
+        public void StoreExceptionProperty(Action load)
         {
             Assert.NotEqual(AspectArgsVariable, -1);
 
-            int exceptionVariable = Variables.Count;
-            Variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
-
-            Processor.Emit(OpCodes.Stloc, exceptionVariable);
-
             Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-            Processor.Emit(OpCodes.Ldloc, exceptionVariable);
+            load();
             Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
         }
 
         /// <summary>
-        /// 戻り値を更新します。
+        /// AspectArgs.ReturnValue をストアします。
         /// </summary>
-        public void UpdateReturnValueVariable()
+        /// <param name="load">値のロード。</param>
+        public void StoreReturnValueProperty(Action load)
         {
-            if (TargetMethod.HasReturnValue())
-            {
-                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-                Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetGetMethod()));
-                if (TargetMethod.ReturnType.IsValueType)
-                {
-                    Processor.Emit(OpCodes.Unbox_Any, TargetMethod.ReturnType);
-                }
-                Processor.Emit(OpCodes.Stloc, ReturnValueVariable);
-            }
-        }
+            Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
 
-        /// <summary>
-        /// AspectArgs.ReturnValue を更新します。
-        /// </summary>
-        public void UpdateReturnValueProperty()
-        {
-            if (TargetMethod.HasReturnValue())
+            load();
+            if (TargetMethod.ReturnType.IsValueType)
             {
-                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
-                Processor.Emit(OpCodes.Ldloc, ReturnValueVariable);
-                if (TargetMethod.ReturnType.IsValueType)
-                {
-                    Processor.Emit(OpCodes.Box, TargetMethod.ReturnType);
-                }
-                Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
+                Processor.Emit(OpCodes.Box, TargetMethod.ReturnType);
             }
+
+            Processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
         }
 
         /// <summary>
@@ -693,15 +700,6 @@ namespace SoftCube.Aspects
                 }
             }
             Processor.Emit(OpCodes.Call, OriginalTargetMethod);
-
-            /// 戻り値をローカル変数にストアします。
-            if (TargetMethod.HasReturnValue())
-            {
-                ReturnValueVariable = Variables.Count;
-                Variables.Add(new VariableDefinition(Module.ImportReference(TargetMethod.ReturnType)));
-
-                Processor.Emit(OpCodes.Stloc, ReturnValueVariable);
-            }
         }
 
         /// <summary>
@@ -718,22 +716,6 @@ namespace SoftCube.Aspects
                     Processor.Emit(OpCodes.Unbox_Any, TargetMethod.ReturnType);
                 }
 
-                Processor.Emit(OpCodes.Ret);
-            }
-            else
-            {
-                Processor.Emit(OpCodes.Ret);
-            }
-        }
-
-        /// <summary>
-        /// 戻り値を戻します。
-        /// </summary>
-        public void ReturnVariable()
-        {
-            if (TargetMethod.HasReturnValue())
-            {
-                Processor.Emit(OpCodes.Ldloc, ReturnValueVariable);
                 Processor.Emit(OpCodes.Ret);
             }
             else

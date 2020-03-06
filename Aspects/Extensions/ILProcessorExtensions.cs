@@ -470,19 +470,14 @@ namespace SoftCube.Aspects
         /// <param name="insert">命令。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
         /// <returns>アスペクト属性の変数インデックス。</returns>
-        internal static int InsertNewAspectAttributeBefore(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
+        internal static void InsertNewAspectAttributeBefore(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
         {
             var method       = processor.Body.Method;
             var module       = method.DeclaringType.Module.Assembly.MainModule;
             var instructions = method.Body.Instructions;
 
-            /// ローカル変数を追加します。
-            var variables      = method.Body.Variables;
-            var attributeIndex = variables.Count();
-            var attributeType  = aspectAttribute.AttributeType.ToSystemType();
-            variables.Add(new VariableDefinition(module.ImportReference(attributeType)));
-
             /// 属性を生成して、ローカル変数にストアします。
+            var attributeType  = aspectAttribute.AttributeType.ToSystemType();
             var argumentTypes  = aspectAttribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
             var argumentValues = aspectAttribute.ConstructorArguments.Select(a => a.Value);
             foreach (var argumentValue in argumentValues)
@@ -559,7 +554,6 @@ namespace SoftCube.Aspects
             }
 
             processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(attributeType.GetConstructor(argumentTypes.ToArray())));
-            processor.InsertBefore(insert, OpCodes.Stloc, attributeIndex);
 
             /// プロパティを設定します。
             foreach (var property in aspectAttribute.Properties)
@@ -567,7 +561,7 @@ namespace SoftCube.Aspects
                 var propertyName  = property.Name;
                 var propertyValue = property.Argument.Value;
 
-                processor.InsertBefore(insert, OpCodes.Ldloc, attributeIndex);
+                processor.InsertBefore(insert, OpCodes.Dup);
 
                 switch (propertyValue)
                 {
@@ -641,8 +635,6 @@ namespace SoftCube.Aspects
 
                 processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(attributeType.GetProperty(propertyName).GetSetMethod()));
             }
-
-            return attributeIndex;
         }
 
         #endregion
@@ -706,9 +698,9 @@ namespace SoftCube.Aspects
         /// <param name="insert">命令。</param>
         /// <param name="aspect">アスペクト属性。</param>
         /// <returns>アスペクト属性の変数インデックス。</returns>
-        internal static int EmitCreateAspectCode(this ILProcessor processor, CustomAttribute aspect)
+        internal static void EmitNewAspectAttribute(this ILProcessor processor, CustomAttribute aspect)
         {
-            return InsertNewAspectAttributeBefore(processor, null, aspect);
+            InsertNewAspectAttributeBefore(processor, null, aspect);
         }
 
         /// <summary>
