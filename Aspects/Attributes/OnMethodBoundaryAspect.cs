@@ -64,7 +64,7 @@ namespace SoftCube.Aspects
         /// <param name="rewriter">ターゲットメソッドの書き換え。</param>
         private void RewriteTargetMethod(MethodRewriter rewriter)
         {
-            var onEntry = new Action<ILProcessor>(processor =>
+            var onEntry = new Action<ILProcessor>(_ =>
             {
                 /// var aspect     = new Aspect(...) {...};
                 /// var arguments  = new Arguments(...);
@@ -78,22 +78,22 @@ namespace SoftCube.Aspects
                 rewriter.NewArgumentsVariable();
                 rewriter.NewAspectArgsVariable(rewriter.Module.ImportReference(typeof(MethodExecutionArgs)));
                 rewriter.UpdateMethodProperty();
-                rewriter.InvokeEventHandler(nameof(OnEntry));
+                rewriter.InvokeAspectHandler(nameof(OnEntry));
                 rewriter.UpdateArguments(pointerOnly: false);
             });
 
-            var onSuccess = new Action<ILProcessor>(processor =>
+            var onInvoke = new Action<ILProcessor>(_ =>
             {
+                /// var returnValue = Method(arg0, arg1);
+                /// aspectArgs.ReturnValue = returnValue;
                 /// arguments[0] = arg0;
                 /// arguments[1] = arg1;
                 /// ...
                 /// aspect.OnSuccess(aspectArgs);
-                /// arg0 = (TArg0)arguments[0];
-                /// arg1 = (TArg1)arguments[1];
-                /// ...
+                rewriter.InvokeOriginalCodeMethod();
                 rewriter.UpdateReturnValueProperty();
                 rewriter.UpdateArgumentsProperty(pointerOnly: true);
-                rewriter.InvokeEventHandler(nameof(OnSuccess));
+                rewriter.InvokeAspectHandler(nameof(OnSuccess));
             });
 
             var onException = new Action<ILProcessor>(processor =>
@@ -101,18 +101,27 @@ namespace SoftCube.Aspects
                 /// aspectArgs.Exception = ex;
                 /// aspect.OnException(aspectArgs);
                 rewriter.UpdateExceptionProperty();
-                rewriter.InvokeEventHandler(nameof(OnException));
+                rewriter.InvokeAspectHandler(nameof(OnException));
+                processor.Emit(OpCodes.Rethrow);
             });
 
-            var onExit = new Action<ILProcessor>(processor =>
+            var onFinally = new Action<ILProcessor>(_ =>
             {
+                /// arg0 = (TArg0)arguments[0];
+                /// arg1 = (TArg1)arguments[1];
+                /// ...
                 /// aspect.OnExit(aspectArgs);
-                rewriter.InvokeEventHandler(nameof(OnExit));
+                rewriter.InvokeAspectHandler(nameof(OnExit));
                 rewriter.UpdateArguments(pointerOnly: true);
-                rewriter.UpdateReturnValueVariable();
             });
 
-            rewriter.RewriteMethod(onEntry, onSuccess, onException, onExit);
+            var onReturn = new Action<ILProcessor>(_ =>
+            {
+                /// return (TResult)aspectArgs.ReturnValue;
+                rewriter.ReturnProperty();
+            });
+
+            rewriter.RewriteMethod(onEntry, onInvoke, onException, onFinally, onReturn);
         }
 
         #endregion

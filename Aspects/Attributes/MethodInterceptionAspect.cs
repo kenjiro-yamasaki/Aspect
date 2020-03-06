@@ -42,7 +42,7 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
                 ReplaceAsyncMethod(methodInjector, aspectArgsInjector);
-                aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalMethod);
+                aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalCodeMethod);
                 aspectArgsInjector.OverrideTaskResultProperty();
 
                 /// アスペクト属性を削除します。
@@ -57,7 +57,7 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
                 ReplaceMethod(methodInjector, aspectArgsInjector);
-                aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalMethod);
+                aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalCodeMethod);
 
                 /// アスペクト属性を削除します。
                 method.CustomAttributes.Remove(aspectAttribute);
@@ -77,7 +77,7 @@ namespace SoftCube.Aspects
         private void ReplaceMethod(MethodRewriter rewriter, MethodInterceptionArgsRewriter aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            rewriter.CopyMethod();
+            rewriter.CreateOriginalCodeMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
@@ -91,7 +91,7 @@ namespace SoftCube.Aspects
                 rewriter.NewArgumentsVariable();
                 rewriter.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
                 rewriter.UpdateMethodProperty();
-                rewriter.InvokeEventHandler(nameof(OnInvoke));
+                rewriter.InvokeAspectHandler(nameof(OnInvoke));
                 rewriter.UpdateArguments(pointerOnly: true);
                 rewriter.ReturnProperty();
             }
@@ -110,7 +110,7 @@ namespace SoftCube.Aspects
         private void ReplaceAsyncMethod(AsyncMethodRewriter methodInjector, MethodInterceptionArgsRewriter aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            methodInjector.CopyMethod();
+            methodInjector.CreateOriginalCodeMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {

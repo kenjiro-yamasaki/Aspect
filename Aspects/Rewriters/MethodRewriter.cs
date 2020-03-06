@@ -31,9 +31,14 @@ namespace SoftCube.Aspects
         public MethodDefinition Method { get; }
 
         /// <summary>
-        /// メソッドのコードをコピーしたメソッド。
+        /// オリジナルコードメソッド。
         /// </summary>
-        public MethodDefinition OriginalMethod { get; private set; }
+        /// <remarks>
+        /// メソッドの元々のコードをコピーしたメソッド。
+        /// </remarks>
+        /// <seealso cref="CreateOriginalCodeMethod"/>
+        /// <seealso cref="InvokeOriginalCodeMethod"/>
+        public MethodDefinition OriginalCodeMethod { get; private set; }
 
         /// <summary>
         /// メソッドの宣言型。
@@ -135,14 +140,33 @@ namespace SoftCube.Aspects
         /// <summary>
         /// メソッドを書き換えます。
         /// </summary>
-        /// <param name="onEntry">OnEntory のアドバイス注入処理。</param>
-        /// <param name="onSuccess">OnSuccess のアドバイス注入処理。</param>
-        /// <param name="onException">OnException のアドバイス注入処理。</param>
-        /// <param name="onExit">OnExit のアドバイス注入処理。</param>
-        public void RewriteMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
+        /// <param name="onEntry">OnEntory アドバイスの注入処理。</param>
+        /// <param name="onInvoke">OnInvoke アドバイスの注入処理。</param>
+        /// <param name="onException">OnException アドバイスの注入処理。</param>
+        /// <param name="onFinally">OnFinally アドバイスの注入処理。</param>
+        /// <remarks>
+        /// メソッドを以下のように書き換えます。
+        /// <code>
+        /// ...OnEntry アドバイス...
+        /// try
+        /// {
+        ///     ...OnInvoke アドバイス...
+        /// }
+        /// catch (Exception ex)
+        /// {
+        ///     ...OnException アドバイス...
+        /// }
+        /// finally
+        /// {
+        ///     ...OnFinally アドバイス...
+        /// }
+        /// ...OnReturn アドバイス...
+        /// </code>
+        /// </remarks>
+        public void RewriteMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onInvoke, Action<ILProcessor> onException, Action<ILProcessor> onFinally, Action<ILProcessor> onReturn)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            CopyMethod();
+            CreateOriginalCodeMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
@@ -157,49 +181,45 @@ namespace SoftCube.Aspects
                 handlers.Add(@catch);
                 handlers.Add(@finally);
 
-                /// onEntry();
+                /// ...OnEntry アドバイス...
                 {
                     onEntry(processor);
                 }
 
                 /// try
                 /// {
-                ///     aspectArgs.ReturnValue = OriginalMethod(...);
-                ///     onSuccess();
+                ///     ...OnInvoke アドバイス...
                 Instruction leave;
                 {
                     @catch.TryStart = @finally.TryStart = processor.EmitNop();
-                    InvokeOriginalMethod();
-                    onSuccess(processor);
+                    onInvoke(processor);
                     leave = processor.EmitLeave(OpCodes.Leave);
                 }
 
                 /// }
                 /// catch (Exception ex)
                 /// {
-                ///     onException();
-                ///     throw;
+                ///     ...OnException アドバイス...
+                /// }
                 {
                     @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
                     onException(processor);
-                    processor.Emit(OpCodes.Rethrow);
                 }
 
-                /// }
                 /// finally
                 /// {
-                ///     onExit();
+                ///     ...OnFinally アドバイス...
+                /// }
                 {
                     @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                    onExit(processor);
+                    onFinally(processor);
                     processor.Emit(OpCodes.Endfinally);
                 }
 
-                /// }
-                /// return (TResult)aspectArgs.ReturnValue;
+                /// ...OnReturn アドバイス...
                 {
                     leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    ReturnVariable();
+                    onReturn(processor);
                 }
 
                 /// IL コードを最適化します。
@@ -208,27 +228,31 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 新たなメソッドを生成し、メソッドのコードをコピーします。
+        /// オリジナルコードメソッドを生成します。
         /// </summary>
-        public void CopyMethod()
+        /// <seealso cref="OriginalCodeMethod"/>
+        /// <seealso cref="InvokeOriginalCodeMethod"/>
+        public void CreateOriginalCodeMethod()
         {
-            Assert.Null(OriginalMethod);
+            Assert.Null(OriginalCodeMethod);
 
-            OriginalMethod = new MethodDefinition(Method.Name + "<Original>", Method.Attributes, Method.ReturnType);
+            OriginalCodeMethod = new MethodDefinition(Method.Name + "<Original>", Method.Attributes, Method.ReturnType);
             foreach (var parameter in Method.Parameters)
             {
-                OriginalMethod.Parameters.Add(parameter);
+                OriginalCodeMethod.Parameters.Add(parameter);
             }
-            OriginalMethod.Body = Method.Body;
+            OriginalCodeMethod.Body = Method.Body;
 
             foreach (var sequencePoint in Method.DebugInformation.SequencePoints)
             {
-                OriginalMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                OriginalCodeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
-            DeclaringType.Methods.Add(OriginalMethod);
+            DeclaringType.Methods.Add(OriginalCodeMethod);
 
             Method.Body = new Mono.Cecil.Cil.MethodBody(Method);
         }
+
+        #region アドバイスの注入
 
         /// <summary>
         /// AspectAttribute を生成し、ローカル変数にストアします。
@@ -612,10 +636,10 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// イベントハンドラーを呼びだします。
+        /// アスペクトハンドラーを呼びだします。
         /// </summary>
-        /// <param name="eventHandlerName">イベントハンドラー名。</param>
-        public void InvokeEventHandler(string eventHandlerName)
+        /// <param name="aspectHandlerName">アスペクトハンドラー名。</param>
+        public void InvokeAspectHandler(string aspectHandlerName)
         {
             Assert.NotEqual(AspectAttributeVariable, -1);
             Assert.NotEqual(AspectArgsVariable, -1);
@@ -626,10 +650,10 @@ namespace SoftCube.Aspects
             var aspectAttributeType = AspectAttribueType;
             while (true)
             {
-                var eventHandler = aspectAttributeType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);
-                if (eventHandler != null)
+                var handler = aspectAttributeType.Methods.SingleOrDefault(m => m.Name == aspectHandlerName);
+                if (handler != null)
                 {
-                    Processor.Emit(OpCodes.Callvirt, Module.ImportReference(eventHandler));
+                    Processor.Emit(OpCodes.Callvirt, Module.ImportReference(handler));
                     break;
                 }
                 else
@@ -641,14 +665,16 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// メソッドのコードをコピーしたメソッドを呼びだします。
+        /// オリジナルコードメソッドを呼びだします。
         /// </summary>
-        public void InvokeOriginalMethod()
+        /// <seealso cref="OriginalCodeMethod"/>
+        /// <seealso cref="CreateOriginalCodeMethod"/>
+        public void InvokeOriginalCodeMethod()
         {
-            Assert.NotNull(OriginalMethod);
+            Assert.NotNull(OriginalCodeMethod);
 
             /// 戻り値がある場合、AspectArgs をスタックにロードします (戻り値を AspectArgs.ReturnValue に設定するための前処理)。
-            if (OriginalMethod.HasReturnValue())
+            if (OriginalCodeMethod.HasReturnValue())
             {
                 Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
             }
@@ -670,7 +696,7 @@ namespace SoftCube.Aspects
                     Processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                 }
             }
-            Processor.Emit(OpCodes.Call, OriginalMethod);
+            Processor.Emit(OpCodes.Call, OriginalCodeMethod);
 
             /// 戻り値をローカル変数にストアします。
             if (Method.HasReturnValue())
@@ -719,6 +745,8 @@ namespace SoftCube.Aspects
                 Processor.Emit(OpCodes.Ret);
             }
         }
+
+        #endregion
 
         #endregion
     }
