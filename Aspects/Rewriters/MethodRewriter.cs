@@ -165,66 +165,60 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void RewriteMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onInvoke, Action<ILProcessor> onException, Action<ILProcessor> onFinally, Action<ILProcessor> onReturn)
         {
-            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            CreateOriginalCodeMethod();
+            var method = Method;
+            var module = Module;
+            var processor = Processor;
 
-            /// 対象メソッドのコードを書き換えます。
+            /// 例外ハンドラーを追加します。
+            var handlers = method.Body.ExceptionHandlers;
+            var @catch = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
+            var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
+            handlers.Add(@catch);
+            handlers.Add(@finally);
+
+            /// ...OnEntry アドバイス...
             {
-                var method    = Method;
-                var module    = Module;
-                var processor = Processor;
-
-                /// 例外ハンドラーを追加します。
-                var handlers = method.Body.ExceptionHandlers;
-                var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
-                var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
-                handlers.Add(@catch);
-                handlers.Add(@finally);
-
-                /// ...OnEntry アドバイス...
-                {
-                    onEntry(processor);
-                }
-
-                /// try
-                /// {
-                ///     ...OnInvoke アドバイス...
-                Instruction leave;
-                {
-                    @catch.TryStart = @finally.TryStart = processor.EmitNop();
-                    onInvoke(processor);
-                    leave = processor.EmitLeave(OpCodes.Leave);
-                }
-
-                /// }
-                /// catch (Exception ex)
-                /// {
-                ///     ...OnException アドバイス...
-                /// }
-                {
-                    @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-                    onException(processor);
-                }
-
-                /// finally
-                /// {
-                ///     ...OnFinally アドバイス...
-                /// }
-                {
-                    @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-                    onFinally(processor);
-                    processor.Emit(OpCodes.Endfinally);
-                }
-
-                /// ...OnReturn アドバイス...
-                {
-                    leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-                    onReturn(processor);
-                }
-
-                /// IL コードを最適化します。
-                method.Optimize();
+                onEntry(processor);
             }
+
+            /// try
+            /// {
+            ///     ...OnInvoke アドバイス...
+            Instruction leave;
+            {
+                @catch.TryStart = @finally.TryStart = processor.EmitNop();
+                onInvoke(processor);
+                leave = processor.EmitLeave(OpCodes.Leave);
+            }
+
+            /// }
+            /// catch (Exception ex)
+            /// {
+            ///     ...OnException アドバイス...
+            /// }
+            {
+                @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
+                onException(processor);
+            }
+
+            /// finally
+            /// {
+            ///     ...OnFinally アドバイス...
+            /// }
+            {
+                @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
+                onFinally(processor);
+                processor.Emit(OpCodes.Endfinally);
+            }
+
+            /// ...OnReturn アドバイス...
+            {
+                leave.Operand = @finally.HandlerEnd = processor.EmitNop();
+                onReturn(processor);
+            }
+
+            /// IL コードを最適化します。
+            method.Optimize();
         }
 
         /// <summary>

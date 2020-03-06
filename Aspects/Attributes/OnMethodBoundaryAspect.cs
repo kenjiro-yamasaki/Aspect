@@ -64,6 +64,10 @@ namespace SoftCube.Aspects
         /// <param name="rewriter">ターゲットメソッドの書き換え。</param>
         private void RewriteTargetMethod(MethodRewriter rewriter)
         {
+            /// オリジナルコードメソッド (ターゲットメソッドの元々のコード) を生成します。
+            rewriter.CreateOriginalCodeMethod();
+
+            /// ターゲットメソッドを書き換えます。
             var onEntry = new Action<ILProcessor>(_ =>
             {
                 /// var aspect     = new Aspect(...) {...};
