@@ -64,8 +64,8 @@ namespace SoftCube.Aspects
         /// <param name="rewriter">ターゲットメソッドの書き換え。</param>
         private void RewriteTargetMethod(MethodRewriter rewriter)
         {
-            /// オリジナルコードメソッド (ターゲットメソッドの元々のコード) を生成します。
-            rewriter.CreateOriginalCodeMethod();
+            /// オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
+            rewriter.CreateOriginalTargetMethod();
 
             /// ターゲットメソッドを書き換えます。
             var onEntry = new Action<ILProcessor>(_ =>
@@ -94,7 +94,7 @@ namespace SoftCube.Aspects
                 /// arguments[1] = arg1;
                 /// ...
                 /// aspect.OnSuccess(aspectArgs);
-                rewriter.InvokeOriginalCodeMethod();
+                rewriter.InvokeOriginalTargetMethod();
                 rewriter.UpdateReturnValueProperty();
                 rewriter.UpdateArgumentsProperty(pointerOnly: true);
                 rewriter.InvokeAspectHandler(nameof(OnSuccess));
@@ -146,7 +146,7 @@ namespace SoftCube.Aspects
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
                 rewriter.NewAspectArgs(processor);
-                rewriter.InvokeEventHandler(processor, nameof(OnEntry));
+                rewriter.InvokeAspectHandler(processor, nameof(OnEntry));
                 rewriter.SetArgumentFields(processor);
             });
 
@@ -155,7 +155,7 @@ namespace SoftCube.Aspects
                 /// _aspect.OnResume(aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
-                rewriter.InvokeEventHandler(processor, nameof(OnResume));
+                rewriter.InvokeAspectHandler(processor, nameof(OnResume));
                 rewriter.SetArgumentFields(processor);
             });
 
@@ -165,14 +165,14 @@ namespace SoftCube.Aspects
                 /// _aspect.OnYield(aspectArgs);
                 /// <>2__current = (TResult)aspectArgs.YieldValue;
                 SetYieldValue(processor, rewriter);
-                rewriter.InvokeEventHandler(processor, nameof(OnYield));
+                rewriter.InvokeAspectHandler(processor, nameof(OnYield));
                 SetCurrentField(processor, rewriter);
             });
 
             var onSuccess = new Action<ILProcessor>(processor =>
             {
                 /// _aspect.OnSuccess(aspectArgs);
-                rewriter.InvokeEventHandler(processor, nameof(OnSuccess));
+                rewriter.InvokeAspectHandler(processor, nameof(OnSuccess));
             });
 
             var onException = new Action<ILProcessor>(processor =>
@@ -180,13 +180,13 @@ namespace SoftCube.Aspects
                 /// _aspectArgs.Exception = exception;
                 /// _aspect.OnException(aspectArgs);
                 rewriter.SetException(processor);
-                rewriter.InvokeEventHandler(processor, nameof(OnException));
+                rewriter.InvokeAspectHandler(processor, nameof(OnException));
             });
 
             var onExit = new Action<ILProcessor>(processor =>
             {
                 /// _aspect.OnExit(aspectArgs);
-                rewriter.InvokeEventHandler(processor, nameof(OnExit));
+                rewriter.InvokeAspectHandler(processor, nameof(OnExit));
             });
 
             rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
@@ -249,7 +249,7 @@ namespace SoftCube.Aspects
                 /// arg1 = arguments.Arg1;
                 /// ...
                 rewriter.NewAspectArgs(processor, insert);
-                rewriter.InvokeEventHandler(processor, insert, nameof(OnEntry));
+                rewriter.InvokeAspectHandler(processor, insert, nameof(OnEntry));
                 rewriter.SetArgumentFields(processor, insert);
             });
 
@@ -259,14 +259,14 @@ namespace SoftCube.Aspects
                 /// arg0 = arguments.Arg0;
                 /// arg1 = arguments.Arg1;
                 /// ...
-                rewriter.InvokeEventHandler(processor, insert, nameof(OnResume));
+                rewriter.InvokeAspectHandler(processor, insert, nameof(OnResume));
                 rewriter.SetArgumentFields(processor, insert);
             });
 
             var onYield = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
                 /// aspect.OnYield(aspectArgs);
-                rewriter.InvokeEventHandler(processor, insert, nameof(OnYield));
+                rewriter.InvokeAspectHandler(processor, insert, nameof(OnYield));
             });
 
             var onSuccess = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -276,7 +276,7 @@ namespace SoftCube.Aspects
                 /// result = (TResult)aspectArgs.ReturnValue;
                 int resultVariable = 1;
                 rewriter.SetReturnValue(processor, insert, resultVariable);
-                rewriter.InvokeEventHandler(processor, insert, nameof(OnSuccess));
+                rewriter.InvokeAspectHandler(processor, insert, nameof(OnSuccess));
                 rewriter.SetReturnVariable(processor, insert, resultVariable);
             });
 
@@ -285,13 +285,13 @@ namespace SoftCube.Aspects
                 /// aspectArgs.Exception = exception;
                 /// aspect.OnException(aspectArgs);
                 rewriter.SetException(processor, insert);
-                rewriter.InvokeEventHandler(processor, insert, nameof(OnException));
+                rewriter.InvokeAspectHandler(processor, insert, nameof(OnException));
             });
 
             var onExit = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
                 /// aspect.OnExit(aspectArgs);
-                rewriter.InvokeEventHandler(processor, insert, nameof(OnExit));
+                rewriter.InvokeAspectHandler(processor, insert, nameof(OnExit));
             });
 
             rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);

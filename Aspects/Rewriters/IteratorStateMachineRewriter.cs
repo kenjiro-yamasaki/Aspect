@@ -45,8 +45,12 @@ namespace SoftCube.Aspects
         public MethodDefinition DisposeMethod => StateMachineType.Methods.Single(m => m.Name == "System.IDisposable.Dispose");
 
         /// <summary>
-        /// Dispose メソッドのコードをコピーしたメソッド。
+        /// オリジナル Dispose メソッド。
         /// </summary>
+        /// <remarks>
+        /// Dispose メソッドの元々のコードをコピーしたメソッド。
+        /// </remarks>
+        /// <seealso cref="CreateOriginalDisposeMethod"/>
         public MethodDefinition OriginalDisposeMethod { get; set; }
 
         #endregion
@@ -77,16 +81,16 @@ namespace SoftCube.Aspects
         /// <summary>
         /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="onEntry">OnEntory のアドバイス注入処理。</param>
-        /// <param name="onResume">OnResume のアドバイス注入処理。</param>
-        /// <param name="onYield">OnYield のアドバイス注入処理。</param>
-        /// <param name="onSuccess">OnSuccess のアドバイス注入処理。</param>
-        /// <param name="onException">OnException のアドバイス注入処理。</param>
-        /// <param name="onExit">OnExit のアドバイス注入処理。</param>
+        /// <param name="onEntry">OnEntory アドバイスの注入処理。</param>
+        /// <param name="onResume">OnResume アドバイスの注入処理。</param>
+        /// <param name="onYield">OnYield アドバイスの注入処理。</param>
+        /// <param name="onSuccess">OnSuccess アドバイスの注入処理。</param>
+        /// <param name="onException">OnException アドバイスの注入処理。</param>
+        /// <param name="onExit">OnExit アドバイスの注入処理。</param>
         public void RewriteMoveNextMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onResume, Action<ILProcessor> onYield, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
         {
             /// 新たなメソッドを生成し、MoveNext メソッドのコードをコピーします。
-            CopyMoveNextMethod();
+            CreateOriginalMoveNextMethod();
 
             /// 元々の MoveNext メソッドを書き換えます。
             {
@@ -154,7 +158,7 @@ namespace SoftCube.Aspects
                 ///     bool result;
                 ///     if (_isDisposing != 2)
                 ///     {
-                ///         result = MoveNext<Original>();
+                ///         result = OriginalMoveNext();
                 ///     }
                 ///     exit = _isDisposing != 0 || !result;
                 ///     if (!_exitFlag && _resumeFlag)
@@ -177,13 +181,13 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldc_I4_1);
                     processor.Emit(OpCodes.Stloc, exitVariable);
 
-                    int resultVariable = variables.Count;
-                    variables.Add(new VariableDefinition(Module.TypeSystem.Boolean));
-
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldfld, IsDisposingField);
                     processor.Emit(OpCodes.Ldc_I4_2);
                     branch[0] = processor.EmitBranch(OpCodes.Beq_S);
+
+                    int resultVariable = variables.Count;
+                    variables.Add(new VariableDefinition(Module.TypeSystem.Boolean));
 
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Call, OriginalMoveNextMethod);
@@ -292,8 +296,8 @@ namespace SoftCube.Aspects
         /// </summary>
         private void RewriteDisposeMethod()
         {
-            /// 新たな Dispose メソッドを生成し、Dispose メソッドのコードをコピーします。
-            CopyDisposeMethod();
+            /// オリジナル Dispose メソッド (Dispose メソッドの元々のコード) を生成します。
+            CreateOriginalDisposeMethod();
 
             /// Dispose のメソッドのコードを書き換えます。
             {
@@ -365,9 +369,10 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 新たなメソッドを生成し、Dispose メソッドのコードをコピーします。
+        /// オリジナル Dispose メソッド (Dispose メソッドの元々のコード) を生成します。
         /// </summary>
-        private void CopyDisposeMethod()
+        /// <seealso cref="OriginalDisposeMethod"/>
+        private void CreateOriginalDisposeMethod()
         {
             Assert.NotNull(DisposeMethod);
             Assert.Null(OriginalDisposeMethod);

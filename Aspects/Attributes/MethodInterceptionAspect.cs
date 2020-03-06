@@ -42,7 +42,7 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
                 ReplaceAsyncMethod(methodInjector, aspectArgsInjector);
-                aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalCodeMethod);
+                aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalTargetMethod);
                 aspectArgsInjector.OverrideTaskResultProperty();
 
                 /// アスペクト属性を削除します。
@@ -57,7 +57,7 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
                 ReplaceMethod(methodInjector, aspectArgsInjector);
-                aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalCodeMethod);
+                aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalTargetMethod);
 
                 /// アスペクト属性を削除します。
                 method.CustomAttributes.Remove(aspectAttribute);
@@ -77,7 +77,7 @@ namespace SoftCube.Aspects
         private void ReplaceMethod(MethodRewriter rewriter, MethodInterceptionArgsRewriter aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            rewriter.CreateOriginalCodeMethod();
+            rewriter.CreateOriginalTargetMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
@@ -110,7 +110,7 @@ namespace SoftCube.Aspects
         private void ReplaceAsyncMethod(AsyncMethodRewriter methodInjector, MethodInterceptionArgsRewriter aspectArgsInjector)
         {
             /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            methodInjector.CreateOriginalCodeMethod();
+            methodInjector.CreateOriginalTargetMethod();
 
             /// 対象メソッドのコードを書き換えます。
             {
@@ -123,7 +123,7 @@ namespace SoftCube.Aspects
                 methodInjector.NewAspectArgsVariable(aspectArgsInjector.DerivedAspectArgsType);
                 methodInjector.UpdateMethodProperty();
 
-                var taskType = methodInjector.Method.ReturnType;
+                var taskType = methodInjector.TargetMethod.ReturnType;
                 if (taskType is GenericInstanceType genericInstanceType)
                 {
                     /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);

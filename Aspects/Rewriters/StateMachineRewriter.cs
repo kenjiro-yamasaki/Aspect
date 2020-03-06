@@ -114,8 +114,12 @@ namespace SoftCube.Aspects
         public MethodDefinition MoveNextMethod { get; }
 
         /// <summary>
-        /// MoveNext メソッドのコードをコピーしたメソッド。
+        /// オリジナル MoveNext メソッド。
         /// </summary>
+        /// <remarks>
+        /// MoveNext メソッドの元々のコードをコピーしたメソッド。
+        /// </remarks>
+        /// <seealso cref="CreateOriginalMoveNextMethod"/>
         public MethodDefinition OriginalMoveNextMethod { get; private set; }
 
         #endregion
@@ -153,9 +157,10 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 新たなメソッドを生成し、MoveNext メソッドのコードをコピーします。
+        /// オリジナル MoveNext メソッド (MoveNext メソッドの元々のコード) を生成します。
         /// </summary>
-        public void CopyMoveNextMethod()
+        /// <seealso cref="OriginalMoveNextMethod"/>
+        public void CreateOriginalMoveNextMethod()
         {
             Assert.Null(OriginalMoveNextMethod);
 
@@ -354,22 +359,22 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// イベントハンドラーを呼びだします。
+        /// アスペクトハンドラーを呼びだします。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="eventHandlerName">イベントハンドラー名。</param>
-        public void InvokeEventHandler(ILProcessor processor, string eventHandlerName)
+        /// <param name="aspectHandlerName">アスペクトハンドラー名。</param>
+        public void InvokeAspectHandler(ILProcessor processor, string aspectHandlerName)
         {
-            InvokeEventHandler(processor, null, eventHandlerName);
+            InvokeAspectHandler(processor, null, aspectHandlerName);
         }
 
         /// <summary>
-        /// イベントハンドラーを呼びだします。
+        /// アスペクトハンドラーを呼びだします。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        /// <param name="eventHandlerName">イベントハンドラー名。</param>
-        public void InvokeEventHandler(ILProcessor processor, Instruction insert, string eventHandlerName)
+        /// <param name="aspectHandlerName">アスペクトハンドラー名。</param>
+        public void InvokeAspectHandler(ILProcessor processor, Instruction insert, string aspectHandlerName)
         {
             processor.InsertBefore(insert, OpCodes.Ldarg_0);
             processor.InsertBefore(insert, OpCodes.Ldfld, AspectField);
@@ -379,10 +384,10 @@ namespace SoftCube.Aspects
             var aspectType = AspectAttribute.AttributeType.Resolve();
             while (true)
             {
-                var eventHandler = aspectType.Methods.SingleOrDefault(m => m.Name == eventHandlerName);
-                if (eventHandler != null)
+                var aspectHandler = aspectType.Methods.SingleOrDefault(m => m.Name == aspectHandlerName);
+                if (aspectHandler != null)
                 {
-                    processor.InsertBefore(insert, OpCodes.Callvirt, Module.ImportReference(eventHandler));
+                    processor.InsertBefore(insert, OpCodes.Callvirt, Module.ImportReference(aspectHandler));
                     break;
                 }
                 else

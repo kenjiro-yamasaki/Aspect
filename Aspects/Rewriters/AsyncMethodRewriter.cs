@@ -57,7 +57,7 @@ namespace SoftCube.Aspects
             AsyncStateMachineVariable      = Variables.Count + 0;
             AsyncTaskMethodBuilderVariable = Variables.Count + 1;
 
-            var taskType = Method.ReturnType;
+            var taskType = TargetMethod.ReturnType;
             if (taskType is GenericInstanceType genericInstanceType)
             {
                 var returnType  = genericInstanceType.GenericArguments[0].ToSystemType();
