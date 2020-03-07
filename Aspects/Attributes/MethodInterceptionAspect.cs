@@ -81,6 +81,7 @@ namespace SoftCube.Aspects
             rewriter.CreateOriginalTargetMethod();
 
             /// 対象メソッドのコードを書き換えます。
+            var method = rewriter.TargetMethod;
             {
                 /// var aspect     = new Aspect(...) { ... };
                 /// var arguments  = new Arguments(...);
@@ -90,11 +91,15 @@ namespace SoftCube.Aspects
                 /// return (TResult)aspectArgs.ReturnValue;
                 var processor = rewriter.Processor;
 
+                int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttribueType);
                 processor.NewAspectAttribute(rewriter.AspectAttribute);
-                int aspectAttributeVariable = processor.StoreLocal(rewriter.AspectAttribueType);
+                processor.Store(aspectAttributeVariable);
+                //int aspectAttributeVariable = processor.StoreLocal(rewriter.AspectAttribueType);
 
+                int argumentsVariable = method.AddVariable(rewriter.TargetMethod.ArgumentsType());
                 processor.NewArguments();
-                int argumentsVariable = processor.StoreLocal(rewriter.TargetMethod.ArgumentsType());
+                processor.Store(argumentsVariable);
+                //int argumentsVariable = processor.StoreLocal(rewriter.TargetMethod.ArgumentsType());
 
                 if (rewriter.TargetMethod.IsStatic)
                 {
@@ -106,7 +111,9 @@ namespace SoftCube.Aspects
                 }
                 processor.Load(argumentsVariable);
                 processor.New(aspectArgsInjector.DerivedAspectArgsType);
-                int aspectArgsVariable = processor.StoreLocal(typeof(MethodInterceptionArgs));
+
+                int aspectArgsVariable = method.AddVariable(typeof(MethodInterceptionArgs));
+                processor.Store(aspectArgsVariable);
 
                 processor.Load(aspectArgsVariable);
                 processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
@@ -151,6 +158,7 @@ namespace SoftCube.Aspects
             rewriter.CreateOriginalTargetMethod();
 
             /// 対象メソッドのコードを書き換えます。
+            var method = rewriter.TargetMethod;
             {
                 /// var aspect     = new Aspect(...) {...};
                 /// var arguments  = new Arguments(...);
@@ -160,10 +168,12 @@ namespace SoftCube.Aspects
                 var processor = rewriter.Processor;
 
                 processor.NewAspectAttribute(rewriter.AspectAttribute);
-                int aspectAttributeVariable = processor.StoreLocal(rewriter.AspectAttribueType);
+                int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttribueType);
+                processor.Store(aspectAttributeVariable);
 
                 processor.NewArguments();
-                int argumentsVariable = processor.StoreLocal(rewriter.TargetMethod.ArgumentsType());
+                int argumentsVariable = method.AddVariable(rewriter.TargetMethod.ArgumentsType());
+                processor.Store(argumentsVariable);
 
                 if (rewriter.TargetMethod.IsStatic)
                 {
@@ -175,7 +185,8 @@ namespace SoftCube.Aspects
                 }
                 processor.Load(argumentsVariable);
                 processor.New(aspectArgsInjector.DerivedAspectArgsType);
-                int aspectArgsVariable = processor.StoreLocal(typeof(MethodExecutionArgs));
+                int aspectArgsVariable = method.AddVariable(typeof(MethodExecutionArgs));
+                processor.Store(aspectArgsVariable);
 
                 processor.Load(aspectArgsVariable);
                 processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));

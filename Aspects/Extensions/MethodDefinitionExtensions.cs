@@ -189,6 +189,31 @@ namespace SoftCube.Aspects
             }
         }
 
+
+
+        
+        public static int AddVariable(this MethodDefinition method, TypeReference type)
+        {
+            var variables = method.Body.Variables;
+            var module    = method.Module;
+
+            var variable = variables.Count();
+            variables.Add(new VariableDefinition(module.ImportReference(type)));
+        
+            return variable;
+        }
+
+        public static int AddVariable(this MethodDefinition method, Type type)
+        {
+            var variables = method.Body.Variables;
+            var module    = method.Module;
+
+            var variable = variables.Count();
+            variables.Add(new VariableDefinition(module.ImportReference(type)));
+        
+            return variable;
+        }
+
         #endregion
     }
 }

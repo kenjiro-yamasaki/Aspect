@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Collections.Generic;
 using SoftCube.Asserts;
 using System;
 
@@ -35,7 +34,6 @@ namespace SoftCube.Aspects
         /// ターゲットメソッドの元々のコードをコピーしたメソッド。
         /// </remarks>
         /// <seealso cref="CreateOriginalTargetMethod"/>
-        /// <seealso cref="InvokeOriginalTargetMethod"/>
         public MethodDefinition OriginalTargetMethod { get; private set; }
 
         /// <summary>
@@ -52,15 +50,6 @@ namespace SoftCube.Aspects
         /// IL プロセッサー。
         /// </summary>
         public ILProcessor Processor => TargetMethod.Body.GetILProcessor();
-
-        #region パラメーター
-
-        /// <summary>
-        /// パラメーターコレクション。
-        /// </summary>
-        protected Collection<ParameterDefinition> Parameters => TargetMethod.Parameters;
-
-        #endregion
 
         #endregion
 
@@ -170,7 +159,6 @@ namespace SoftCube.Aspects
         /// オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
         /// </summary>
         /// <seealso cref="OriginalTargetMethod"/>
-        /// <seealso cref="InvokeOriginalTargetMethod"/>
         public void CreateOriginalTargetMethod()
         {
             Assert.Null(OriginalTargetMethod);

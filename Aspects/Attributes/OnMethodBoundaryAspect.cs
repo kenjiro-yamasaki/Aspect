@@ -69,9 +69,11 @@ namespace SoftCube.Aspects
             rewriter.CreateOriginalTargetMethod();
 
             /// ターゲットメソッドを書き換えます。
-            int aspectAttributeVariable = default;
-            int argumentsVariable       = default;
-            int aspectArgsVariable      = default;
+            var method = rewriter.TargetMethod;
+            int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttribueType);
+            int argumentsVariable       = method.AddVariable(rewriter.TargetMethod.ArgumentsType());
+            int aspectArgsVariable      = method.AddVariable(typeof(MethodExecutionArgs));
+            int exceptionVariable       = method.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor>(processor =>
             {
@@ -84,10 +86,10 @@ namespace SoftCube.Aspects
                 /// arg1 = (TArg1)arguments[1];
                 /// ...
                 processor.NewAspectAttribute(rewriter.AspectAttribute);
-                aspectAttributeVariable = processor.StoreLocal(rewriter.AspectAttribueType);
+                processor.Store(aspectAttributeVariable);
 
                 processor.NewArguments();
-                argumentsVariable = processor.StoreLocal(rewriter.TargetMethod.ArgumentsType());
+                processor.Store(argumentsVariable);
 
                 if (rewriter.TargetMethod.IsStatic)
                 {
@@ -99,7 +101,7 @@ namespace SoftCube.Aspects
                 }
                 processor.Load(argumentsVariable);
                 processor.New<MethodExecutionArgs>(typeof(object), typeof(Arguments));
-                aspectArgsVariable = processor.StoreLocal(typeof(MethodExecutionArgs));
+                processor.Store(aspectArgsVariable);
 
                 processor.Load(aspectArgsVariable);
                 processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
@@ -146,7 +148,8 @@ namespace SoftCube.Aspects
             {
                 /// aspectArgs.Exception = ex;
                 /// aspect.OnException(aspectArgs);
-                int exceptionVariable = processor.StoreLocal(typeof(Exception));
+                /// rethrow;
+                processor.Store(exceptionVariable);
                 processor.Load(aspectArgsVariable);
                 processor.Load(exceptionVariable);
                 processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Exception));
@@ -154,15 +157,15 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
                 processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnException));
-                processor.Emit(OpCodes.Rethrow);
+                processor.Rethrow();
             });
 
             var onExit = new Action<ILProcessor>(processor =>
             {
+                /// aspect.OnExit(aspectArgs);
                 /// arg0 = (TArg0)arguments[0];
                 /// arg1 = (TArg1)arguments[1];
                 /// ...
-                /// aspect.OnExit(aspectArgs);
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
                 processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnExit));

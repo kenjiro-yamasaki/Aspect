@@ -973,32 +973,10 @@ namespace SoftCube.Aspects
         /// 
         /// </summary>
         /// <param name="processor"></param>
-        /// <param name="type"></param>
-        /// <param name="load"></param>
-        /// <returns></returns>
-        internal static int StoreLocal(this ILProcessor processor, TypeReference type)
+        /// <param name="variable"></param>
+        internal static void Store(this ILProcessor processor, int variable)
         {
-            var variables = processor.Body.Variables;
-            var module = processor.Body.Method.Module;
-
-            var variable = variables.Count();
-            variables.Add(new VariableDefinition(module.ImportReference(type)));
-
             processor.Emit(OpCodes.Stloc, variable);
-            return variable;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="type"></param>
-        /// <param name="load"></param>
-        /// <returns></returns>
-        internal static int StoreLocal(this ILProcessor processor, Type type)
-        {
-            var module = processor.Body.Method.Module;
-            return StoreLocal(processor, module.ImportReference(type));
         }
 
         /// <summary>
@@ -1126,6 +1104,15 @@ namespace SoftCube.Aspects
             {
                 processor.Emit(OpCodes.Unbox_Any, type);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        internal static void Rethrow(this ILProcessor processor)
+        {
+            processor.Emit(OpCodes.Rethrow);
         }
 
         /// <summary>
