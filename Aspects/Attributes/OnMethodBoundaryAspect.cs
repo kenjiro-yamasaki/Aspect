@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using System.Reflection;
 
 namespace SoftCube.Aspects
 {
@@ -68,7 +69,11 @@ namespace SoftCube.Aspects
             rewriter.CreateOriginalTargetMethod();
 
             /// ターゲットメソッドを書き換えます。
-            var onEntry = new Action<ILProcessor>(_ =>
+            int aspectAttributeVariable = default;
+            int argumentsVariable       = default;
+            int aspectArgsVariable      = default;
+
+            var onEntry = new Action<ILProcessor>(processor =>
             {
                 /// var aspect     = new Aspect(...) {...};
                 /// var arguments  = new Arguments(...);
@@ -78,15 +83,35 @@ namespace SoftCube.Aspects
                 /// arg0 = (TArg0)arguments[0];
                 /// arg1 = (TArg1)arguments[1];
                 /// ...
-                rewriter.NewAspectAttributeVariable();
-                rewriter.NewArgumentsVariable();
-                rewriter.NewAspectArgsVariable(rewriter.Module.ImportReference(typeof(MethodExecutionArgs)));
-                rewriter.StoreMethodProperty(rewriter.LoadTargetMethod);
-                rewriter.InvokeAspectHandler(nameof(OnEntry));
-                rewriter.UpdateArguments(pointerOnly: false);
+                processor.NewAspectAttribute(rewriter.AspectAttribute);
+                aspectAttributeVariable = processor.StoreLocal(rewriter.AspectAttribueType);
+
+                processor.NewArguments();
+                argumentsVariable = processor.StoreLocal(rewriter.TargetMethod.ArgumentsType());
+
+                if (rewriter.TargetMethod.IsStatic)
+                {
+                    processor.LoadNull();
+                }
+                else
+                {
+                    processor.LoadThis();
+                }
+                processor.Load(argumentsVariable);
+                processor.New<MethodExecutionArgs>(typeof(object), typeof(Arguments));
+                aspectArgsVariable = processor.StoreLocal(typeof(MethodExecutionArgs));
+
+                processor.Load(aspectArgsVariable);
+                processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
+                processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
+
+                processor.Load(aspectAttributeVariable);
+                processor.Load(aspectArgsVariable);
+                processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnEntry));
+                rewriter.UpdateArguments(pointerOnly: false, argumentsVariable);
             });
 
-            var onInvoke = new Action<ILProcessor>(_ =>
+            var onInvoke = new Action<ILProcessor>(processor =>
             {
                 /// var returnValue = OriginalMethod(arg0, arg1, ...);
                 /// aspectArgs.ReturnValue = returnValue;
@@ -96,40 +121,65 @@ namespace SoftCube.Aspects
                 /// aspect.OnSuccess(aspectArgs);
                 if (rewriter.TargetMethod.HasReturnValue())
                 {
-                    rewriter.StoreReturnValueProperty(rewriter.InvokeOriginalTargetMethod);
+                    processor.Load(aspectArgsVariable);
+
+                    processor.LoadThis();
+                    processor.LoadArguments();
+                    processor.Call(rewriter.OriginalTargetMethod);
+                    processor.Box(rewriter.TargetMethod.ReturnType);
+                    processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
                 }
                 else
                 {
-                    rewriter.InvokeOriginalTargetMethod();
+                    processor.LoadThis();
+                    processor.LoadArguments();
+                    processor.Call(rewriter.OriginalTargetMethod);
                 }
 
-                rewriter.UpdateArgumentsProperty(pointerOnly: true);
-                rewriter.InvokeAspectHandler(nameof(OnSuccess));
+                rewriter.UpdateArgumentsProperty(pointerOnly: true, argumentsVariable);
+
+                processor.Load(aspectAttributeVariable);
+                processor.Load(aspectArgsVariable);
+                processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnSuccess));
             });
 
             var onException = new Action<ILProcessor>(processor =>
             {
                 /// aspectArgs.Exception = ex;
                 /// aspect.OnException(aspectArgs);
-                rewriter.StoreExceptionProperty(rewriter.LoadExceptionVariable);
-                rewriter.InvokeAspectHandler(nameof(OnException));
+                int exceptionVariable = processor.StoreLocal(typeof(Exception));
+                processor.Load(aspectArgsVariable);
+                processor.Load(exceptionVariable);
+                processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Exception));
+
+                processor.Load(aspectAttributeVariable);
+                processor.Load(aspectArgsVariable);
+                processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnException));
                 processor.Emit(OpCodes.Rethrow);
             });
 
-            var onExit = new Action<ILProcessor>(_ =>
+            var onExit = new Action<ILProcessor>(processor =>
             {
                 /// arg0 = (TArg0)arguments[0];
                 /// arg1 = (TArg1)arguments[1];
                 /// ...
                 /// aspect.OnExit(aspectArgs);
-                rewriter.InvokeAspectHandler(nameof(OnExit));
-                rewriter.UpdateArguments(pointerOnly: true);
+                processor.Load(aspectAttributeVariable);
+                processor.Load(aspectArgsVariable);
+                processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnExit));
+                rewriter.UpdateArguments(pointerOnly: true, argumentsVariable);
             });
 
-            var onReturn = new Action<ILProcessor>(_ =>
+            var onReturn = new Action<ILProcessor>(processor =>
             {
                 /// return (TResult)aspectArgs.ReturnValue;
-                rewriter.ReturnProperty();
+                if (rewriter.TargetMethod.HasReturnValue())
+                {
+                    processor.Load(aspectArgsVariable);
+                    processor.GetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
+                    processor.Unbox(rewriter.TargetMethod.ReturnType);
+                }
+                processor.Return();
             });
 
             rewriter.RewriteMethod(onEntry, onInvoke, onException, onExit, onReturn);

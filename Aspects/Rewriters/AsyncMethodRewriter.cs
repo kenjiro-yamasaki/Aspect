@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Collections.Generic;
 using SoftCube.Asserts;
 using System;
 using System.Runtime.CompilerServices;
@@ -12,6 +13,11 @@ namespace SoftCube.Aspects
     public class AsyncMethodRewriter : MethodRewriter
     {
         #region プロパティ
+
+        /// <summary>
+        /// ローカル変数コレクション。
+        /// </summary>
+        private Collection<VariableDefinition> Variables => TargetMethod.Body.Variables;
 
         /// <summary>
         /// AsyncStateMachine のローカル変数。
@@ -47,12 +53,12 @@ namespace SoftCube.Aspects
         /// <param name="stateMachineType">非同期ステートマシンの型。</param>
         /// <param name="aspectAttributeType">アスペクト属性の型。</param>
         /// <param name="aspectArgsType">アスペクト引数の型。</param>
-        public void StartAsyncStateMachine(Type stateMachineType, Type aspectAttributeType, Type aspectArgsType)
+        public void StartAsyncStateMachine(Type stateMachineType, Type aspectAttributeType, Type aspectArgsType, int aspectAttributeVariable, int aspectArgsVariable)
         {
             Assert.Equal(AsyncStateMachineVariable, -1);
             Assert.Equal(AsyncTaskMethodBuilderVariable, -1);
-            Assert.NotEqual(AspectAttributeVariable, -1);
-            Assert.NotEqual(AspectArgsVariable, -1);
+            Assert.NotEqual(aspectAttributeVariable, -1);
+            Assert.NotEqual(aspectArgsVariable, -1);
 
             AsyncStateMachineVariable      = Variables.Count + 0;
             AsyncTaskMethodBuilderVariable = Variables.Count + 1;
@@ -66,8 +72,8 @@ namespace SoftCube.Aspects
                 Variables.Add(new VariableDefinition(Module.ImportReference(stateMachineType)));
                 Variables.Add(new VariableDefinition(Module.ImportReference(builderType)));
 
-                Processor.Emit(OpCodes.Ldloc, AspectAttributeVariable);
-                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+                Processor.Emit(OpCodes.Ldloc, aspectAttributeVariable);
+                Processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
                 Processor.Emit(OpCodes.Newobj, Module.ImportReference(stateMachineType.GetConstructor(new Type[] { aspectAttributeType, aspectArgsType })));
                 Processor.Emit(OpCodes.Stloc, AsyncStateMachineVariable);
 
@@ -91,8 +97,8 @@ namespace SoftCube.Aspects
                 Variables.Add(new VariableDefinition(Module.ImportReference(stateMachineType)));
                 Variables.Add(new VariableDefinition(Module.ImportReference(builderType)));
 
-                Processor.Emit(OpCodes.Ldloc, AspectAttributeVariable);
-                Processor.Emit(OpCodes.Ldloc, AspectArgsVariable);
+                Processor.Emit(OpCodes.Ldloc, aspectAttributeVariable);
+                Processor.Emit(OpCodes.Ldloc, aspectArgsVariable);
                 Processor.Emit(OpCodes.Newobj, Module.ImportReference(stateMachineType.GetConstructor(new Type[] { aspectAttributeType, aspectArgsType })));
                 Processor.Emit(OpCodes.Stloc, AsyncStateMachineVariable);
 

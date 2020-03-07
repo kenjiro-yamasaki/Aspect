@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using SoftCube.Logging;
+using System;
 using System.Linq;
 
 namespace SoftCube.Aspects
@@ -23,25 +24,27 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Return 命令を取得します。
+        /// Arguments の型を取得します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        /// <returns>
-        /// Return 命令。
-        /// メソッドに戻り値がある場合、戻り値のロード命令を返します。
-        /// メソッドに戻り値がない場合、Return 命令そのものを返します。
-        /// </returns>
-        public static Instruction ReturnInstruction(this MethodDefinition method)
+        /// <returns>Arguments の型。</returns>
+        public static Type ArgumentsType(this MethodDefinition method)
         {
-            var instructions = method.Body.Instructions;
-            if (method.HasReturnValue())
+            var parameters = method.Parameters;
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
+            return parameters.Count switch
             {
-                return instructions.Last().Previous;
-            }
-            else
-            {
-                return instructions.Last();
-            }
+                0 => typeof(Arguments),
+                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                _ => typeof(ArgumentsArray),
+            };
         }
 
         #endregion

@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using SoftCube.Asserts;
 using System;
 using System.Linq;
 
@@ -692,18 +693,6 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 命令の前にアスペクト属性を追加するコードを追加します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">命令。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        /// <returns>アスペクト属性の変数インデックス。</returns>
-        internal static void EmitNewAspectAttribute(this ILProcessor processor, CustomAttribute aspect)
-        {
-            InsertNewAspectAttributeBefore(processor, null, aspect);
-        }
-
-        /// <summary>
         /// 末尾に Ldind 命令を追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
@@ -816,6 +805,333 @@ namespace SoftCube.Aspects
                     return;
             }
         }
+
+        /// <summary>
+        /// 命令の前にアスペクト属性を追加するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">命令。</param>
+        /// <param name="aspect">アスペクト属性。</param>
+        /// <returns>アスペクト属性の変数インデックス。</returns>
+        internal static void NewAspectAttribute(this ILProcessor processor, CustomAttribute aspect)
+        {
+            InsertNewAspectAttributeBefore(processor, null, aspect);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal static void NewArguments(this ILProcessor processor)
+        {
+            var method     = processor.Body.Method;
+            var module     = method.Module;
+            var parameters = method.Parameters;
+
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
+            var argumentsType = parameters.Count switch
+            {
+                0 => typeof(Arguments),
+                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                _ => typeof(ArgumentsArray),
+            };
+
+            /// Arguments を生成して、ローカル変数にストアします。
+            if (parameters.Count <= 8)
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter     = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (method.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+                        processor.EmitLdind(elementType);
+                    }
+                }
+                processor.Emit(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameters.Select(p => p.ParameterType.ToSystemType(removePointer: true)).ToArray())));
+            }
+            else
+            {
+                processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+                processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter     = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    processor.Emit(OpCodes.Dup);
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+
+                    if (method.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else 
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        processor.EmitLdind(elementType);
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, elementType);
+                        }
+                    }
+                    else
+                    {
+                        if (parameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, parameterType);
+                        }
+                    }
+                    processor.Emit(OpCodes.Stelem_Ref);
+                }
+
+                processor.Emit(OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="processor"></param>
+        /// <param name="types"></param>
+        internal static void New<T>(this ILProcessor processor, params Type[] types)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(types)));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="processor"></param>
+        /// <param name="types"></param>
+        internal static void New(this ILProcessor processor, TypeDefinition type)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="type"></param>
+        /// <param name="propertyName"></param>
+        internal static void SetProperty(this ILProcessor processor, Type type, string propertyName)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="type"></param>
+        /// <param name="propertyName"></param>
+        internal static void GetProperty(this ILProcessor processor, Type type, string propertyName)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="type"></param>
+        /// <param name="load"></param>
+        /// <returns></returns>
+        internal static int StoreLocal(this ILProcessor processor, TypeReference type)
+        {
+            var variables = processor.Body.Variables;
+            var module = processor.Body.Method.Module;
+
+            var variable = variables.Count();
+            variables.Add(new VariableDefinition(module.ImportReference(type)));
+
+            processor.Emit(OpCodes.Stloc, variable);
+            return variable;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="type"></param>
+        /// <param name="load"></param>
+        /// <returns></returns>
+        internal static int StoreLocal(this ILProcessor processor, Type type)
+        {
+            var module = processor.Body.Method.Module;
+            return StoreLocal(processor, module.ImportReference(type));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        internal static void LoadThis(this ILProcessor processor)
+        {
+            var method = processor.Body.Method;
+
+            if (!method.IsStatic)
+            {
+                processor.Emit(OpCodes.Ldarg_0);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        internal static void LoadNull(this ILProcessor processor) 
+        {
+            processor.Emit(OpCodes.Ldnull);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        internal static void LoadArguments(this ILProcessor processor)
+        {
+            var method = processor.Body.Method;
+            var parameters = method.Parameters;
+
+            for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+            {
+                if (method.IsStatic)
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="local"></param>
+        internal static void Load(this ILProcessor processor, int local)
+        {
+            processor.Emit(OpCodes.Ldloc, local);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="method"></param>
+        internal static void Call(this ILProcessor processor, MethodDefinition method)
+        {
+            processor.Emit(OpCodes.Call, method);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="type"></param>
+        /// <param name="methodName"></param>
+        internal static void CallVirtual(this ILProcessor processor, TypeReference type, string methodName)
+        {
+            var module = processor.Body.Method.Module;
+            var typeDefinition = type.Resolve();
+
+            while (true)
+            {
+                var handler = typeDefinition.Methods.SingleOrDefault(m => m.Name == methodName);
+                if (handler != null)
+                {
+                    processor.Emit(OpCodes.Callvirt, module.ImportReference(handler));
+                    break;
+                }
+                else
+                {
+                    Assert.NotNull(typeDefinition.Resolve().BaseType);
+                    typeDefinition = typeDefinition.Resolve().BaseType.Resolve();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal static void CallStatic(this ILProcessor processor, Type type, string methodName, params Type[] argumentTypes)
+        {
+            var module = processor.Body.Method.Module;
+            processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethod(methodName, argumentTypes)));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="type"></param>
+        internal static void Box(this ILProcessor processor, TypeReference type)
+        {
+            if (type.IsValueType)
+            {
+                processor.Emit(OpCodes.Box, type);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="type"></param>
+        internal static void Unbox(this ILProcessor processor, TypeReference type)
+        {
+            if (type.IsValueType)
+            {
+                processor.Emit(OpCodes.Unbox_Any, type);
+            }
+        }
+
+        internal static void Return(this ILProcessor processor)
+        {
+             processor.Emit(OpCodes.Ret);
+        }
+
 
         #endregion
 
