@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using SoftCube.Asserts;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +12,8 @@ namespace SoftCube.Aspects
     public static class ILProcessorExtensions
     {
         #region メソッド
+
+        #region 低レベル命令
 
         #region Create
 
@@ -465,180 +466,6 @@ namespace SoftCube.Aspects
             return instruction;
         }
 
-        /// <summary>
-        /// 命令の前にアスペクト属性を追加するコードを追加します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">命令。</param>
-        /// <param name="aspectAttribute">アスペクト属性。</param>
-        /// <returns>アスペクト属性の変数インデックス。</returns>
-        internal static void InsertNewAspectAttributeBefore(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
-        {
-            var method       = processor.Body.Method;
-            var module       = method.DeclaringType.Module.Assembly.MainModule;
-            var instructions = method.Body.Instructions;
-
-            /// 属性を生成して、ローカル変数にストアします。
-            var attributeType  = aspectAttribute.AttributeType.ToSystemType();
-            var argumentTypes  = aspectAttribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
-            var argumentValues = aspectAttribute.ConstructorArguments.Select(a => a.Value);
-            foreach (var argumentValue in argumentValues)
-            {
-                switch (argumentValue)
-                {
-                    case bool value:
-                        if (value)
-                        {
-                            processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
-                        }
-                        else
-                        {
-                            processor.InsertBefore(insert, OpCodes.Ldc_I4_0);
-                        }
-                        break;
-
-                    case sbyte value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, value);
-                        break;
-
-                    case short value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
-                        break;
-
-                    case int value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
-                        break;
-
-                    case long value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I8, value);
-                        break;
-
-                    case byte value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, (sbyte)value);
-                        break;
-
-                    case ushort value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (short)value);
-                        break;
-
-                    case uint value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (int)value);
-                        break;
-
-                    case ulong value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I8, (long)value);
-                        break;
-
-                    case float value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_R4, value);
-                        break;
-
-                    case double value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_R8, value);
-                        break;
-
-                    case char value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
-                        break;
-
-                    case string value:
-                        processor.InsertBefore(insert, OpCodes.Ldstr, value);
-                        break;
-
-                    case TypeReference value:
-                        processor.InsertBefore(insert, OpCodes.Ldtoken, module.ImportReference(value));
-                        processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
-                }
-            }
-
-            processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(attributeType.GetConstructor(argumentTypes.ToArray())));
-
-            /// プロパティを設定します。
-            foreach (var property in aspectAttribute.Properties)
-            {
-                var propertyName  = property.Name;
-                var propertyValue = property.Argument.Value;
-
-                processor.InsertBefore(insert, OpCodes.Dup);
-
-                switch (propertyValue)
-                {
-                    case bool value:
-                        if (value)
-                        {
-                            processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
-                        }
-                        else
-                        {
-                            processor.InsertBefore(insert, OpCodes.Ldc_I4_0);
-                        }
-                        break;
-
-                    case sbyte value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, value);
-                        break;
-
-                    case short value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
-                        break;
-
-                    case int value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
-                        break;
-
-                    case long value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I8, value);
-                        break;
-
-                    case byte value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, (sbyte)value);
-                        break;
-
-                    case ushort value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (short)value);
-                        break;
-
-                    case uint value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (int)value);
-                        break;
-
-                    case ulong value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I8, (long)value);
-                        break;
-
-                    case float value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_R4, value);
-                        break;
-
-                    case double value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_R8, value);
-                        break;
-
-                    case char value:
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
-                        break;
-
-                    case string value:
-                        processor.InsertBefore(insert, OpCodes.Ldstr, value);
-                        break;
-
-                    case TypeReference value:
-                        processor.InsertBefore(insert, OpCodes.Ldtoken, module.ImportReference(value));
-                        processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
-                }
-
-                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(attributeType.GetProperty(propertyName).GetSetMethod()));
-            }
-        }
-
         #endregion
 
         #region Emit
@@ -807,22 +634,242 @@ namespace SoftCube.Aspects
             }
         }
 
+        #endregion
+
+        #endregion
+
+        #region 高レベル命令
+
+        #region New
+
         /// <summary>
-        /// 命令の前にアスペクト属性を追加するコードを追加します。
+        /// 指定命令の前にアスペクト属性を生成するコードを挿入します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">命令。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        /// <returns>アスペクト属性の変数インデックス。</returns>
-        internal static void NewAspectAttribute(this ILProcessor processor, CustomAttribute aspect)
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        public static void NewAspectAttribute(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
         {
-            InsertNewAspectAttributeBefore(processor, null, aspect);
+            var method       = processor.Body.Method;
+            var module       = method.DeclaringType.Module.Assembly.MainModule;
+            var instructions = method.Body.Instructions;
+
+            /// 属性を生成して、ローカル変数にストアします。
+            var attributeType  = aspectAttribute.AttributeType.ToSystemType();
+            var argumentTypes  = aspectAttribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
+            var argumentValues = aspectAttribute.ConstructorArguments.Select(a => a.Value);
+            foreach (var argumentValue in argumentValues)
+            {
+                switch (argumentValue)
+                {
+                    case bool value:
+                        if (value)
+                        {
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
+                        }
+                        else
+                        {
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_0);
+                        }
+                        break;
+
+                    case sbyte value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, value);
+                        break;
+
+                    case short value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case int value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case long value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, value);
+                        break;
+
+                    case byte value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, (sbyte)value);
+                        break;
+
+                    case ushort value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (short)value);
+                        break;
+
+                    case uint value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (int)value);
+                        break;
+
+                    case ulong value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, (long)value);
+                        break;
+
+                    case float value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_R4, value);
+                        break;
+
+                    case double value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_R8, value);
+                        break;
+
+                    case char value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case string value:
+                        processor.InsertBefore(insert, OpCodes.Ldstr, value);
+                        break;
+
+                    case TypeReference value:
+                        processor.InsertBefore(insert, OpCodes.Ldtoken, module.ImportReference(value));
+                        processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+
+            processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(attributeType.GetConstructor(argumentTypes.ToArray())));
+
+            /// プロパティを設定します。
+            foreach (var property in aspectAttribute.Properties)
+            {
+                var propertyName  = property.Name;
+                var propertyValue = property.Argument.Value;
+
+                processor.InsertBefore(insert, OpCodes.Dup);
+
+                switch (propertyValue)
+                {
+                    case bool value:
+                        if (value)
+                        {
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_1);
+                        }
+                        else
+                        {
+                            processor.InsertBefore(insert, OpCodes.Ldc_I4_0);
+                        }
+                        break;
+
+                    case sbyte value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, value);
+                        break;
+
+                    case short value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case int value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case long value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, value);
+                        break;
+
+                    case byte value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4_S, (sbyte)value);
+                        break;
+
+                    case ushort value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (short)value);
+                        break;
+
+                    case uint value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, (int)value);
+                        break;
+
+                    case ulong value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I8, (long)value);
+                        break;
+
+                    case float value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_R4, value);
+                        break;
+
+                    case double value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_R8, value);
+                        break;
+
+                    case char value:
+                        processor.InsertBefore(insert, OpCodes.Ldc_I4, value);
+                        break;
+
+                    case string value:
+                        processor.InsertBefore(insert, OpCodes.Ldstr, value);
+                        break;
+
+                    case TypeReference value:
+                        processor.InsertBefore(insert, OpCodes.Ldtoken, module.ImportReference(value));
+                        processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))));
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
+
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(attributeType.GetProperty(propertyName).GetSetMethod()));
+            }
         }
 
         /// <summary>
-        /// 
+        /// 末尾に指定型のインスタンスを生成するコードを追加します。
         /// </summary>
-        internal static void NewArguments(this ILProcessor processor)
+        /// <typeparam name="T">型。</typeparam>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="argumentTypes">引数型配列。</param>
+        public static void New<T>(this ILProcessor processor, params Type[] argumentTypes)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
+        }
+
+        /// <summary>
+        /// 末尾に指定型のインスタンスを生成するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">型。</param>
+        public static void New(this ILProcessor processor, TypeReference type)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Resolve().Methods.Single(m => m.Name == ".ctor")));
+        }
+
+        /// <summary>
+        /// 末尾に指定型のインスタンスを生成するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">型。</param>
+        public static void New(this ILProcessor processor, TypeDefinition type)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
+        }
+
+        /// <summary>
+        /// 末尾にアスペクト属性を生成するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        public static void NewAspectAttribute(this ILProcessor processor, CustomAttribute aspectAttribute)
+        {
+            NewAspectAttribute(processor, null, aspectAttribute);
+        }
+
+        /// <summary>
+        /// 末尾に Arguments を生成するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        public static void NewArguments(this ILProcessor processor)
         {
             var method     = processor.Body.Method;
             var module     = method.Module;
@@ -913,76 +960,27 @@ namespace SoftCube.Aspects
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="processor"></param>
-        /// <param name="types"></param>
-        internal static void New<T>(this ILProcessor processor, params Type[] types)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
+        #endregion
 
-            processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(types)));
+        #region Load
+
+        /// <summary>
+        /// 末尾にローカル変数をロードするコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="variable">ローカル変数のインデックス。</param>
+        internal static void Load(this ILProcessor processor, int variable)
+        {
+            processor.Emit(OpCodes.Ldloc, variable);
         }
 
         /// <summary>
-        /// 
+        /// 末尾に this (第 0 引数) をロードするコードを追加します。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="processor"></param>
-        /// <param name="types"></param>
-        internal static void New(this ILProcessor processor, TypeDefinition type)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="type"></param>
-        /// <param name="propertyName"></param>
-        internal static void SetProperty(this ILProcessor processor, Type type, string propertyName)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="type"></param>
-        /// <param name="propertyName"></param>
-        internal static void GetProperty(this ILProcessor processor, Type type, string propertyName)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="variable"></param>
-        internal static void Store(this ILProcessor processor, int variable)
-        {
-            processor.Emit(OpCodes.Stloc, variable);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <remarks>
+        /// 静的メソッドの場合、コードを追加しません。
+        /// </remarks>
         internal static void LoadThis(this ILProcessor processor)
         {
             var method = processor.Body.Method;
@@ -994,21 +992,21 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// 末尾に null をロードするコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
         internal static void LoadNull(this ILProcessor processor) 
         {
             processor.Emit(OpCodes.Ldnull);
         }
 
         /// <summary>
-        /// 
+        /// 末尾に引数をロードするコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
         internal static void LoadArguments(this ILProcessor processor)
         {
-            var method = processor.Body.Method;
+            var method     = processor.Body.Method;
             var parameters = method.Parameters;
 
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
@@ -1024,67 +1022,126 @@ namespace SoftCube.Aspects
             }
         }
 
+        #endregion
+
+        #region Store
+
         /// <summary>
-        /// 
+        /// 末尾にローカル変数をストアするコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="local"></param>
-        internal static void Load(this ILProcessor processor, int local)
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="variable">ローカル変数のインデックス。</param>
+        internal static void Store(this ILProcessor processor, int variable)
         {
-            processor.Emit(OpCodes.Ldloc, local);
+            processor.Emit(OpCodes.Stloc, variable);
+        }
+
+        #endregion
+
+        #region Call
+
+        /// <summary>
+        /// 末尾にメソッドを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">メソッドの宣言型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        internal static void Call(this ILProcessor processor, Type type, string methodName)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethods().Single(m => m.Name == methodName)));
         }
 
         /// <summary>
-        /// 
+        /// 末尾にメソッドを呼びだすコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="method"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="method">メソッド。</param>
         internal static void Call(this ILProcessor processor, MethodDefinition method)
         {
             processor.Emit(OpCodes.Call, method);
         }
 
         /// <summary>
-        /// 
+        /// 末尾に仮想メソッドを呼びだすコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="type"></param>
-        /// <param name="methodName"></param>
-        internal static void CallVirtual(this ILProcessor processor, TypeReference type, string methodName)
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">メソッドの宣言型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        internal static void CallVirtual(this ILProcessor processor, Type type, string methodName)
         {
-            var module = processor.Body.Method.Module;
-            var typeDefinition = type.Resolve();
+            var method = processor.Body.Method;
+            var module = method.Module;
 
-            while (true)
-            {
-                var handler = typeDefinition.Methods.SingleOrDefault(m => m.Name == methodName);
-                if (handler != null)
-                {
-                    processor.Emit(OpCodes.Callvirt, module.ImportReference(handler));
-                    break;
-                }
-                else
-                {
-                    Assert.NotNull(typeDefinition.Resolve().BaseType);
-                    typeDefinition = typeDefinition.Resolve().BaseType.Resolve();
-                }
-            }
+            processor.Emit(OpCodes.Callvirt, module.ImportReference(type.GetMethods().Single(m => m.Name == methodName)));
         }
 
         /// <summary>
-        /// 
+        /// 末尾に仮想メソッドを呼びだすコードを追加します。
         /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="method">メソッド。</param>
+        internal static void CallVirtual(this ILProcessor processor, MethodDefinition method)
+        {
+            processor.Emit(OpCodes.Callvirt, method);
+        }
+
+        /// <summary>
+        /// 末尾に静的メソッドを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">メソッドの宣言型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        /// <param name="argumentTypes">引数型配列。</param>
         internal static void CallStatic(this ILProcessor processor, Type type, string methodName, params Type[] argumentTypes)
         {
             var module = processor.Body.Method.Module;
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethod(methodName, argumentTypes)));
         }
 
+        #endregion
+
+        #region Property
+
         /// <summary>
-        /// 
+        /// 末尾にプロパティの set メソッドを呼びだすコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="type"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">プロパティの宣言型。</param>
+        /// <param name="propertyName">プロパティ名。</param>
+        internal static void SetProperty(this ILProcessor processor, Type type, string propertyName)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
+        }
+
+        /// <summary>
+        /// 末尾にプロパティの get メソッドを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">プロパティの宣言型。</param>
+        /// <param name="propertyName">プロパティ名。</param>
+        internal static void GetProperty(this ILProcessor processor, Type type, string propertyName)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
+        }
+
+        #endregion
+
+        #region Box
+
+        /// <summary>
+        /// 末尾に Box 化のコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">型。</param>
         internal static void Box(this ILProcessor processor, TypeReference type)
         {
             if (type.IsValueType)
@@ -1094,10 +1151,10 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// 末尾に Box 化解除のコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="type"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">型。</param>
         internal static void Unbox(this ILProcessor processor, TypeReference type)
         {
             if (type.IsValueType)
@@ -1106,29 +1163,41 @@ namespace SoftCube.Aspects
             }
         }
 
+        #endregion
+
+        #region Rethrow
+
         /// <summary>
-        /// 
+        /// 末尾に rethrow 命令を追加します。
         /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
         internal static void Rethrow(this ILProcessor processor)
         {
             processor.Emit(OpCodes.Rethrow);
         }
 
+        #endregion
+
+        #region Return
+
         /// <summary>
-        /// 
+        /// 末尾に return 命令を追加します。
         /// </summary>
-        /// <param name="processor"></param>
+        /// <param name="processor">IL プロセッサー。</param>
         internal static void Return(this ILProcessor processor)
         {
              processor.Emit(OpCodes.Ret);
         }
 
+        #endregion
+
+        #region Update
+
         /// <summary>
-        /// 引数を更新します。
+        /// Arguments のローカル変数の内容で引数を更新します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="argumentsVariable"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="argumentsVariable">Arguments のローカル変数。</param>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを更新対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
@@ -1233,10 +1302,10 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// AspectArgs.Arguments を更新します。
+        /// 引数の内容で AspectArgs.Arguments を更新します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="argumentsVariable"></param>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="argumentsVariable">Arguments のローカル変数。</param>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを更新対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
@@ -1337,6 +1406,8 @@ namespace SoftCube.Aspects
                 }
             }
         }
+
+        #endregion
 
         #endregion
 

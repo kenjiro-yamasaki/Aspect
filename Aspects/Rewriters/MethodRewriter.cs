@@ -20,7 +20,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクト属性の型。
         /// </summary>
-        public TypeDefinition AspectAttribueType => AspectAttribute.AttributeType.Resolve();
+        public TypeDefinition AspectAttributeType => AspectAttribute.AttributeType.Resolve();
 
         /// <summary>
         /// ターゲットメソッド。
@@ -106,50 +106,34 @@ namespace SoftCube.Aspects
             handlers.Add(@finally);
 
             /// ...OnEntry アドバイス...
-            {
-                onEntry(Processor);
-            }
+            onEntry(Processor);
 
             /// try
             /// {
             ///     ...OnInvoke アドバイス...
-            Instruction leave;
-            {
-                @catch.TryStart = @finally.TryStart = Processor.EmitNop();
-                onInvoke(Processor);
-                leave = Processor.EmitLeave(OpCodes.Leave);
-            }
+            @catch.TryStart = @finally.TryStart = Processor.EmitNop();
+            onInvoke(Processor);
+            var leave = Processor.EmitLeave(OpCodes.Leave);
 
             /// }
             /// catch (Exception ex)
             /// {
             ///     ...OnException アドバイス...
             /// }
-            {
-                @catch.TryEnd = @catch.HandlerStart = Processor.EmitNop();
-
-                //ExceptionVariable = Variables.Count;
-                //Variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
-                //Processor.Emit(OpCodes.Stloc, ExceptionVariable);
-
-                onException(Processor);
-            }
+            @catch.TryEnd = @catch.HandlerStart = Processor.EmitNop();
+            onException(Processor);
 
             /// finally
             /// {
             ///     ...OnFinally アドバイス...
             /// }
-            {
-                @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = Processor.EmitNop();
-                onExit(Processor);
-                Processor.Emit(OpCodes.Endfinally);
-            }
+            @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = Processor.EmitNop();
+            onExit(Processor);
+            Processor.Emit(OpCodes.Endfinally);
 
             /// ...OnReturn アドバイス...
-            {
-                leave.Operand = @finally.HandlerEnd = Processor.EmitNop();
-                onReturn(Processor);
-            }
+            leave.Operand = @finally.HandlerEnd = Processor.EmitNop();
+            onReturn(Processor);
 
             /// IL コードを最適化します。
             TargetMethod.Optimize();
@@ -163,20 +147,27 @@ namespace SoftCube.Aspects
         {
             Assert.Null(OriginalTargetMethod);
 
-            OriginalTargetMethod = new MethodDefinition(TargetMethod.Name + "<Original>", TargetMethod.Attributes, TargetMethod.ReturnType);
-            foreach (var parameter in TargetMethod.Parameters)
+            /// オリジナルターゲットメソッドを生成します。
             {
-                OriginalTargetMethod.Parameters.Add(parameter);
-            }
-            OriginalTargetMethod.Body = TargetMethod.Body;
+                OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, TargetMethod.Attributes, TargetMethod.ReturnType);
 
-            foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
-            {
-                OriginalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
-            }
-            DeclaringType.Methods.Add(OriginalTargetMethod);
+                foreach (var parameter in TargetMethod.Parameters)
+                {
+                    OriginalTargetMethod.Parameters.Add(parameter);
+                }
 
-            TargetMethod.Body = new Mono.Cecil.Cil.MethodBody(TargetMethod);
+                foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
+                {
+                    OriginalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                }
+
+                OriginalTargetMethod.Body = TargetMethod.Body;
+
+                DeclaringType.Methods.Add(OriginalTargetMethod);
+            }
+
+            /// ターゲットメソッドの Body を新規作成します。
+            TargetMethod.Body = new MethodBody(TargetMethod);
         }
 
         #endregion

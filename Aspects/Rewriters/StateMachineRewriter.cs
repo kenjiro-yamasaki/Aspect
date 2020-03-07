@@ -197,7 +197,7 @@ namespace SoftCube.Aspects
             var attributeType = AspectAttribute.AttributeType.ToSystemType();
             variables.Add(new VariableDefinition(Module.ImportReference(attributeType)));
 
-            processor.InsertNewAspectAttributeBefore(first, AspectAttribute);
+            processor.NewAspectAttribute(first, AspectAttribute);
             processor.InsertBefore(first, OpCodes.Stloc, aspectAttributeVariable);
 
             /// アスペクト属性のインスタンスをフィールドにストアします。

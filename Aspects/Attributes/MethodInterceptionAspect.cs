@@ -91,7 +91,7 @@ namespace SoftCube.Aspects
                 /// return (TResult)aspectArgs.ReturnValue;
                 var processor = rewriter.Processor;
 
-                int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttribueType);
+                int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttributeType);
                 processor.NewAspectAttribute(rewriter.AspectAttribute);
                 processor.Store(aspectAttributeVariable);
                 //int aspectAttributeVariable = processor.StoreLocal(rewriter.AspectAttribueType);
@@ -128,7 +128,7 @@ namespace SoftCube.Aspects
 
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
-                processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnInvoke));
+                processor.CallVirtual(typeof(MethodInterceptionAspect), nameof(OnInvoke));
 
                 processor.UpdateArguments(argumentsVariable, pointerOnly: true);
                 //rewriter.UpdateArguments(pointerOnly: true, argumentsVariable);
@@ -168,7 +168,7 @@ namespace SoftCube.Aspects
                 var processor = rewriter.Processor;
 
                 processor.NewAspectAttribute(rewriter.AspectAttribute);
-                int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttribueType);
+                int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttributeType);
                 processor.Store(aspectAttributeVariable);
 
                 processor.NewArguments();
