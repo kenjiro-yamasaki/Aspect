@@ -37,11 +37,6 @@ namespace SoftCube.Aspects
         public MethodDefinition OriginalTargetMethod { get; private set; }
 
         /// <summary>
-        /// メソッドの宣言型。
-        /// </summary>
-        public TypeDefinition DeclaringType => TargetMethod.DeclaringType;
-
-        /// <summary>
         /// モジュール。
         /// </summary>
         public ModuleDefinition Module => TargetMethod.Module;
@@ -163,7 +158,7 @@ namespace SoftCube.Aspects
 
                 OriginalTargetMethod.Body = TargetMethod.Body;
 
-                DeclaringType.Methods.Add(OriginalTargetMethod);
+                TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
             }
 
             /// ターゲットメソッドの Body を新規作成します。
