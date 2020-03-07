@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using SoftCube.Asserts;
 using System;
 using System.Linq;
+using System.Reflection;
 
 namespace SoftCube.Aspects
 {
@@ -1127,11 +1128,228 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
         internal static void Return(this ILProcessor processor)
         {
              processor.Emit(OpCodes.Ret);
         }
 
+        /// <summary>
+        /// 引数を更新します。
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="argumentsVariable"></param>
+        /// <param name="pointerOnly">
+        /// ポインタ引数のみを更新対象とするか。
+        /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
+        /// <c>false</c> の場合、すべての引数を更新します。
+        /// </param>
+        internal static void UpdateArguments(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
+        {
+            var method     = processor.Body.Method;
+            var module     = method.Module;
+            var parameters = method.Parameters;
+
+            if (parameters.Count <= 8)
+            {
+                var fieldNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
+
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        processor.Emit(OpCodes.Ldfld, module.ImportReference(method.ArgumentsType().GetField(fieldNames[parameterIndex])));
+                        processor.EmitStind(elementType);
+                    }
+                    else if (!pointerOnly)
+                    {
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        processor.Emit(OpCodes.Ldfld, module.ImportReference(method.ArgumentsType().GetField(fieldNames[parameterIndex])));
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex + 1);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
+
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Unbox, elementType);
+                            processor.Emit(OpCodes.Ldobj, elementType);
+                        }
+                        processor.EmitStind(elementType);
+                    }
+                    else if (!pointerOnly)
+                    {
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        processor.Emit(OpCodes.Call, module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        if (parameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Unbox_Any, parameterType);
+                        }
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Starg, parameterIndex + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// AspectArgs.Arguments を更新します。
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="argumentsVariable"></param>
+        /// <param name="pointerOnly">
+        /// ポインタ引数のみを更新対象とするか。
+        /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
+        /// <c>false</c> の場合、すべての引数を更新します。
+        /// </param>
+        internal static void UpdateArgumentsProperty(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
+        {
+            var method     = processor.Body.Method;
+            var module     = method.Module;
+            var parameters = method.Parameters;
+
+            if (parameters.Count <= 8)
+            {
+                var fieldNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
+
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter     = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
+                        processor.EmitLdind(elementType);
+                        processor.Emit(OpCodes.Stfld, module.ImportReference(method.ArgumentsType().GetField(fieldNames[parameterIndex])));
+                    }
+                    else if (!pointerOnly)
+                    {
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
+                        processor.Emit(OpCodes.Stfld, module.ImportReference(method.ArgumentsType().GetField(fieldNames[parameterIndex])));
+                    }
+                }
+            }
+            else
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter     = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    if (parameterType.IsByReference)
+                    {
+                        var elementType = parameterType.GetElementType();
+
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
+                        processor.EmitLdind(elementType);
+                        if (elementType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, elementType);
+                        }
+                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                        if (method.IsStatic)
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex);
+                        }
+                        else
+                        {
+                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                        }
+                        if (parameterType.IsValueType)
+                        {
+                            processor.Emit(OpCodes.Box, parameterType);
+                        }
+                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
+                    }
+                }
+            }
+        }
 
         #endregion
 

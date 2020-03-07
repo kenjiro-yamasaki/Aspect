@@ -122,9 +122,9 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
                 processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnInvoke));
-                //rewriter.InvokeAspectHandler(nameof(OnInvoke));
 
-                rewriter.UpdateArguments(pointerOnly: true, argumentsVariable);
+                processor.UpdateArguments(argumentsVariable, pointerOnly: true);
+                //rewriter.UpdateArguments(pointerOnly: true, argumentsVariable);
                 if (rewriter.TargetMethod.HasReturnValue())
                 {
                     processor.Load(aspectArgsVariable);

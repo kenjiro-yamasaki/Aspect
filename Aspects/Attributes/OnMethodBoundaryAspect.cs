@@ -108,7 +108,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
                 processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnEntry));
-                rewriter.UpdateArguments(pointerOnly: false, argumentsVariable);
+                processor.UpdateArguments(argumentsVariable, pointerOnly: false);
             });
 
             var onInvoke = new Action<ILProcessor>(processor =>
@@ -135,8 +135,7 @@ namespace SoftCube.Aspects
                     processor.LoadArguments();
                     processor.Call(rewriter.OriginalTargetMethod);
                 }
-
-                rewriter.UpdateArgumentsProperty(pointerOnly: true, argumentsVariable);
+                processor.UpdateArgumentsProperty(argumentsVariable, pointerOnly: true);
 
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
@@ -167,7 +166,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
                 processor.CallVirtual(rewriter.AspectAttribueType, nameof(OnExit));
-                rewriter.UpdateArguments(pointerOnly: true, argumentsVariable);
+                processor.UpdateArguments(argumentsVariable, pointerOnly: true);
             });
 
             var onReturn = new Action<ILProcessor>(processor =>
