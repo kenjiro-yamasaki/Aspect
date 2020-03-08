@@ -213,6 +213,7 @@ namespace SoftCube.Aspects
                 /// _aspect.OnEntry(aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
+                /// ...
                 processor.LoadThis();
                 processor.NewAspectAttribute(aspectAttribute);
                 processor.Store(aspectField);
@@ -250,6 +251,7 @@ namespace SoftCube.Aspects
                 /// _aspect.OnResume(aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
+                /// ...
                 processor.LoadThis();
                 processor.Load(aspectField);
                 processor.LoadThis();
