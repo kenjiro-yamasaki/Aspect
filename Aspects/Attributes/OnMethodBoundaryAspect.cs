@@ -208,9 +208,10 @@ namespace SoftCube.Aspects
 
             var onEntry = new Action<ILProcessor>(processor =>
             {
-                /// _arguments  = new Arguments(...);
-                /// _aspectArgs = new MethodExecutionArgs(instance, arguments);
-                /// _aspect.OnEntry(aspectArgs);
+                /// _aspectAttribute = new AspectAttribute(...) {...};
+                /// _arguments       = new Arguments(...);
+                /// _aspectArgs      = new MethodExecutionArgs(<>4__this, _arguments);
+                /// _aspectAttribute.OnEntry(_aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
                 /// ...
@@ -248,7 +249,7 @@ namespace SoftCube.Aspects
 
             var onResume = new Action<ILProcessor>(processor =>
             {
-                /// _aspect.OnResume(aspectArgs);
+                /// _aspectAttribute.OnResume(_aspectArgs);
                 /// arg0 = _arguments.Arg0;
                 /// arg1 = _arguments.Arg1;
                 /// ...
@@ -263,8 +264,8 @@ namespace SoftCube.Aspects
             var onYield = new Action<ILProcessor>(processor =>
             {
                 /// _aspectArgs.YieldValue = <> 2__current;
-                /// _aspect.OnYield(aspectArgs);
-                /// <>2__current = (TResult)aspectArgs.YieldValue;
+                /// _aspectAttribute.OnYield(_aspectArgs);
+                /// <>2__current = (TResult)_aspectArgs.YieldValue;
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.LoadThis();
@@ -288,7 +289,7 @@ namespace SoftCube.Aspects
 
             var onSuccess = new Action<ILProcessor>(processor =>
             {
-                /// _aspect.OnSuccess(aspectArgs);
+                /// _aspectAttribute.OnSuccess(_aspectArgs);
                 processor.LoadThis();
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
@@ -299,7 +300,7 @@ namespace SoftCube.Aspects
             var onException = new Action<ILProcessor>(processor =>
             {
                 /// _aspectArgs.Exception = exception;
-                /// _aspect.OnException(aspectArgs);
+                /// _aspectAttribute.OnException(_aspectArgs);
                 processor.Store(exceptionVariable);
 
                 processor.LoadThis();
@@ -316,7 +317,7 @@ namespace SoftCube.Aspects
 
             var onExit = new Action<ILProcessor>(processor =>
             {
-                /// _aspect.OnExit(aspectArgs);
+                /// _aspectAttribute.OnExit(_aspectArgs);
                 processor.LoadThis();
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
@@ -352,12 +353,12 @@ namespace SoftCube.Aspects
 
             var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// var instance = <> 4__this;
-                /// arguments = new Arguments(...);
-                /// aspectArgs = new MethodExecutionArgs(instance, arguments);
-                /// aspect.OnEntry(aspectArgs);
-                /// arg0 = arguments.Arg0;
-                /// arg1 = arguments.Arg1;
+                /// _aspectAttribute = new AspectAttribute(...) {...};
+                /// _arguments       = new Arguments(...);
+                /// _aspectArgs      = new MethodExecutionArgs(4__this, _arguments);
+                /// _aspectAttribute.OnEntry(_aspectArgs);
+                /// arg0 = _arguments.Arg0;
+                /// arg1 = _arguments.Arg1;
                 /// ...
                 processor.LoadThis(insert);
                 processor.NewAspectAttribute(insert, aspectAttribute);
@@ -393,9 +394,9 @@ namespace SoftCube.Aspects
 
             var onResume = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// aspect.OnResume(aspectArgs);
-                /// arg0 = arguments.Arg0;
-                /// arg1 = arguments.Arg1;
+                /// _aspectAttribute.OnResume(_aspectArgs);
+                /// arg0 = _arguments.Arg0;
+                /// arg1 = _arguments.Arg1;
                 /// ...
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectAttributeField);
@@ -407,7 +408,7 @@ namespace SoftCube.Aspects
 
             var onYield = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// aspect.OnYield(aspectArgs);
+                /// _aspectAttribute.OnYield(_aspectArgs);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
@@ -417,9 +418,9 @@ namespace SoftCube.Aspects
 
             var onSuccess = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// aspectArgs.ReturnValue = result;
-                /// aspect.OnSuccess(aspectArgs);
-                /// result = (TResult)aspectArgs.ReturnValue;
+                /// _aspectArgs.ReturnValue = result;
+                /// _aspectAttribute.OnSuccess(_aspectArgs);
+                /// result = (TResult)_aspectArgs.ReturnValue;
                 int resultVariable = 1;
                 if (targetMethod.ReturnType is GenericInstanceType genericReturnType)
                 {
@@ -454,8 +455,8 @@ namespace SoftCube.Aspects
 
             var onException = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// aspectArgs.Exception = exception;
-                /// aspect.OnException(aspectArgs);
+                /// _aspectArgs.Exception = exception;
+                /// _aspectAttribute.OnException(_aspectArgs);
                 processor.Store(insert, exceptionVariable);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
@@ -471,7 +472,7 @@ namespace SoftCube.Aspects
 
             var onExit = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// aspect.OnExit(aspectArgs);
+                /// _aspectAttribute.OnExit(_aspectArgs);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);

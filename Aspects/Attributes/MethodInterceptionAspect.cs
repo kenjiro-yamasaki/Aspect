@@ -85,11 +85,11 @@ namespace SoftCube.Aspects
             var argumentsVariable       = targetMethod.AddVariable(targetMethod.ArgumentsType());
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodInterceptionArgs));
 
-            /// var aspect     = new Aspect(...) { ... };
-            /// var arguments  = new Arguments(...);
-            /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
+            /// var aspectAttribute = new AspectAttribute(...) {...};
+            /// var arguments       = new Arguments(...);
+            /// var aspectArgs      = new MethodInterceptionArgs(this, arguments);
             /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-            /// aspect.OnInvoke(aspectArgs);
+            /// aspectAttribute.OnInvoke(aspectArgs);
             /// arg0 = (TArg0)arguments[0];
             /// arg1 = (TArg1)arguments[1];
             /// ...
@@ -150,9 +150,9 @@ namespace SoftCube.Aspects
             var argumentsVariable       = targetMethod.AddVariable(targetMethod.ArgumentsType());
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodExecutionArgs));
 
-            /// var aspect     = new Aspect(...) {...};
-            /// var arguments  = new Arguments(...);
-            /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
+            /// var aspectAttribute = new AspectAttribute(...) {...};
+            /// var arguments       = new Arguments(...);
+            /// var aspectArgs      = new MethodInterceptionArgs(this, arguments);
             /// aspectArgs.Method = MethodBase.GetCurrentMethod();
             processor.NewAspectAttribute(rewriter.AspectAttribute);
             processor.Store(aspectAttributeVariable);
@@ -176,6 +176,10 @@ namespace SoftCube.Aspects
             processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
             processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
 
+            /// var stateMachine = new MethodInterceptionAsyncStateMachine(aspectAttribute, aspectArgs);
+            /// var builder      = stateMachine.Builder;
+            /// builder.Start(ref stateMachine);
+            /// return stateMachine.Builder.Task;
             Type stateMachineType;
             Type builderType;
             if (targetMethod.ReturnType is GenericInstanceType taskType)
