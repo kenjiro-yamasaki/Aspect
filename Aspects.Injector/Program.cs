@@ -19,6 +19,8 @@ namespace SoftCube.Aspects.Injector
         {
             try
             {
+                using var profile = Profiling.Profiler.Start(nameof(Main));
+
                 /// カスタムコードの注入対象アセンブリファイルパスを取得します。
                 var assemblyFilePath      = args[0];
                 var assemblyDirectoryName = Path.GetDirectoryName(assemblyFilePath);

@@ -1,28 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net472</TargetFramework>
-    <AssemblyName>SoftCube.Aspects.Injector</AssemblyName>
-    <RootNamespace>SoftCube.Aspects.Injector</RootNamespace>
-    <Platforms>AnyCPU;x64;x86</Platforms>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net472</TargetFramework>
+        <AssemblyName>SoftCube.Aspects.Injector</AssemblyName>
+        <RootNamespace>SoftCube.Aspects.Injector</RootNamespace>
+        <Platforms>AnyCPU;x64;x86</Platforms>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Extensions\**" />
-    <EmbeddedResource Remove="Extensions\**" />
-    <None Remove="Extensions\**" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="Extensions\**" />
+        <EmbeddedResource Remove="Extensions\**" />
+        <None Remove="Extensions\**" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Aspects\Aspects.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="SoftCube.Logging" Version="1.0.7" />
+        <PackageReference Include="SoftCube.Profiling" Version="1.0.6" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Logging.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Aspects\Aspects.csproj" />
+    </ItemGroup>
 
+    <ItemGroup>
+        <None Update="Application.config">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 
 </Project>
