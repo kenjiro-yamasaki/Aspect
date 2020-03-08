@@ -96,7 +96,7 @@ namespace SoftCube.Aspects
                     processor.LoadThis();
                 }
                 processor.Load(argumentsVariable);
-                processor.New<MethodExecutionArgs>(typeof(object), typeof(Arguments));
+                processor.New(typeof(MethodExecutionArgs), typeof(object), typeof(Arguments));
                 processor.Store(aspectArgsVariable);
 
                 processor.Load(aspectArgsVariable);
@@ -192,19 +192,19 @@ namespace SoftCube.Aspects
         /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
         private void RewriteMoveNextMethod(IteratorStateMachineRewriter rewriter)
         {
-            var module            = rewriter.Module;
-            var aspectAttribute   = rewriter.AspectAttribute;
-            var aspectArgsType    = rewriter.AspectArgsType;
-            var moveNextMethod    = rewriter.MoveNextMethod;
-            var targetMethod      = rewriter.TargetMethod;
-            var stateMachineType  = rewriter.StateMachineType;
+            var module               = rewriter.Module;
+            var aspectAttribute      = rewriter.AspectAttribute;
+            var aspectArgsType       = rewriter.AspectArgsType;
+            var moveNextMethod       = rewriter.MoveNextMethod;
+            var targetMethod         = rewriter.TargetMethod;
+            var stateMachineType     = rewriter.StateMachineType;
 
-            var thisField         = rewriter.ThisField;
-            var currentField      = rewriter.CurrentField;
-            var aspectField       = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField    = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
-            var aspectArgsField   = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
-            var exceptionVariable = moveNextMethod.AddVariable(typeof(Exception));
+            var thisField            = rewriter.ThisField;
+            var currentField         = rewriter.CurrentField;
+            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
+            var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
+            var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor>(processor =>
             {
@@ -216,7 +216,7 @@ namespace SoftCube.Aspects
                 /// ...
                 processor.LoadThis();
                 processor.NewAspectAttribute(aspectAttribute);
-                processor.Store(aspectField);
+                processor.Store(aspectAttributeField);
 
                 processor.LoadThis();
                 processor.NewArguments(targetMethod);
@@ -235,11 +235,11 @@ namespace SoftCube.Aspects
                 }
                 processor.LoadThis();
                 processor.Load(argumentsField);
-                processor.New<MethodExecutionArgs>(typeof(object), typeof(Arguments));
+                processor.New(typeof(MethodExecutionArgs), typeof(object), typeof(Arguments));
                 processor.Store(aspectArgsField);
 
                 processor.LoadThis();
-                processor.Load(aspectField);
+                processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnEntry));
@@ -253,7 +253,7 @@ namespace SoftCube.Aspects
                 /// arg1 = _arguments.Arg1;
                 /// ...
                 processor.LoadThis();
-                processor.Load(aspectField);
+                processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnResume));
@@ -273,7 +273,7 @@ namespace SoftCube.Aspects
                 processor.SetProperty(typeof(MethodExecutionArgs), nameof(MethodExecutionArgs.YieldValue));
 
                 processor.LoadThis();
-                processor.Load(aspectField);
+                processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnYield));
@@ -290,7 +290,7 @@ namespace SoftCube.Aspects
             {
                 /// _aspect.OnSuccess(aspectArgs);
                 processor.LoadThis();
-                processor.Load(aspectField);
+                processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnSuccess));
@@ -308,7 +308,7 @@ namespace SoftCube.Aspects
                 processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Exception));
 
                 processor.LoadThis();
-                processor.Load(aspectField);
+                processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnException));
@@ -318,7 +318,7 @@ namespace SoftCube.Aspects
             {
                 /// _aspect.OnExit(aspectArgs);
                 processor.LoadThis();
-                processor.Load(aspectField);
+                processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnExit));
@@ -337,18 +337,18 @@ namespace SoftCube.Aspects
         /// <param name="rewriter">非同期ステートマシンの書き換え。</param>
         private void RewriteMoveNextMethod(AsyncStateMachineRewriter rewriter)
         {
-            var module            = rewriter.Module;
-            var aspectAttribute   = rewriter.AspectAttribute;
-            var aspectArgsType    = rewriter.AspectArgsType;
-            var moveNextMethod    = rewriter.MoveNextMethod;
-            var targetMethod      = rewriter.TargetMethod;
-            var stateMachineType  = rewriter.StateMachineType;
+            var module               = rewriter.Module;
+            var aspectAttribute      = rewriter.AspectAttribute;
+            var aspectArgsType       = rewriter.AspectArgsType;
+            var moveNextMethod       = rewriter.MoveNextMethod;
+            var targetMethod         = rewriter.TargetMethod;
+            var stateMachineType     = rewriter.StateMachineType;
 
-            var thisField         = rewriter.ThisField;
-            var aspectField       = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField    = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
-            var aspectArgsField   = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
-            var exceptionVariable = moveNextMethod.AddVariable(typeof(Exception));
+            var thisField            = rewriter.ThisField;
+            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
+            var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
+            var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
@@ -361,7 +361,7 @@ namespace SoftCube.Aspects
                 /// ...
                 processor.LoadThis(insert);
                 processor.NewAspectAttribute(insert, aspectAttribute);
-                processor.Store(insert, aspectField);
+                processor.Store(insert, aspectAttributeField);
 
                 processor.LoadThis(insert);
                 processor.NewArguments(insert, targetMethod);
@@ -384,7 +384,7 @@ namespace SoftCube.Aspects
                 processor.Store(insert, aspectArgsField);
 
                 processor.LoadThis(insert);
-                processor.Load(insert, aspectField);
+                processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
                 processor.CallVirtual(insert, GetType(), nameof(OnEntry));
@@ -398,7 +398,7 @@ namespace SoftCube.Aspects
                 /// arg1 = arguments.Arg1;
                 /// ...
                 processor.LoadThis(insert);
-                processor.Load(insert, aspectField);
+                processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
                 processor.CallVirtual(insert, GetType(), nameof(OnResume));
@@ -409,7 +409,7 @@ namespace SoftCube.Aspects
             {
                 /// aspect.OnYield(aspectArgs);
                 processor.LoadThis(insert);
-                processor.Load(insert, aspectField);
+                processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
                 processor.CallVirtual(insert, GetType(), nameof(OnYield));
@@ -431,7 +431,7 @@ namespace SoftCube.Aspects
                     processor.SetProperty(insert, typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
 
                     processor.LoadThis(insert);
-                    processor.Load(insert, aspectField);
+                    processor.Load(insert, aspectAttributeField);
                     processor.LoadThis(insert);
                     processor.Load(insert, aspectArgsField);
                     processor.CallVirtual(insert, GetType(), nameof(OnSuccess));
@@ -445,7 +445,7 @@ namespace SoftCube.Aspects
                 else
                 {
                     processor.LoadThis(insert);
-                    processor.Load(insert, aspectField);
+                    processor.Load(insert, aspectAttributeField);
                     processor.LoadThis(insert);
                     processor.Load(insert, aspectArgsField);
                     processor.CallVirtual(insert, GetType(), nameof(OnSuccess));
@@ -463,7 +463,7 @@ namespace SoftCube.Aspects
                 processor.SetProperty(insert, typeof(MethodArgs), nameof(MethodArgs.Exception));
 
                 processor.LoadThis(insert);
-                processor.Load(insert, aspectField);
+                processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
                 processor.CallVirtual(insert, GetType(), nameof(OnException));
@@ -473,7 +473,7 @@ namespace SoftCube.Aspects
             {
                 /// aspect.OnExit(aspectArgs);
                 processor.LoadThis(insert);
-                processor.Load(insert, aspectField);
+                processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
                 processor.CallVirtual(insert, GetType(), nameof(OnExit));

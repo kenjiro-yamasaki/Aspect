@@ -645,15 +645,15 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 末尾に指定型のインスタンスを生成するコードを追加します。
         /// </summary>
-        /// <typeparam name="T">型。</typeparam>
         /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">生成するインスタンスの型。</param>
         /// <param name="argumentTypes">引数型配列。</param>
-        public static void New<T>(this ILProcessor processor, params Type[] argumentTypes)
+        public static void New(this ILProcessor processor, Type type, params Type[] argumentTypes)
         {
             var method = processor.Body.Method;
             var module = method.Module;
 
-            processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
+            processor.Emit(OpCodes.Newobj, module.ImportReference(type.GetConstructor(argumentTypes)));
         }
 
         /// <summary>
@@ -702,7 +702,7 @@ namespace SoftCube.Aspects
         public static void NewAspectAttribute(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
         {
             var method       = processor.Body.Method;
-            var module       = method.DeclaringType.Module.Assembly.MainModule;
+            var module       = method.Module;
             var instructions = method.Body.Instructions;
 
             /// 属性を生成して、ローカル変数にストアします。
@@ -1026,6 +1026,16 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
+        /// 末尾にローカル変数のアドレスをロードするコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="variable">ローカル変数のインデックス。</param>
+        public static void LoadAddress(this ILProcessor processor, int variable)
+        {
+            processor.Emit(OpCodes.Ldloca, variable);
+        }
+
+        /// <summary>
         /// 指定命令の前にローカル変数をロードするコードを挿入します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
@@ -1041,9 +1051,19 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="field">フィールド。</param>
-        public static void Load(this ILProcessor processor, FieldDefinition field)
+        public static void Load(this ILProcessor processor, FieldReference field)
         {
             processor.Emit(OpCodes.Ldfld, field);
+        }
+
+        /// <summary>
+        /// 末尾にフィールドのアドレスをロードするコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="field">フィールド。</param>
+        public static void LoadAddress(this ILProcessor processor, FieldReference field)
+        {
+            processor.Emit(OpCodes.Ldflda, field);
         }
 
         /// <summary>
@@ -1052,7 +1072,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="field">フィールド。</param>
-        public static void Load(this ILProcessor processor, Instruction insert, FieldDefinition field)
+        public static void Load(this ILProcessor processor, Instruction insert, FieldReference field)
         {
             processor.InsertBefore(insert, OpCodes.Ldfld, field);
         }
@@ -1163,7 +1183,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="field">フィールド。</param>
-        public static void Store(this ILProcessor processor, FieldDefinition field)
+        public static void Store(this ILProcessor processor, FieldReference field)
         {
             processor.Emit(OpCodes.Stfld, field);
         }
@@ -1174,7 +1194,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令。</param>
         /// <param name="field">フィールド。</param>
-        public static void Store(this ILProcessor processor, Instruction insert, FieldDefinition field)
+        public static void Store(this ILProcessor processor, Instruction insert, FieldReference field)
         {
             processor.InsertBefore(insert, OpCodes.Stfld, field);
         }
@@ -1188,7 +1208,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="method">メソッド。</param>
-        public static void Call(this ILProcessor processor, MethodDefinition method)
+        public static void Call(this ILProcessor processor, MethodReference method)
         {
             processor.Emit(OpCodes.Call, method);
         }
@@ -1231,7 +1251,9 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void CallStatic(this ILProcessor processor, Type type, string methodName, params Type[] argumentTypes)
         {
-            var module = processor.Body.Method.Module;
+            var method = processor.Body.Method;
+            var module = method.Module;
+
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethod(methodName, argumentTypes)));
         }
 
