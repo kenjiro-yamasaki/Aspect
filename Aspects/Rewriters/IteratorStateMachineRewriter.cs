@@ -23,17 +23,17 @@ namespace SoftCube.Aspects
         /// <summary>
         /// Current フィールド。
         /// </summary>
-        public FieldDefinition CurrentField => StateMachineType.Fields.Single(f => f.Name == "<>2__current");
+        public FieldDefinition CurrentField => StateMachineType.Fields.SingleOrDefault(f => f.Name == "<>2__current");
 
         /// <summary>
         /// ExitFlag フィールド。
         /// </summary>
-        public FieldDefinition ExitFlagField { get; }
+        private FieldDefinition ExitFlagField { get; }
 
         /// <summary>
         /// IsDisposing フィールド。
         /// </summary>
-        public FieldDefinition IsDisposingField { get; }
+        private FieldDefinition IsDisposingField { get; }
 
         #endregion
 

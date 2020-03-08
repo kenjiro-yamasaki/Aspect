@@ -39,12 +39,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="onEntry">OnEntory のアドバイス注入処理。</param>
-        /// <param name="onResume">OnResume のアドバイス注入処理。</param>
-        /// <param name="onYield">OnYield のアドバイス注入処理。</param>
-        /// <param name="onSuccess">OnSuccess のアドバイス注入処理。</param>
-        /// <param name="onException">OnException のアドバイス注入処理。</param>
-        /// <param name="onExit">OnExit のアドバイス注入処理。</param>
+        /// <param name="onEntry">OnEntory アドバイスの注入処理。</param>
+        /// <param name="onResume">OnResume アドバイスの注入処理。</param>
+        /// <param name="onYield">OnYield アドバイスの注入処理。</param>
+        /// <param name="onSuccess">OnSuccess アドバイスの注入処理。</param>
+        /// <param name="onException">OnException アドバイスの注入処理。</param>
+        /// <param name="onExit">OnExit アドバイスの注入処理。</param>
         public void RewriteMoveNextMethod(Action<ILProcessor, Instruction> onEntry, Action<ILProcessor, Instruction> onResume, Action<ILProcessor, Instruction> onYield, Action<ILProcessor, Instruction> onSuccess, Action<ILProcessor, Instruction> onException, Action<ILProcessor, Instruction> onExit)
         {
             var processor    = MoveNextMethod.Body.GetILProcessor();
@@ -216,52 +216,6 @@ namespace SoftCube.Aspects
 
             /// IL コードを最適化します。
             MoveNextMethod.Optimize();
-        }
-
-        /// <summary>
-        /// <see cref="MethodArgs.ReturnValue"/> に戻り値を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        /// <param name="returnVariable">戻り値のローカル変数。</param>
-        public void SetReturnValue(ILProcessor processor, Instruction insert, int returnVariable, FieldDefinition AspectArgsField)
-        {
-            if (TargetMethod.ReturnType is GenericInstanceType genericReturnType)
-            {
-                var returnType = genericReturnType.GenericArguments[0];
-
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
-                processor.InsertBefore(insert, OpCodes.Ldloc, returnVariable);
-                if (returnType.IsValueType)
-                {
-                    processor.InsertBefore(insert, OpCodes.Box, returnType);
-                }
-                processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetSetMethod()));
-            }
-        }
-
-        /// <summary>
-        /// 戻り値に <see cref="MethodArgs.ReturnValue"/> を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        /// <param name="returnVariable">戻り値のローカル変数。</param>
-        public void SetReturnVariable(ILProcessor processor, Instruction insert, int returnVariable, FieldDefinition AspectArgsField)
-        {
-            if (TargetMethod.ReturnType is GenericInstanceType genericReturnType)
-            {
-                var returnType = genericReturnType.GenericArguments[0];
-
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
-                processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.ReturnValue)).GetGetMethod()));
-                if (returnType.IsValueType)
-                {
-                    processor.InsertBefore(insert, OpCodes.Unbox_Any, returnType);
-                }
-                processor.InsertBefore(insert, OpCodes.Stloc, returnVariable);
-            }
         }
 
         #endregion

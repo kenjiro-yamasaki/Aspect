@@ -1254,6 +1254,14 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
         }
 
+        internal static void GetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
+        }
+
         #endregion
 
         #region Box
@@ -1289,6 +1297,14 @@ namespace SoftCube.Aspects
             if (type.IsValueType)
             {
                 processor.Emit(OpCodes.Unbox_Any, type);
+            }
+        }
+
+        internal static void Unbox(this ILProcessor processor, Instruction insert, TypeReference type)
+        {
+            if (type.IsValueType)
+            {
+                processor.InsertBefore(insert, OpCodes.Unbox_Any, type);
             }
         }
 

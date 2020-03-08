@@ -32,31 +32,6 @@ namespace SoftCube.Aspects
         /// </summary>
         public ModuleDefinition Module { get; }
 
-        /// <summary>
-        /// Arguments の型。
-        /// </summary>
-        public Type ArgumentsType
-        {
-            get
-            {
-                var parameters = TargetMethod.Parameters;
-                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
-                return parameters.Count switch
-                {
-                    0 => typeof(Arguments),
-                    1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                    2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                    3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                    4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                    5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                    6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                    7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                    8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                    _ => typeof(ArgumentsArray)
-                };
-            }
-        }
-
         #region ステートマシン
 
         /// <summary>
@@ -74,28 +49,23 @@ namespace SoftCube.Aspects
         #region フィールド
 
         /// <summary>
+        /// This フィールド。
+        /// </summary>
+        public FieldDefinition ThisField => StateMachineType.Fields.SingleOrDefault(f => f.Name == "<>4__this");
+
+        /// <summary>
         /// State フィールド。
         /// </summary>
-        public FieldDefinition StateField { get; }
+        protected FieldDefinition StateField { get; }
 
         /// <summary>
         /// ResumeFlag フィールド。
         /// </summary>
-        public FieldDefinition ResumeFlagField { get; }
-
-        /// <summary>
-        /// This フィールド。
-        /// </summary>
-        public FieldDefinition ThisField => StateMachineType.Fields.Single(f => f.Name == "<>4__this");
+        protected FieldDefinition ResumeFlagField { get; }
 
         #endregion
 
         #region メソッド
-
-        /// <summary>
-        /// Constructor メソッド。
-        /// </summary>
-        public MethodDefinition Constructor { get; }
 
         /// <summary>
         /// MoveNext メソッド。
@@ -134,7 +104,6 @@ namespace SoftCube.Aspects
             StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
             ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
-            Constructor      = StateMachineType.Methods.Single(m => m.Name == ".ctor");
             MoveNextMethod   = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }
 
