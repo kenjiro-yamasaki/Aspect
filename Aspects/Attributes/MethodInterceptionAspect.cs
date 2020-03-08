@@ -29,16 +29,16 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アドバイスを注入します。
         /// </summary>
-        /// <param name="method">対象メソッド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
-        protected sealed override void InjectAdvice(MethodDefinition method, CustomAttribute aspectAttribute)
+        sealed public override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
-            var asyncStateMachineAttribute = method.GetAsyncStateMachineAttribute();
+            var asyncStateMachineAttribute = targetMethod.GetAsyncStateMachineAttribute();
             var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                var methodInjector     = new AsyncMethodRewriter(method, aspectAttribute);
-                var aspectArgsInjector = new MethodInterceptionArgsRewriter(method, aspectAttribute);
+                var methodInjector     = new AsyncMethodRewriter(targetMethod, aspectAttribute);
+                var aspectArgsInjector = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
 
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
@@ -47,13 +47,13 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.OverrideTaskResultProperty();
 
                 /// アスペクト属性を削除します。
-                method.CustomAttributes.Remove(aspectAttribute);
-                method.CustomAttributes.Remove(asyncStateMachineAttribute);
+                targetMethod.CustomAttributes.Remove(aspectAttribute);
+                targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
-                var methodInjector     = new MethodRewriter(method, aspectAttribute);
-                var aspectArgsInjector = new MethodInterceptionArgsRewriter(method, aspectAttribute);
+                var methodInjector     = new MethodRewriter(targetMethod, aspectAttribute);
+                var aspectArgsInjector = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
 
                 aspectArgsInjector.CreateAspectArgsImpl();
                 aspectArgsInjector.CreateConstructor();
@@ -61,7 +61,7 @@ namespace SoftCube.Aspects
                 aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalTargetMethod);
 
                 /// アスペクト属性を削除します。
-                method.CustomAttributes.Remove(aspectAttribute);
+                targetMethod.CustomAttributes.Remove(aspectAttribute);
             }
         }
 

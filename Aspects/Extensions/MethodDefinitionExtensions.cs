@@ -69,7 +69,7 @@ namespace SoftCube.Aspects
                     if (baseAttributeType.FullName == baseFullName && baseAttributeType.Scope.Name == baseScopeName)
                     {
                         var aspect = attribute.Create<MethodLevelAspect>();
-                        aspect.Inject(method, attribute);
+                        aspect.InjectAdvice(method, attribute);
                         break;
                     }
 

@@ -23,26 +23,11 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="method">メソッド。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        public void Inject(MethodDefinition method, CustomAttribute aspect)
-        {
-            if (method == null)
-            {
-                throw new ArgumentNullException(nameof(method));
-            }
-
-            InjectAdvice(method, aspect);
-        }
-
-        /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
-        /// </summary>
-        /// <param name="method">メソッド。</param>
-        /// <param name="aspect">アスペクト属性。</param>
-        protected abstract void InjectAdvice(MethodDefinition method, CustomAttribute aspect);
+        /// <param name="targetMethod">ターゲットメソッド。</param>
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        public abstract void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute);
 
         #endregion
     }

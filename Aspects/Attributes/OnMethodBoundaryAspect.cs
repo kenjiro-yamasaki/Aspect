@@ -30,7 +30,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
-        sealed protected override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
+        sealed public override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
             var iteratorStateMachineAttribute = targetMethod.GetIteratorStateMachineAttribute();
             var asyncStateMachineAttribute    = targetMethod.GetAsyncStateMachineAttribute();
