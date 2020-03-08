@@ -68,8 +68,8 @@ namespace SoftCube.Aspects
         public IteratorStateMachineRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
             : base(targetMethod, aspectAttribute, aspectArgsType)
         {
-            ExitFlagField    = CreateField("*exitFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
-            IsDisposingField = CreateField("*isDisposing*", FieldAttributes.Private, Module.TypeSystem.Int32);
+            ExitFlagField    = CreateField("*exitFlag", FieldAttributes.Private, Module.TypeSystem.Boolean);
+            IsDisposingField = CreateField("*isDisposing", FieldAttributes.Private, Module.TypeSystem.Int32);
 
             RewriteDisposeMethod();
         }
@@ -377,18 +377,16 @@ namespace SoftCube.Aspects
             Assert.NotNull(DisposeMethod);
             Assert.Null(OriginalDisposeMethod);
 
-            OriginalDisposeMethod = new MethodDefinition(DisposeMethod.Name + "<Original>", DisposeMethod.Attributes, DisposeMethod.ReturnType);
+            OriginalDisposeMethod = new MethodDefinition("*" + DisposeMethod.Name, DisposeMethod.Attributes, DisposeMethod.ReturnType);
+            OriginalDisposeMethod.Body = DisposeMethod.Body;
             foreach (var parameter in DisposeMethod.Parameters)
             {
                 OriginalDisposeMethod.Parameters.Add(parameter);
             }
-
-            OriginalDisposeMethod.Body = DisposeMethod.Body;
             foreach (var sequencePoint in DisposeMethod.DebugInformation.SequencePoints)
             {
                 OriginalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
-
             StateMachineType.Methods.Add(OriginalDisposeMethod);
         }
 

@@ -53,11 +53,11 @@ namespace SoftCube.Aspects
         /// <summary>
         /// コンストラクター。
         /// </summary>
-        /// <param name="method">メソッド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
-        public MethodRewriter(MethodDefinition method, CustomAttribute aspectAttribute)
+        public MethodRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
-            TargetMethod          = method ?? throw new ArgumentNullException(nameof(method));
+            TargetMethod    = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
             AspectAttribute = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
         }
 
@@ -145,19 +145,15 @@ namespace SoftCube.Aspects
             /// オリジナルターゲットメソッドを生成します。
             {
                 OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, TargetMethod.Attributes, TargetMethod.ReturnType);
-
+                OriginalTargetMethod.Body = TargetMethod.Body;
                 foreach (var parameter in TargetMethod.Parameters)
                 {
                     OriginalTargetMethod.Parameters.Add(parameter);
                 }
-
                 foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
                 {
                     OriginalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
                 }
-
-                OriginalTargetMethod.Body = TargetMethod.Body;
-
                 TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
             }
 

@@ -102,7 +102,7 @@ namespace SoftCube.Aspects
             StateMachineType = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
 
             StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
-            ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
+            ResumeFlagField  = CreateField("*resumeFlag", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
             MoveNextMethod   = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }
@@ -119,21 +119,16 @@ namespace SoftCube.Aspects
         {
             Assert.Null(OriginalMoveNextMethod);
 
-            var moveNextMethod = MoveNextMethod;
-
-            OriginalMoveNextMethod = new MethodDefinition(moveNextMethod.Name + "<Original>", moveNextMethod.Attributes, moveNextMethod.ReturnType);
-            foreach (var parameter in moveNextMethod.Parameters)
+            OriginalMoveNextMethod = new MethodDefinition("*" + MoveNextMethod.Name, MoveNextMethod.Attributes, MoveNextMethod.ReturnType);;
+            OriginalMoveNextMethod.Body = MoveNextMethod.Body;
+            foreach (var parameter in MoveNextMethod.Parameters)
             {
                 OriginalMoveNextMethod.Parameters.Add(parameter);
             }
-
-            OriginalMoveNextMethod.Body = moveNextMethod.Body;
-
-            foreach (var sequencePoint in moveNextMethod.DebugInformation.SequencePoints)
+            foreach (var sequencePoint in MoveNextMethod.DebugInformation.SequencePoints)
             {
                 OriginalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
-
             StateMachineType.Methods.Add(OriginalMoveNextMethod);
         }
 

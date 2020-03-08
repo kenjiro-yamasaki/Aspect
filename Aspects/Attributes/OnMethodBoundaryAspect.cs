@@ -28,30 +28,24 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アドバイスを注入します。
         /// </summary>
-        /// <param name="method">対象メソッド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
         /// <param name="aspectAttribute">アスペクト属性。</param>
-        sealed protected override void InjectAdvice(MethodDefinition method, CustomAttribute aspectAttribute)
+        sealed protected override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
-            var iteratorStateMachineAttribute = method.GetIteratorStateMachineAttribute();
-            var asyncStateMachineAttribute    = method.GetAsyncStateMachineAttribute();
+            var iteratorStateMachineAttribute = targetMethod.GetIteratorStateMachineAttribute();
+            var asyncStateMachineAttribute    = targetMethod.GetAsyncStateMachineAttribute();
 
             if (iteratorStateMachineAttribute != null)
             {
-                var rewriter = new IteratorStateMachineRewriter(method, aspectAttribute, typeof(MethodExecutionArgs));
-
-                RewriteMoveNextMethod(rewriter);
+                RewriteMoveNextMethod(new IteratorStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var rewriter = new AsyncStateMachineRewriter(method, aspectAttribute, typeof(MethodExecutionArgs));
-
-                RewriteMoveNextMethod(rewriter);
+                RewriteMoveNextMethod(new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
             }
             else
             {
-                var rewriter = new MethodRewriter(method, aspectAttribute);
-
-                RewriteTargetMethod(rewriter);
+                RewriteTargetMethod(new MethodRewriter(targetMethod, aspectAttribute));
             }
         }
 
@@ -207,9 +201,9 @@ namespace SoftCube.Aspects
 
             var thisField         = rewriter.ThisField;
             var currentField      = rewriter.CurrentField;
-            var aspectField       = rewriter.CreateField("*aspect*", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField    = rewriter.CreateField("*arguments*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
-            var aspectArgsField   = rewriter.CreateField("*aspectArgs*", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
+            var aspectField       = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var argumentsField    = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
+            var aspectArgsField   = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             var exceptionVariable = moveNextMethod.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor>(processor =>
@@ -349,9 +343,9 @@ namespace SoftCube.Aspects
             var stateMachineType  = rewriter.StateMachineType;
 
             var thisField         = rewriter.ThisField;
-            var aspectField       = rewriter.CreateField("*aspect*",     Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField    = rewriter.CreateField("*arguments*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
-            var aspectArgsField   = rewriter.CreateField("*aspectArgs*", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
+            var aspectField       = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var argumentsField    = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
+            var aspectArgsField   = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             var exceptionVariable = moveNextMethod.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
