@@ -1494,6 +1494,77 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
+        /// 末尾に引数を更新するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="argumentsField">Arguments フィールド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
+        /// <remarks>
+        /// ターゲットメソッドの引数は、ステートマシンの引数フィールド (引数と同名のフィールド) に転送されます。
+        /// ステートマシンの引数フィールドを更新する場合、このメソッドを使用します。
+        /// </remarks>
+        public static void UpdateArguments(this ILProcessor processor, FieldDefinition argumentsField, MethodDefinition targetMethod)
+        {
+            UpdateArguments(processor, null, argumentsField, targetMethod);
+        }
+
+        /// <summary>
+        /// 指定命令の前に引数を更新するコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="argumentsField">Arguments フィールド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
+        /// <remarks>
+        /// ターゲットメソッドの引数は、ステートマシンの引数フィールド (引数と同名のフィールド) に転送されます。
+        /// ステートマシンの引数フィールドを更新する場合、このメソッドを使用します。
+        /// </remarks>
+        public static void UpdateArguments(this ILProcessor processor, Instruction insert, FieldDefinition argumentsField, MethodDefinition targetMethod)
+        {
+            var method           = processor.Body.Method;
+            var module           = method.Module;
+            var stateMachineType = method.DeclaringType;
+            var argumentsType    = targetMethod.ArgumentsType();
+            var parameters       = targetMethod.Parameters;
+            var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+
+            if (parameters.Count <= 8)
+            {
+                var propertyNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Dup);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
+
+                    processor.InsertBefore(insert, OpCodes.Ldfld, module.ImportReference(argumentsType.GetField(propertyNames[parameterIndex])));
+                    processor.InsertBefore(insert, OpCodes.Stfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                }
+            }
+            else
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Dup);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
+                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(argumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+                    if (parameterType.IsValueType)
+                    {
+                        processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);
+                    }
+                    processor.InsertBefore(insert, OpCodes.Stfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                }
+            }
+        }
+
+        /// <summary>
         /// 末尾に AspectArgs.Arguments を更新するコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
@@ -1599,74 +1670,6 @@ namespace SoftCube.Aspects
             }
         }
 
-        /// <summary>
-        /// 末尾に Arguments フィールドを更新するコードを追加します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="argumentsField">Arguments フィールド。</param>
-        /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <remarks>
-        /// ステートマシンの Arguments フィールドを更新する場合、このメソッドを使用します。
-        /// </remarks>
-        public static void UpdateArgumentsFields(this ILProcessor processor, FieldDefinition argumentsField, MethodDefinition targetMethod)
-        {
-            UpdateArgumentsFields(processor, null, argumentsField, targetMethod);
-        }
-
-        /// <summary>
-        /// 指定命令の前に Arguments フィールドを更新するコードを挿入します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令。</param>
-        /// <param name="argumentsField">Arguments フィールド。</param>
-        /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <remarks>
-        /// ステートマシンの Arguments フィールドを更新する場合、このメソッドを使用します。
-        /// </remarks>
-        public static void UpdateArgumentsFields(this ILProcessor processor, Instruction insert, FieldDefinition argumentsField, MethodDefinition targetMethod)
-        {
-            var method           = processor.Body.Method;
-            var module           = method.Module;
-            var stateMachineType = method.DeclaringType;
-            var argumentsType    = targetMethod.ArgumentsType();
-            var parameters       = targetMethod.Parameters;
-            var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
-
-            if (parameters.Count <= 8)
-            {
-                var propertyNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Dup);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
-
-                    processor.InsertBefore(insert, OpCodes.Ldfld, module.ImportReference(argumentsType.GetField(propertyNames[parameterIndex])));
-                    processor.InsertBefore(insert, OpCodes.Stfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                }
-            }
-            else
-            {
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-                    var parameterType = parameter.ParameterType;
-
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Dup);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
-                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
-                    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(argumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
-                    if (parameterType.IsValueType)
-                    {
-                        processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);
-                    }
-                    processor.InsertBefore(insert, OpCodes.Stfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                }
-            }
-        }
 
         #endregion
 

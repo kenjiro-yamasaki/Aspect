@@ -242,7 +242,7 @@ namespace SoftCube.Aspects
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnEntry));
-                processor.UpdateArgumentsFields(argumentsField, targetMethod);
+                processor.UpdateArguments(argumentsField, targetMethod);
             });
 
             var onResume = new Action<ILProcessor>(processor =>
@@ -255,7 +255,7 @@ namespace SoftCube.Aspects
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnResume));
-                processor.UpdateArgumentsFields(argumentsField, targetMethod);
+                processor.UpdateArguments(argumentsField, targetMethod);
             });
 
             var onYield = new Action<ILProcessor>(processor =>
@@ -386,7 +386,7 @@ namespace SoftCube.Aspects
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
                 processor.CallVirtual(insert, GetType(), nameof(OnEntry));
-                processor.UpdateArgumentsFields(insert, argumentsField, targetMethod);
+                processor.UpdateArguments(insert, argumentsField, targetMethod);
             });
 
             var onResume = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -400,7 +400,7 @@ namespace SoftCube.Aspects
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
                 processor.CallVirtual(insert, GetType(), nameof(OnResume));
-                processor.UpdateArgumentsFields(insert, argumentsField, targetMethod);
+                processor.UpdateArguments(insert, argumentsField, targetMethod);
             });
 
             var onYield = new Action<ILProcessor, Instruction>((processor, insert) =>
