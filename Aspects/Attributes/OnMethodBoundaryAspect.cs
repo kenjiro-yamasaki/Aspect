@@ -67,10 +67,10 @@ namespace SoftCube.Aspects
             rewriter.CreateOriginalTargetMethod();
 
             /// ターゲットメソッドを書き換えます。
-            var targetMethod         = rewriter.TargetMethod;
-            var originalTargetMethod = rewriter.OriginalTargetMethod;
-            var aspectAttribute      = rewriter.AspectAttribute;
-            var aspectAttributeType  = rewriter.AspectAttributeType;
+            var targetMethod            = rewriter.TargetMethod;
+            var originalTargetMethod    = rewriter.OriginalTargetMethod;
+            var aspectAttribute         = rewriter.AspectAttribute;
+            var aspectAttributeType     = rewriter.AspectAttributeType;
 
             var aspectAttributeVariable = targetMethod.AddVariable(aspectAttributeType);
             var argumentsVariable       = targetMethod.AddVariable(targetMethod.ArgumentsType());
@@ -206,6 +206,7 @@ namespace SoftCube.Aspects
             var targetMethod      = rewriter.TargetMethod;
             var stateMachineType  = rewriter.StateMachineType;
 
+            var currentField      = rewriter.CurrentField;
             var aspectField       = rewriter.CreateField("*aspect*", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
             var argumentsField    = rewriter.CreateField("*arguments*",  Mono.Cecil.FieldAttributes.Private, module.ImportReference(argumentsType));
             var aspectArgsField   = rewriter.CreateField("*aspectArgs*", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
@@ -268,7 +269,12 @@ namespace SoftCube.Aspects
                 /// _aspectArgs.YieldValue = <> 2__current;
                 /// _aspect.OnYield(aspectArgs);
                 /// <>2__current = (TResult)aspectArgs.YieldValue;
-                SetYieldValue(processor, rewriter, aspectArgsField);
+                processor.LoadThis();
+                processor.Load(aspectArgsField);
+                processor.LoadThis();
+                processor.Load(currentField);
+                processor.Box(currentField.FieldType);
+                processor.SetProperty(typeof(MethodExecutionArgs), nameof(MethodExecutionArgs.YieldValue));
 
                 processor.LoadThis();
                 processor.Load(aspectField);
@@ -276,7 +282,12 @@ namespace SoftCube.Aspects
                 processor.Load(aspectArgsField);
                 processor.CallVirtual(GetType(), nameof(OnYield));
 
-                SetCurrentField(processor, rewriter, aspectArgsField);
+                processor.LoadThis();
+                processor.LoadThis();
+                processor.Load(aspectArgsField);
+                processor.GetProperty(typeof(MethodExecutionArgs), nameof(MethodExecutionArgs.YieldValue));
+                processor.Unbox(currentField.FieldType);
+                processor.Store(currentField);
             });
 
             var onSuccess = new Action<ILProcessor>(processor =>
@@ -318,43 +329,6 @@ namespace SoftCube.Aspects
             });
 
             rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
-        }
-
-        /// <summary>
-        /// AspectArgs.YieldValue フィールドに値を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
-        private void SetYieldValue(ILProcessor processor, IteratorStateMachineRewriter rewriter, FieldDefinition aspectArgsField)
-        {
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldfld, aspectArgsField);
-            processor.Emit(OpCodes.Ldarg_0);
-            processor.Emit(OpCodes.Ldfld, rewriter.CurrentField);
-            if (rewriter.CurrentField.FieldType.IsValueType)
-            {
-                processor.Emit(OpCodes.Box, rewriter.CurrentField.FieldType);
-            }
-            processor.Emit(OpCodes.Call, rewriter.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetSetMethod()));
-        }
-
-        /// <summary>
-        /// Current フィールドに値を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
-        private void SetCurrentField(ILProcessor processor, IteratorStateMachineRewriter rewriter, FieldDefinition aspectArgsField)
-        {
-            processor.Emit(OpCodes.Ldarg_0);
-
-            processor.Emit(OpCodes.Dup);
-            processor.Emit(OpCodes.Ldfld, aspectArgsField);
-            processor.Emit(OpCodes.Call, rewriter.Module.ImportReference(typeof(MethodExecutionArgs).GetProperty(nameof(MethodExecutionArgs.YieldValue)).GetGetMethod()));
-            if (rewriter.CurrentField.FieldType.IsValueType)
-            {
-                processor.Emit(OpCodes.Unbox_Any, rewriter.CurrentField.FieldType);
-            }
-            processor.Emit(OpCodes.Stfld, rewriter.CurrentField);
         }
 
         #endregion
