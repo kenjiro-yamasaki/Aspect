@@ -643,6 +643,57 @@ namespace SoftCube.Aspects
         #region New
 
         /// <summary>
+        /// 末尾に指定型のインスタンスを生成するコードを追加します。
+        /// </summary>
+        /// <typeparam name="T">型。</typeparam>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="argumentTypes">引数型配列。</param>
+        public static void New<T>(this ILProcessor processor, params Type[] argumentTypes)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
+        }
+
+        /// <summary>
+        /// 末尾に指定型のインスタンスを生成するコードを追加します。
+        /// </summary>
+        /// <typeparam name="T">型。</typeparam>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="argumentTypes">引数型配列。</param>
+        public static void New<T>(this ILProcessor processor, Instruction insert, params Type[] argumentTypes)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
+        }
+
+        /// <summary>
+        /// 末尾に指定型のインスタンスを生成するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">型。</param>
+        public static void New(this ILProcessor processor, TypeDefinition type)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
+        }
+
+        /// <summary>
+        /// 末尾にアスペクト属性を生成するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="aspectAttribute">アスペクト属性。</param>
+        public static void NewAspectAttribute(this ILProcessor processor, CustomAttribute aspectAttribute)
+        {
+            NewAspectAttribute(processor, null, aspectAttribute);
+        }
+
+        /// <summary>
         /// 指定命令の前にアスペクト属性を生成するコードを挿入します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
@@ -816,80 +867,16 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 末尾に指定型のインスタンスを生成するコードを追加します。
-        /// </summary>
-        /// <typeparam name="T">型。</typeparam>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="argumentTypes">引数型配列。</param>
-        public static void New<T>(this ILProcessor processor, params Type[] argumentTypes)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            processor.Emit(OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
-        }
-
-        /// <summary>
-        /// 末尾に指定型のインスタンスを生成するコードを追加します。
-        /// </summary>
-        /// <typeparam name="T">型。</typeparam>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="argumentTypes">引数型配列。</param>
-        public static void New<T>(this ILProcessor processor, Instruction insert, params Type[] argumentTypes)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
-        }
-
-        /// <summary>
-        /// 末尾に指定型のインスタンスを生成するコードを追加します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="type">型。</param>
-        public static void New(this ILProcessor processor, TypeDefinition type)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
-        }
-
-        /// <summary>
-        /// 末尾にアスペクト属性を生成するコードを追加します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="aspectAttribute">アスペクト属性。</param>
-        public static void NewAspectAttribute(this ILProcessor processor, CustomAttribute aspectAttribute)
-        {
-            NewAspectAttribute(processor, null, aspectAttribute);
-        }
-
-        /// <summary>
         /// 末尾に Arguments を生成するコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         public static void NewArguments(this ILProcessor processor)
         {
-            var method     = processor.Body.Method;
-            var module     = method.Module;
-            var parameters = method.Parameters;
-
+            var method         = processor.Body.Method;
+            var module         = method.Module;
+            var argumentsType  = method.ArgumentsType();
+            var parameters     = method.Parameters;
             var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
-            var argumentsType = parameters.Count switch
-            {
-                0 => typeof(Arguments),
-                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                _ => typeof(ArgumentsArray),
-            };
 
             /// Arguments を生成して、ローカル変数にストアします。
             if (parameters.Count <= 8)
@@ -961,31 +948,37 @@ namespace SoftCube.Aspects
             }
         }
 
-        public static void NewArguments(this ILProcessor processor, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        /// <summary>
+        /// 末尾に Arguments を生成するコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
+        /// <remarks>
+        /// ステートマシンの Arguments を生成する場合、このメソッドを使用します。
+        /// </remarks>
+        public static void NewArguments(this ILProcessor processor, MethodDefinition targetMethod)
         {
-            NewArguments(processor, null, targetMethod, stateMachineType);
+            NewArguments(processor, null, targetMethod);
         }
 
-        public static void NewArguments(this ILProcessor processor, Instruction insert, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        /// <summary>
+        /// 指定命令の前に Arguments を生成するコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
+        /// <remarks>
+        /// ステートマシンの Arguments を生成する場合、このメソッドを使用します。
+        /// </remarks>
+        public static void NewArguments(this ILProcessor processor, Instruction insert, MethodDefinition targetMethod)
         {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            var parameters = targetMethod.Parameters;
-            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
-            var argumentsType = parameters.Count switch
-            {
-                0 => typeof(Arguments),
-                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                _ => typeof(ArgumentsArray),
-            };
+            var method           = processor.Body.Method;
+            var module           = method.Module;
+            var stateMachineType = method.DeclaringType;
+            var argumentsType    = targetMethod.ArgumentsType();
+            var parameters       = targetMethod.Parameters;
+            var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
 
             if (parameters.Count <= 8)
             {
@@ -1027,22 +1020,39 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="variable">ローカル変数のインデックス。</param>
-        internal static void Load(this ILProcessor processor, int variable)
+        public static void Load(this ILProcessor processor, int variable)
         {
             processor.Emit(OpCodes.Ldloc, variable);
         }
 
-        internal static void Load(this ILProcessor processor, Instruction insert, int variable)
+        /// <summary>
+        /// 指定命令の前にローカル変数をロードするコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="variable">ローカル変数のインデックス。</param>
+        public static void Load(this ILProcessor processor, Instruction insert, int variable)
         {
             processor.InsertBefore(insert, OpCodes.Ldloc, variable);
         }
 
-        internal static void Load(this ILProcessor processor, FieldDefinition field)
+        /// <summary>
+        /// 末尾にフィールドをロードするコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="field">フィールド。</param>
+        public static void Load(this ILProcessor processor, FieldDefinition field)
         {
             processor.Emit(OpCodes.Ldfld, field);
         }
 
-        internal static void Load(this ILProcessor processor, Instruction insert, FieldDefinition field)
+        /// <summary>
+        /// 指定命令の前にフィールドをロードするコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="field">フィールド。</param>
+        public static void Load(this ILProcessor processor, Instruction insert, FieldDefinition field)
         {
             processor.InsertBefore(insert, OpCodes.Ldfld, field);
         }
@@ -1054,7 +1064,7 @@ namespace SoftCube.Aspects
         /// <remarks>
         /// 静的メソッドの場合、コードを追加しません。
         /// </remarks>
-        internal static void LoadThis(this ILProcessor processor)
+        public static void LoadThis(this ILProcessor processor)
         {
             var method = processor.Body.Method;
 
@@ -1065,13 +1075,14 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 末尾に this (第 0 引数) をロードするコードを追加します。
+        /// 指定命令の前に this (第 0 引数) をロードするコードを挿入します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
         /// <remarks>
         /// 静的メソッドの場合、コードを追加しません。
         /// </remarks>
-        internal static void LoadThis(this ILProcessor processor, Instruction insert)
+        public static void LoadThis(this ILProcessor processor, Instruction insert)
         {
             var method = processor.Body.Method;
 
@@ -1085,12 +1096,17 @@ namespace SoftCube.Aspects
         /// 末尾に null をロードするコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        internal static void LoadNull(this ILProcessor processor)
+        public static void LoadNull(this ILProcessor processor)
         {
             processor.Emit(OpCodes.Ldnull);
         }
 
-        internal static void LoadNull(this ILProcessor processor, Instruction insert)
+        /// <summary>
+        /// 指定命令の前に null をロードするコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        public static void LoadNull(this ILProcessor processor, Instruction insert)
         {
             processor.InsertBefore(insert, OpCodes.Ldnull);
         }
@@ -1099,7 +1115,7 @@ namespace SoftCube.Aspects
         /// 末尾に引数をロードするコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        internal static void LoadArguments(this ILProcessor processor)
+        public static void LoadArguments(this ILProcessor processor)
         {
             var method     = processor.Body.Method;
             var parameters = method.Parameters;
@@ -1126,27 +1142,39 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="variable">ローカル変数のインデックス。</param>
-        internal static void Store(this ILProcessor processor, int variable)
+        public static void Store(this ILProcessor processor, int variable)
         {
             processor.Emit(OpCodes.Stloc, variable);
         }
 
-        internal static void Store(this ILProcessor processor, Instruction insert, int variable)
+        /// <summary>
+        /// 指定命令の前にローカル変数をストアするコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="variable">ローカル変数のインデックス。</param>
+        public static void Store(this ILProcessor processor, Instruction insert, int variable)
         {
             processor.InsertBefore(insert, OpCodes.Stloc, variable);
         }
 
         /// <summary>
-        /// 
+        /// 末尾にフィールドをストアするコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="field"></param>
-        internal static void Store(this ILProcessor processor, FieldDefinition field)
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="field">フィールド。</param>
+        public static void Store(this ILProcessor processor, FieldDefinition field)
         {
             processor.Emit(OpCodes.Stfld, field);
         }
 
-        internal static void Store(this ILProcessor processor, Instruction insert, FieldDefinition field)
+        /// <summary>
+        /// 指定命令の前にフィールドをストアするコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="field">フィールド。</param>
+        public static void Store(this ILProcessor processor, Instruction insert, FieldDefinition field)
         {
             processor.InsertBefore(insert, OpCodes.Stfld, field);
         }
@@ -1159,22 +1187,8 @@ namespace SoftCube.Aspects
         /// 末尾にメソッドを呼びだすコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="type">メソッドの宣言型。</param>
-        /// <param name="methodName">メソッド名。</param>
-        internal static void Call(this ILProcessor processor, Type type, string methodName)
-        {
-            var method = processor.Body.Method;
-            var module = method.Module;
-
-            processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethods().Single(m => m.Name == methodName)));
-        }
-
-        /// <summary>
-        /// 末尾にメソッドを呼びだすコードを追加します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
         /// <param name="method">メソッド。</param>
-        internal static void Call(this ILProcessor processor, MethodDefinition method)
+        public static void Call(this ILProcessor processor, MethodDefinition method)
         {
             processor.Emit(OpCodes.Call, method);
         }
@@ -1185,7 +1199,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="type">メソッドの宣言型。</param>
         /// <param name="methodName">メソッド名。</param>
-        internal static void CallVirtual(this ILProcessor processor, Type type, string methodName)
+        public static void CallVirtual(this ILProcessor processor, Type type, string methodName)
         {
             var method = processor.Body.Method;
             var module = method.Module;
@@ -1193,7 +1207,14 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Callvirt, module.ImportReference(type.GetMethods().Single(m => m.Name == methodName)));
         }
 
-        internal static void CallVirtual(this ILProcessor processor, Instruction insert, Type type, string methodName)
+        /// <summary>
+        /// 指定命令の前に仮想メソッドを呼びだすコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="type">メソッドの宣言型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        public static void CallVirtual(this ILProcessor processor, Instruction insert, Type type, string methodName)
         {
             var method = processor.Body.Method;
             var module = method.Module;
@@ -1208,7 +1229,7 @@ namespace SoftCube.Aspects
         /// <param name="type">メソッドの宣言型。</param>
         /// <param name="methodName">メソッド名。</param>
         /// <param name="argumentTypes">引数型配列。</param>
-        internal static void CallStatic(this ILProcessor processor, Type type, string methodName, params Type[] argumentTypes)
+        public static void CallStatic(this ILProcessor processor, Type type, string methodName, params Type[] argumentTypes)
         {
             var module = processor.Body.Method.Module;
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethod(methodName, argumentTypes)));
@@ -1224,7 +1245,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="type">プロパティの宣言型。</param>
         /// <param name="propertyName">プロパティ名。</param>
-        internal static void SetProperty(this ILProcessor processor, Type type, string propertyName)
+        public static void SetProperty(this ILProcessor processor, Type type, string propertyName)
         {
             var method = processor.Body.Method;
             var module = method.Module;
@@ -1232,7 +1253,14 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
         }
 
-        internal static void SetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
+        /// <summary>
+        /// 指定命令の前にプロパティの set メソッドを呼びだすコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="type">プロパティの宣言型。</param>
+        /// <param name="propertyName">プロパティ名。</param>
+        public static void SetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
         {
             var method = processor.Body.Method;
             var module = method.Module;
@@ -1246,7 +1274,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="type">プロパティの宣言型。</param>
         /// <param name="propertyName">プロパティ名。</param>
-        internal static void GetProperty(this ILProcessor processor, Type type, string propertyName)
+        public static void GetProperty(this ILProcessor processor, Type type, string propertyName)
         {
             var method = processor.Body.Method;
             var module = method.Module;
@@ -1254,7 +1282,14 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
         }
 
-        internal static void GetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
+        /// <summary>
+        /// 指定命令の前にプロパティの get メソッドを呼びだすコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="type">プロパティの宣言型。</param>
+        /// <param name="propertyName">プロパティ名。</param>
+        public static void GetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
         {
             var method = processor.Body.Method;
             var module = method.Module;
@@ -1271,7 +1306,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="type">型。</param>
-        internal static void Box(this ILProcessor processor, TypeReference type)
+        public static void Box(this ILProcessor processor, TypeReference type)
         {
             if (type.IsValueType)
             {
@@ -1279,7 +1314,13 @@ namespace SoftCube.Aspects
             }
         }
 
-        internal static void Box(this ILProcessor processor, Instruction insert, TypeReference type)
+        /// <summary>
+        /// 指定命令の前に Box 化のコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="type">型。</param>
+        public static void Box(this ILProcessor processor, Instruction insert, TypeReference type)
         {
             if (type.IsValueType)
             {
@@ -1292,7 +1333,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="type">型。</param>
-        internal static void Unbox(this ILProcessor processor, TypeReference type)
+        public static void Unbox(this ILProcessor processor, TypeReference type)
         {
             if (type.IsValueType)
             {
@@ -1300,7 +1341,13 @@ namespace SoftCube.Aspects
             }
         }
 
-        internal static void Unbox(this ILProcessor processor, Instruction insert, TypeReference type)
+        /// <summary>
+        /// 指定命令の前に Box 化解除のコードを挿入します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="type">型。</param>
+        public static void Unbox(this ILProcessor processor, Instruction insert, TypeReference type)
         {
             if (type.IsValueType)
             {
@@ -1316,7 +1363,7 @@ namespace SoftCube.Aspects
         /// 末尾に rethrow 命令を追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        internal static void Rethrow(this ILProcessor processor)
+        public static void Rethrow(this ILProcessor processor)
         {
             processor.Emit(OpCodes.Rethrow);
         }
@@ -1329,7 +1376,7 @@ namespace SoftCube.Aspects
         /// 末尾に return 命令を追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        internal static void Return(this ILProcessor processor)
+        public static void Return(this ILProcessor processor)
         {
              processor.Emit(OpCodes.Ret);
         }
@@ -1339,16 +1386,16 @@ namespace SoftCube.Aspects
         #region Update
 
         /// <summary>
-        /// Arguments のローカル変数の内容で引数を更新します。
+        /// 末尾に引数を更新するコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="argumentsVariable">Arguments のローカル変数。</param>
+        /// <param name="argumentsVariable">Arguments ローカル変数。</param>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを更新対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
         /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        internal static void UpdateArguments(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
+        public static void UpdateArguments(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
         {
             var method     = processor.Body.Method;
             var module     = method.Module;
@@ -1447,16 +1494,16 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 引数の内容で AspectArgs.Arguments を更新します。
+        /// 末尾に AspectArgs.Arguments を更新するコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="argumentsVariable">Arguments のローカル変数。</param>
+        /// <param name="argumentsVariable">Arguments ローカル変数。</param>
         /// <param name="pointerOnly">
         /// ポインタ引数のみを更新対象とするか。
         /// <c>true</c> の場合、in/ref/out 引数のみを更新します。
         /// <c>false</c> の場合、すべての引数を更新します。
         /// </param>
-        internal static void UpdateArgumentsProperty(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
+        public static void UpdateArgumentsProperty(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
         {
             var method     = processor.Body.Method;
             var module     = method.Module;
@@ -1552,43 +1599,38 @@ namespace SoftCube.Aspects
             }
         }
 
-
         /// <summary>
-        /// 
+        /// 末尾に Arguments フィールドを更新するコードを追加します。
         /// </summary>
-        /// <param name="processor"></param>
-        /// <param name="argumentsField"></param>
-        /// <param name="targetMethod"></param>
-        /// <param name="stateMachineType"></param>
-        internal static void UpdateArgumentFields(this ILProcessor processor, FieldDefinition argumentsField, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="argumentsField">Arguments フィールド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
+        /// <remarks>
+        /// ステートマシンの Arguments フィールドを更新する場合、このメソッドを使用します。
+        /// </remarks>
+        public static void UpdateArgumentsFields(this ILProcessor processor, FieldDefinition argumentsField, MethodDefinition targetMethod)
         {
-            UpdateArgumentFields(processor, null, argumentsField, targetMethod, stateMachineType);
+            UpdateArgumentsFields(processor, null, argumentsField, targetMethod);
         }
 
         /// <summary>
-        /// 引数フィールドを設定します。
+        /// 指定命令の前に Arguments フィールドを更新するコードを挿入します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        internal static void UpdateArgumentFields(this ILProcessor processor, Instruction insert, FieldDefinition argumentsField, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        /// <param name="insert">挿入位置を示す命令。</param>
+        /// <param name="argumentsField">Arguments フィールド。</param>
+        /// <param name="targetMethod">ターゲットメソッド。</param>
+        /// <remarks>
+        /// ステートマシンの Arguments フィールドを更新する場合、このメソッドを使用します。
+        /// </remarks>
+        public static void UpdateArgumentsFields(this ILProcessor processor, Instruction insert, FieldDefinition argumentsField, MethodDefinition targetMethod)
         {
-            var module = processor.Body.Method.Module;
-
-            var parameters     = targetMethod.Parameters;
-            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
-            var argumentsType  = parameters.Count switch
-            {
-                0 => typeof(Arguments),
-                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                _ => typeof(ArgumentsArray),
-            };
+            var method           = processor.Body.Method;
+            var module           = method.Module;
+            var stateMachineType = method.DeclaringType;
+            var argumentsType    = targetMethod.ArgumentsType();
+            var parameters       = targetMethod.Parameters;
+            var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
 
             if (parameters.Count <= 8)
             {
@@ -1625,9 +1667,6 @@ namespace SoftCube.Aspects
                 }
             }
         }
-
-
-
 
         #endregion
 
