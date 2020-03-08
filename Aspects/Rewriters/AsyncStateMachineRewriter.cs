@@ -224,7 +224,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         /// <param name="returnVariable">戻り値のローカル変数。</param>
-        public void SetReturnValue(ILProcessor processor, Instruction insert, int returnVariable)
+        public void SetReturnValue(ILProcessor processor, Instruction insert, int returnVariable, FieldDefinition AspectArgsField)
         {
             if (TargetMethod.ReturnType is GenericInstanceType genericReturnType)
             {
@@ -247,7 +247,7 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
         /// <param name="returnVariable">戻り値のローカル変数。</param>
-        public void SetReturnVariable(ILProcessor processor, Instruction insert, int returnVariable)
+        public void SetReturnVariable(ILProcessor processor, Instruction insert, int returnVariable, FieldDefinition AspectArgsField)
         {
             if (TargetMethod.ReturnType is GenericInstanceType genericReturnType)
             {

@@ -80,24 +80,14 @@ namespace SoftCube.Aspects
         public FieldDefinition StateField { get; }
 
         /// <summary>
-        /// Aspect フィールド。
-        /// </summary>
-        public FieldDefinition AspectField { get; }
-
-        /// <summary>
-        /// AspectArgs フィールド。
-        /// </summary>
-        public FieldDefinition AspectArgsField { get; }
-
-        /// <summary>
-        /// Args フィールド。
-        /// </summary>
-        public FieldDefinition ArgumentsField { get; }
-
-        /// <summary>
         /// ResumeFlag フィールド。
         /// </summary>
         public FieldDefinition ResumeFlagField { get; }
+
+        /// <summary>
+        /// This フィールド。
+        /// </summary>
+        public FieldDefinition ThisField => StateMachineType.Fields.Single(f => f.Name == "<>4__this");
 
         #endregion
 
@@ -143,9 +133,6 @@ namespace SoftCube.Aspects
             StateMachineType = (TypeDefinition)StateMachineAttribute.ConstructorArguments[0].Value;
 
             StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
-            AspectField      = CreateField("*aspect*",     FieldAttributes.Private, Module.ImportReference(AspectAttribute.AttributeType));
-            AspectArgsField  = CreateField("*aspectArgs*", FieldAttributes.Private, Module.ImportReference(AspectArgsType));
-            ArgumentsField   = CreateField("*arguments*",  FieldAttributes.Private, Module.ImportReference(ArgumentsType));
             ResumeFlagField  = CreateField("*resumeFlag*", FieldAttributes.Private, Module.TypeSystem.Boolean);
 
             Constructor      = StateMachineType.Methods.Single(m => m.Name == ".ctor");
@@ -183,111 +170,12 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// Aspect 属性のインスタンスを生成し、フォール度にストアします。
-        /// </summary>
-        public void NewAspectAttribute()
-        {
-            var processor    = Constructor.Body.GetILProcessor();
-            var variables    = Constructor.Body.Variables;
-            var instructions = Constructor.Body.Instructions;
-            var first        = instructions.First();
-
-            /// アスペクト属性のインスタンスを生成し、ローカル変数にストアします。
-            var aspectAttributeVariable = Constructor.Body.Variables.Count();
-            var attributeType = AspectAttribute.AttributeType.ToSystemType();
-            variables.Add(new VariableDefinition(Module.ImportReference(attributeType)));
-
-            processor.NewAspectAttribute(first, AspectAttribute);
-            processor.InsertBefore(first, OpCodes.Stloc, aspectAttributeVariable);
-
-            /// アスペクト属性のインスタンスをフィールドにストアします。
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(first, processor.Create(OpCodes.Ldloc, aspectAttributeVariable));
-            processor.InsertBefore(first, processor.Create(OpCodes.Stfld, AspectField));
-        }
-
-        /// <summary>
-        /// AspectArgs フィールドのインスタンスを生成します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        public void NewAspectArgs(ILProcessor processor)
-        {
-            NewAspectArgs(processor, null);
-        }
-
-        /// <summary>
-        /// AspectArgs フィールドのインスタンスを生成し、フィールドにストアします。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void NewAspectArgs(ILProcessor processor, Instruction insert)
-        {
-            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-
-            if (TargetMethod.IsStatic)
-            {
-                processor.InsertBefore(insert, OpCodes.Ldnull);
-            }
-            else
-            {
-                processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                processor.InsertBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == "<>4__this"));
-                if (TargetMethod.DeclaringType.IsValueType)
-                {
-                    processor.InsertBefore(insert, OpCodes.Box, TargetMethod.DeclaringType);
-                }
-            }
-
-            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-            {
-                var parameters = TargetMethod.Parameters;
-                var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
-
-                if (parameters.Count <= 8)
-                {
-                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                    {
-                        var parameter = parameters[parameterIndex];
-                        processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                        processor.InsertBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                    }
-                    processor.InsertBefore(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(parameterTypes)));
-                }
-                else
-                {
-                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
-                    processor.InsertBefore(insert, OpCodes.Newarr, Module.ImportReference(typeof(object)));
-                    for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                    {
-                        var parameter = parameters[parameterIndex];
-                        processor.InsertBefore(insert, OpCodes.Dup);
-                        processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
-                        processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                        processor.InsertBefore(insert, OpCodes.Ldfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                        if (parameter.ParameterType.IsValueType)
-                        {
-                            processor.InsertBefore(insert, OpCodes.Box, parameter.ParameterType);
-                        }
-                        processor.InsertBefore(insert, OpCodes.Stelem_Ref);
-                    }
-                    processor.InsertBefore(insert, OpCodes.Newobj, Module.ImportReference(ArgumentsType.GetConstructor(new Type[] { typeof(object[]) })));
-                }
-            }
-            processor.InsertBefore(insert, OpCodes.Stfld, ArgumentsField);
-
-            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-            processor.InsertBefore(insert, OpCodes.Ldfld, ArgumentsField);
-            processor.InsertBefore(insert, OpCodes.Newobj, Module.ImportReference(typeof(MethodExecutionArgs).GetConstructor(new Type[] { typeof(object), typeof(Arguments) })));
-            processor.InsertBefore(insert, OpCodes.Stfld, AspectArgsField);
-        }
-
-        /// <summary>
         /// 引数フィールドを設定します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        public void SetArgumentFields(ILProcessor processor)
+        public void SetArgumentFields(ILProcessor processor, FieldDefinition ArgumentsField)
         {
-            SetArgumentFields(processor, null);
+            SetArgumentFields(processor, null, ArgumentsField);
         }
 
         /// <summary>
@@ -295,7 +183,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void SetArgumentFields(ILProcessor processor, Instruction insert)
+        public void SetArgumentFields(ILProcessor processor, Instruction insert, FieldDefinition ArgumentsField)
         {
             var parameters     = TargetMethod.Parameters;
             var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
@@ -332,74 +220,6 @@ namespace SoftCube.Aspects
                         processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);
                     }
                     processor.InsertBefore(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                }
-            }
-        }
-
-        /// <summary>
-        /// AspectArgs.Exception に例外を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        public void SetException(ILProcessor processor)
-        {
-            SetException(processor, null);
-        }
-
-        /// <summary>
-        /// AspectArgs.Exception" に例外を設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void SetException(ILProcessor processor, Instruction insert)
-        {
-            var variables = processor.Body.Variables;
-            int exceptionVariable = variables.Count;
-            variables.Add(new VariableDefinition(Module.ImportReference(typeof(Exception))));
-
-            processor.InsertBefore(insert, OpCodes.Stloc, exceptionVariable);
-
-            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-            processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
-            processor.InsertBefore(insert, OpCodes.Ldloc, exceptionVariable);
-            processor.InsertBefore(insert, OpCodes.Call, Module.ImportReference(typeof(MethodArgs).GetProperty(nameof(MethodArgs.Exception)).GetSetMethod()));
-        }
-
-        /// <summary>
-        /// アスペクトハンドラーを呼びだします。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="aspectHandlerName">アスペクトハンドラー名。</param>
-        public void InvokeAspectHandler(ILProcessor processor, string aspectHandlerName)
-        {
-            InvokeAspectHandler(processor, null, aspectHandlerName);
-        }
-
-        /// <summary>
-        /// アスペクトハンドラーを呼びだします。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        /// <param name="aspectHandlerName">アスペクトハンドラー名。</param>
-        public void InvokeAspectHandler(ILProcessor processor, Instruction insert, string aspectHandlerName)
-        {
-            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-            processor.InsertBefore(insert, OpCodes.Ldfld, AspectField);
-            processor.InsertBefore(insert, OpCodes.Ldarg_0);
-            processor.InsertBefore(insert, OpCodes.Ldfld, AspectArgsField);
-
-            var aspectType = AspectAttribute.AttributeType.Resolve();
-            while (true)
-            {
-                var aspectHandler = aspectType.Methods.SingleOrDefault(m => m.Name == aspectHandlerName);
-                if (aspectHandler != null)
-                {
-                    processor.InsertBefore(insert, OpCodes.Callvirt, Module.ImportReference(aspectHandler));
-                    break;
-                }
-                else
-                {
-                    Assert.NotNull(aspectType.BaseType);
-                    aspectType = aspectType.BaseType.Resolve();
                 }
             }
         }

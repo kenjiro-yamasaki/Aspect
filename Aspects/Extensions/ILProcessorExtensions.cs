@@ -832,14 +832,15 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 末尾に指定型のインスタンスを生成するコードを追加します。
         /// </summary>
+        /// <typeparam name="T">型。</typeparam>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="type">型。</param>
-        public static void New(this ILProcessor processor, TypeReference type)
+        /// <param name="argumentTypes">引数型配列。</param>
+        public static void New<T>(this ILProcessor processor, Instruction insert, params Type[] argumentTypes)
         {
             var method = processor.Body.Method;
             var module = method.Module;
 
-            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Resolve().Methods.Single(m => m.Name == ".ctor")));
+            processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
         }
 
         /// <summary>
@@ -960,6 +961,63 @@ namespace SoftCube.Aspects
             }
         }
 
+        public static void NewArguments(this ILProcessor processor, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        {
+            NewArguments(processor, null, targetMethod, stateMachineType);
+        }
+
+        public static void NewArguments(this ILProcessor processor, Instruction insert, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            var parameters = targetMethod.Parameters;
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
+            var argumentsType = parameters.Count switch
+            {
+                0 => typeof(Arguments),
+                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                _ => typeof(ArgumentsArray),
+            };
+
+            if (parameters.Count <= 8)
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                }
+                processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
+            }
+            else
+            {
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
+                processor.InsertBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.InsertBefore(insert, OpCodes.Dup);
+                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                    if (parameter.ParameterType.IsValueType)
+                    {
+                        processor.InsertBefore(insert, OpCodes.Box, parameter.ParameterType);
+                    }
+                    processor.InsertBefore(insert, OpCodes.Stelem_Ref);
+                }
+                processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+            }
+        }
+
         #endregion
 
         #region Load
@@ -972,6 +1030,21 @@ namespace SoftCube.Aspects
         internal static void Load(this ILProcessor processor, int variable)
         {
             processor.Emit(OpCodes.Ldloc, variable);
+        }
+
+        internal static void Load(this ILProcessor processor, Instruction insert, int variable)
+        {
+            processor.InsertBefore(insert, OpCodes.Ldloc, variable);
+        }
+
+        internal static void Load(this ILProcessor processor, FieldDefinition field)
+        {
+            processor.Emit(OpCodes.Ldfld, field);
+        }
+
+        internal static void Load(this ILProcessor processor, Instruction insert, FieldDefinition field)
+        {
+            processor.InsertBefore(insert, OpCodes.Ldfld, field);
         }
 
         /// <summary>
@@ -992,12 +1065,34 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
+        /// 末尾に this (第 0 引数) をロードするコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <remarks>
+        /// 静的メソッドの場合、コードを追加しません。
+        /// </remarks>
+        internal static void LoadThis(this ILProcessor processor, Instruction insert)
+        {
+            var method = processor.Body.Method;
+
+            if (!method.IsStatic)
+            {
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+            }
+        }
+
+        /// <summary>
         /// 末尾に null をロードするコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        internal static void LoadNull(this ILProcessor processor) 
+        internal static void LoadNull(this ILProcessor processor)
         {
             processor.Emit(OpCodes.Ldnull);
+        }
+
+        internal static void LoadNull(this ILProcessor processor, Instruction insert)
+        {
+            processor.InsertBefore(insert, OpCodes.Ldnull);
         }
 
         /// <summary>
@@ -1034,6 +1129,26 @@ namespace SoftCube.Aspects
         internal static void Store(this ILProcessor processor, int variable)
         {
             processor.Emit(OpCodes.Stloc, variable);
+        }
+
+        internal static void Store(this ILProcessor processor, Instruction insert, int variable)
+        {
+            processor.InsertBefore(insert, OpCodes.Stloc, variable);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="field"></param>
+        internal static void Store(this ILProcessor processor, FieldDefinition field)
+        {
+            processor.Emit(OpCodes.Stfld, field);
+        }
+
+        internal static void Store(this ILProcessor processor, Instruction insert, FieldDefinition field)
+        {
+            processor.InsertBefore(insert, OpCodes.Stfld, field);
         }
 
         #endregion
@@ -1078,14 +1193,12 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Callvirt, module.ImportReference(type.GetMethods().Single(m => m.Name == methodName)));
         }
 
-        /// <summary>
-        /// 末尾に仮想メソッドを呼びだすコードを追加します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="method">メソッド。</param>
-        internal static void CallVirtual(this ILProcessor processor, MethodDefinition method)
+        internal static void CallVirtual(this ILProcessor processor, Instruction insert, Type type, string methodName)
         {
-            processor.Emit(OpCodes.Callvirt, method);
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(type.GetMethods().Single(m => m.Name == methodName)));
         }
 
         /// <summary>
@@ -1119,6 +1232,14 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
         }
 
+        internal static void SetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            processor.InsertBefore(insert, OpCodes.Call, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
+        }
+
         /// <summary>
         /// 末尾にプロパティの get メソッドを呼びだすコードを追加します。
         /// </summary>
@@ -1147,6 +1268,14 @@ namespace SoftCube.Aspects
             if (type.IsValueType)
             {
                 processor.Emit(OpCodes.Box, type);
+            }
+        }
+
+        internal static void Box(this ILProcessor processor, Instruction insert, TypeReference type)
+        {
+            if (type.IsValueType)
+            {
+                processor.InsertBefore(insert, OpCodes.Box, type);
             }
         }
 
