@@ -221,6 +221,7 @@ namespace SoftCube.Aspects
         /// <param name="args">メソッドインターセプション引数。</param>
         public virtual void OnInvoke(MethodInterceptionArgs args)
         {
+            throw new NotImplementedException();
         }
 
         /// <summary>
