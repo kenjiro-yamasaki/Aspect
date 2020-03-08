@@ -1536,6 +1536,83 @@ namespace SoftCube.Aspects
             }
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <param name="argumentsField"></param>
+        /// <param name="targetMethod"></param>
+        /// <param name="stateMachineType"></param>
+        internal static void UpdateArgumentFields(this ILProcessor processor, FieldDefinition argumentsField, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        {
+            UpdateArgumentFields(processor, null, argumentsField, targetMethod, stateMachineType);
+        }
+
+        /// <summary>
+        /// 引数フィールドを設定します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
+        internal static void UpdateArgumentFields(this ILProcessor processor, Instruction insert, FieldDefinition argumentsField, MethodDefinition targetMethod, TypeDefinition stateMachineType)
+        {
+            var module = processor.Body.Method.Module;
+
+            var parameters     = targetMethod.Parameters;
+            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
+            var argumentsType  = parameters.Count switch
+            {
+                0 => typeof(Arguments),
+                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
+                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
+                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
+                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
+                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
+                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
+                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
+                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
+                _ => typeof(ArgumentsArray),
+            };
+
+            if (parameters.Count <= 8)
+            {
+                var propertyNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Dup);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
+
+                    processor.InsertBefore(insert, OpCodes.Ldfld, module.ImportReference(argumentsType.GetField(propertyNames[parameterIndex])));
+                    processor.InsertBefore(insert, OpCodes.Stfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                }
+            }
+            else
+            {
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    var parameterType = parameter.ParameterType;
+
+                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                    processor.InsertBefore(insert, OpCodes.Dup);
+                    processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
+                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(argumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+                    if (parameterType.IsValueType)
+                    {
+                        processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);
+                    }
+                    processor.InsertBefore(insert, OpCodes.Stfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                }
+            }
+        }
+
+
+
+
         #endregion
 
         #endregion

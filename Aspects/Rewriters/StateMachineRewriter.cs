@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
 using SoftCube.Asserts;
 using System;
 using System.Linq;
@@ -167,61 +166,6 @@ namespace SoftCube.Aspects
             }
 
             StateMachineType.Methods.Add(OriginalMoveNextMethod);
-        }
-
-        /// <summary>
-        /// 引数フィールドを設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        public void SetArgumentFields(ILProcessor processor, FieldDefinition ArgumentsField)
-        {
-            SetArgumentFields(processor, null, ArgumentsField);
-        }
-
-        /// <summary>
-        /// 引数フィールドを設定します。
-        /// </summary>
-        /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="insert">挿入位置を示す命令 (この命令の前にコードを注入します)。</param>
-        public void SetArgumentFields(ILProcessor processor, Instruction insert, FieldDefinition ArgumentsField)
-        {
-            var parameters     = TargetMethod.Parameters;
-            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
-
-            if (parameters.Count <= 8)
-            {
-                var propertyNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Dup);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, ArgumentsField);
-
-                    processor.InsertBefore(insert, OpCodes.Ldfld, Module.ImportReference(ArgumentsType.GetField(propertyNames[parameterIndex])));
-                    processor.InsertBefore(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                }
-            }
-            else
-            {
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-                    var parameterType = parameter.ParameterType;
-
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Dup);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, ArgumentsField);
-                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
-                    processor.InsertBefore(insert, OpCodes.Callvirt, Module.ImportReference(ArgumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
-                    if (parameterType.IsValueType)
-                    {
-                        processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);
-                    }
-                    processor.InsertBefore(insert, OpCodes.Stfld, StateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                }
-            }
         }
 
         /// <summary>
