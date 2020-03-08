@@ -16,7 +16,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アスペクトの型。
         /// </summary>
-        public TypeDefinition DerivedAspectArgsType => DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
+        public TypeDefinition AspectArgsImplType => DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
 
         /// <summary>
         /// MethodInterceptionArgs の派生クラスの型名。

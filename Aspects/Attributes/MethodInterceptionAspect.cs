@@ -35,16 +35,19 @@ namespace SoftCube.Aspects
         {
             var asyncStateMachineAttribute = targetMethod.GetAsyncStateMachineAttribute();
             var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
+
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                var methodInjector     = new AsyncMethodRewriter(targetMethod, aspectAttribute);
-                var aspectArgsInjector = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
+                var targetMethodRewriter = new AsyncMethodRewriter(targetMethod, aspectAttribute);
+                var aspectArgsRewriter   = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
 
-                aspectArgsInjector.CreateAspectArgsImpl();
-                aspectArgsInjector.CreateConstructor();
-                ReplaceAsyncMethod(methodInjector, aspectArgsInjector);
-                aspectArgsInjector.OverrideInvokeAsyncImplMethod(methodInjector.OriginalTargetMethod);
-                aspectArgsInjector.OverrideTaskResultProperty();
+                targetMethodRewriter.CreateOriginalTargetMethod();
+
+                aspectArgsRewriter.CreateAspectArgsImpl();
+                aspectArgsRewriter.CreateConstructor();
+                ReplaceAsyncMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
+                aspectArgsRewriter.OverrideInvokeAsyncImplMethod(targetMethodRewriter.OriginalTargetMethod);
+                aspectArgsRewriter.OverrideTaskResultProperty();
 
                 /// アスペクト属性を削除します。
                 targetMethod.CustomAttributes.Remove(aspectAttribute);
@@ -52,13 +55,15 @@ namespace SoftCube.Aspects
             }
             else
             {
-                var methodInjector     = new MethodRewriter(targetMethod, aspectAttribute);
-                var aspectArgsInjector = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
+                var targetMethodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
+                var aspectArgsRewriter   = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
 
-                aspectArgsInjector.CreateAspectArgsImpl();
-                aspectArgsInjector.CreateConstructor();
-                ReplaceMethod(methodInjector, aspectArgsInjector.DerivedAspectArgsType);
-                aspectArgsInjector.OverrideInvokeImplMethod(methodInjector.OriginalTargetMethod);
+                targetMethodRewriter.CreateOriginalTargetMethod();
+
+                aspectArgsRewriter.CreateAspectArgsImpl();
+                aspectArgsRewriter.CreateConstructor();
+                ReplaceMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
+                aspectArgsRewriter.OverrideInvokeImplMethod(targetMethodRewriter.OriginalTargetMethod);
 
                 /// アスペクト属性を削除します。
                 targetMethod.CustomAttributes.Remove(aspectAttribute);
@@ -66,68 +71,61 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 対象メソッドを書き換えます。
+        /// ターゲットメソッドを書き換えます。
         /// </summary>
         /// <param name="rewriter">ターゲットメソッドの書き換え。</param>
-        /// <param name="aspectArgsType">アスペクト引数の型。</param>
-        private void ReplaceMethod(MethodRewriter rewriter, TypeDefinition aspectArgsType)
+        /// <param name="aspectArgsImplType">アスペクト引数の型。</param>
+        private void ReplaceMethod(MethodRewriter rewriter, TypeDefinition aspectArgsImplType)
         {
-            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            rewriter.CreateOriginalTargetMethod();
+            var targetMethod            = rewriter.TargetMethod;
+            var processor               = targetMethod.Body.GetILProcessor();
+            var aspectVariable          = targetMethod.AddVariable(rewriter.AspectAttributeType);
+            var argumentsVariable       = targetMethod.AddVariable(rewriter.TargetMethod.ArgumentsType());
+            var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodInterceptionArgs));
 
-            /// 対象メソッドのコードを書き換えます。
+            /// var aspect     = new Aspect(...) { ... };
+            /// var arguments  = new Arguments(...);
+            /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
+            /// aspectArgs.Method = MethodBase.GetCurrentMethod();
+            /// aspect.OnInvoke(aspectArgs);
+            /// arg0 = (TArg0)arguments[0];
+            /// arg1 = (TArg1)arguments[1];
+            /// ...
+            /// return (TResult)aspectArgs.ReturnValue;
+            processor.NewAspectAttribute(rewriter.AspectAttribute);
+            processor.Store(aspectVariable);
+
+            processor.NewArguments();
+            processor.Store(argumentsVariable);
+
+            if (rewriter.TargetMethod.IsStatic)
             {
-                /// var aspect     = new Aspect(...) { ... };
-                /// var arguments  = new Arguments(...);
-                /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
-                /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-                /// aspect.OnInvoke(aspectArgs);
-                /// arg0 = (TArg0)arguments[0];
-                /// arg1 = (TArg1)arguments[1];
-                /// ...
-                /// return (TResult)aspectArgs.ReturnValue;
-                var targetMethod            = rewriter.TargetMethod;
-                var processor               = targetMethod.Body.GetILProcessor();
-
-                var aspectAttributeVariable = targetMethod.AddVariable(rewriter.AspectAttributeType);
-                var argumentsVariable       = targetMethod.AddVariable(rewriter.TargetMethod.ArgumentsType());
-                var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodInterceptionArgs));
-
-                processor.NewAspectAttribute(rewriter.AspectAttribute);
-                processor.Store(aspectAttributeVariable);
-
-                processor.NewArguments();
-                processor.Store(argumentsVariable);
-
-                if (rewriter.TargetMethod.IsStatic)
-                {
-                    processor.LoadNull();
-                }
-                else
-                {
-                    processor.LoadThis();
-                }
-                processor.Load(argumentsVariable);
-                processor.New(aspectArgsType);
-                processor.Store(aspectArgsVariable);
-
-                processor.Load(aspectArgsVariable);
-                processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
-                processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
-
-                processor.Load(aspectAttributeVariable);
-                processor.Load(aspectArgsVariable);
-                processor.CallVirtual(typeof(MethodInterceptionAspect), nameof(OnInvoke));
-                processor.UpdateArguments(argumentsVariable, pointerOnly: true);
-
-                if (rewriter.TargetMethod.HasReturnValue())
-                {
-                    processor.Load(aspectArgsVariable);
-                    processor.GetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
-                    processor.Unbox(rewriter.TargetMethod.ReturnType);
-                }
-                processor.Return();
+                processor.LoadNull();
             }
+            else
+            {
+                processor.LoadThis();
+            }
+            processor.Load(argumentsVariable);
+            processor.New(aspectArgsImplType);
+            processor.Store(aspectArgsVariable);
+
+            processor.Load(aspectArgsVariable);
+            processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
+            processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
+
+            processor.Load(aspectVariable);
+            processor.Load(aspectArgsVariable);
+            processor.CallVirtual(typeof(MethodInterceptionAspect), nameof(OnInvoke));
+            processor.UpdateArguments(argumentsVariable, pointerOnly: true);
+
+            if (rewriter.TargetMethod.HasReturnValue())
+            {
+                processor.Load(aspectArgsVariable);
+                processor.GetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
+                processor.Unbox(rewriter.TargetMethod.ReturnType);
+            }
+            processor.Return();
         }
 
         /// <summary>
@@ -140,70 +138,61 @@ namespace SoftCube.Aspects
         /// 対象メソッドのコードを、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
         /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodRewriter)"/> を呼びだしてください。
         /// </remarks>
-        private void ReplaceAsyncMethod(AsyncMethodRewriter rewriter, MethodInterceptionArgsRewriter aspectArgsInjector)
+        private void ReplaceAsyncMethod(AsyncMethodRewriter rewriter, TypeDefinition aspectArgsImplType)
         {
-            /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-            rewriter.CreateOriginalTargetMethod();
+            var targetMethod       = rewriter.TargetMethod;
+            var processor          = targetMethod.Body.GetILProcessor();
+            var aspectVariable     = targetMethod.AddVariable(rewriter.AspectAttributeType);
+            var argumentsVariable  = targetMethod.AddVariable(rewriter.TargetMethod.ArgumentsType());
+            var aspectArgsVariable = targetMethod.AddVariable(typeof(MethodExecutionArgs));
 
-            /// 対象メソッドのコードを書き換えます。
-            var method = rewriter.TargetMethod;
+            /// var aspect     = new Aspect(...) {...};
+            /// var arguments  = new Arguments(...);
+            /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
+            /// aspectArgs.Method = MethodBase.GetCurrentMethod();
+            processor.NewAspectAttribute(rewriter.AspectAttribute);
+            processor.Store(aspectVariable);
+
+            processor.NewArguments();
+            processor.Store(argumentsVariable);
+
+            if (targetMethod.IsStatic)
             {
-                /// var aspect     = new Aspect(...) {...};
-                /// var arguments  = new Arguments(...);
-                /// var aspectArgs = new MethodInterceptionArgs(this, arguments);
-                /// aspectArgs.Method = MethodBase.GetCurrentMethod();
+                processor.LoadNull();
+            }
+            else
+            {
+                processor.LoadThis();
+            }
+            processor.Load(argumentsVariable);
+            processor.New(aspectArgsImplType);
+            processor.Store(aspectArgsVariable);
 
-                var processor = rewriter.Processor;
+            processor.Load(aspectArgsVariable);
+            processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
+            processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
 
-                processor.NewAspectAttribute(rewriter.AspectAttribute);
-                int aspectAttributeVariable = method.AddVariable(rewriter.AspectAttributeType);
-                processor.Store(aspectAttributeVariable);
-
-                processor.NewArguments();
-                int argumentsVariable = method.AddVariable(rewriter.TargetMethod.ArgumentsType());
-                processor.Store(argumentsVariable);
-
-                if (rewriter.TargetMethod.IsStatic)
-                {
-                    processor.LoadNull();
-                }
-                else
-                {
-                    processor.LoadThis();
-                }
-                processor.Load(argumentsVariable);
-                processor.New(aspectArgsInjector.DerivedAspectArgsType);
-                int aspectArgsVariable = method.AddVariable(typeof(MethodExecutionArgs));
-                processor.Store(aspectArgsVariable);
-
-                processor.Load(aspectArgsVariable);
-                processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
-                processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
-
-                var taskType = rewriter.TargetMethod.ReturnType;
-                if (taskType is GenericInstanceType genericInstanceType)
-                {
-                    /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);
-                    /// var builder      = stateMachine.Builder;
-                    /// builder.Start(ref stateMachine);
-                    /// return stateMachine.Builder.Task;
-                    var returnType       = genericInstanceType.GenericArguments[0].ToSystemType();
-                    var stateMachineType = typeof(MethodInterceptionAsyncStateMachine<>).MakeGenericType(returnType);
-                    var aspectType       = typeof(MethodInterceptionAspect);
-                    var aspectArgsType   = typeof(MethodInterceptionArgs);
-                    rewriter.StartAsyncStateMachine(stateMachineType, aspectType, aspectArgsType, aspectAttributeVariable, aspectArgsVariable);
-                }
-                else
-                {
-                    /// var stateMachine = new MethodInterceptionAsyncStateMachine(aspect, aspectArgs);
-                    /// var builder      = stateMachine.Builder;
-                    /// builder.Start(ref stateMachine);
-                    /// return stateMachine.Builder.Task;
-                    var stateMachineType = typeof(MethodInterceptionAsyncStateMachine);
-                    var aspectType       = typeof(MethodInterceptionAspect);
-                    var aspectArgsType   = typeof(MethodInterceptionArgs);
-                    rewriter.StartAsyncStateMachine(stateMachineType, aspectType, aspectArgsType, aspectAttributeVariable, aspectArgsVariable);
-                }
+            var taskType = targetMethod.ReturnType;
+            if (taskType is GenericInstanceType genericInstanceType)
+            {
+                /// var stateMachine = new MethodInterceptionAsyncStateMachine<TResult>(aspect, aspectArgs);
+                /// var builder      = stateMachine.Builder;
+                /// builder.Start(ref stateMachine);
+                /// return stateMachine.Builder.Task;
+                var returnType       = genericInstanceType.GenericArguments[0].ToSystemType();
+                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine<>).MakeGenericType(returnType);
+                var aspectType       = typeof(MethodInterceptionAspect);
+                rewriter.StartAsyncStateMachine(stateMachineType, aspectType, typeof(MethodInterceptionArgs), aspectVariable, aspectArgsVariable);
+            }
+            else
+            {
+                /// var stateMachine = new MethodInterceptionAsyncStateMachine(aspect, aspectArgs);
+                /// var builder      = stateMachine.Builder;
+                /// builder.Start(ref stateMachine);
+                /// return stateMachine.Builder.Task;
+                var stateMachineType = typeof(MethodInterceptionAsyncStateMachine);
+                var aspectType       = typeof(MethodInterceptionAspect);
+                rewriter.StartAsyncStateMachine(stateMachineType, aspectType, typeof(MethodInterceptionArgs), aspectVariable, aspectArgsVariable);
             }
         }
 
