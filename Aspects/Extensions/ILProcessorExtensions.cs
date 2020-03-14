@@ -782,7 +782,7 @@ namespace SoftCube.Aspects
         /// <param name="aspectAttribute">アスペクト属性。</param>
         public static void NewAspectAttribute(this ILProcessor processor, CustomAttribute aspectAttribute)
         {
-            using var profile = Profiling.Profiler.Start("NewAspectAttribute");
+            using var profile = Profiling.Profiler.Start("A");
 
             NewAspectAttribute(processor, null, aspectAttribute);
         }
@@ -795,7 +795,7 @@ namespace SoftCube.Aspects
         /// <param name="aspectAttribute">アスペクト属性。</param>
         public static void NewAspectAttribute(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
         {
-            using var profile = Profiling.Profiler.Start("NewAspectAttribute");
+            using var profile = Profiling.Profiler.Start("A");
 
             var method       = processor.Body.Method;
             var module       = method.Module;
@@ -968,95 +968,60 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         public static void NewArguments(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("NewArguments");
+            using var profile = Profiling.Profiler.Start("A");
 
             var method         = processor.Body.Method;
             var module         = method.Module;
-            var argumentsType  = method.ArgumentsType();
+            var argumentsType  = typeof(Arguments);
             var parameters     = method.Parameters;
             var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
 
-            /// Arguments を生成して、ローカル変数にストアします。
             if (!TypeToConstructor.ContainsKey(argumentsType))
             {
-                if (parameters.Count <= 8)
+                TypeToConstructor.Add(argumentsType, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+            }
+
+            /// Arguments を生成して、ローカル変数にストアします。
+            processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+            processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
+            for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+            {
+                var parameter     = parameters[parameterIndex];
+                var parameterType = parameter.ParameterType;
+
+                processor.Emit(OpCodes.Dup);
+                processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+
+                if (method.IsStatic)
                 {
-                    TypeToConstructor.Add(argumentsType, module.ImportReference(argumentsType.GetConstructor(parameters.Select(p => p.ParameterType.ToSystemType(removePointer: true)).ToArray())));
+                    processor.Emit(OpCodes.Ldarg, parameterIndex);
+                }
+                else 
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                }
+
+                if (parameterType.IsByReference)
+                {
+                    var elementType = parameterType.GetElementType();
+
+                    processor.EmitLdind(elementType);
+                    if (elementType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Box, elementType);
+                    }
                 }
                 else
                 {
-                    TypeToConstructor.Add(argumentsType, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
-                }
-            }
-
-            if (parameters.Count <= 8)
-            {
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-                    var parameterType = parameter.ParameterType;
-
-                    if (method.IsStatic)
+                    if (parameterType.IsValueType)
                     {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex);
-                    }
-                    else
-                    {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    }
-
-                    if (parameterType.IsByReference)
-                    {
-                        var elementType = parameterType.GetElementType();
-                        processor.EmitLdind(elementType);
+                        processor.Emit(OpCodes.Box, parameterType);
                     }
                 }
-
-                processor.Emit(OpCodes.Newobj, TypeToConstructor[argumentsType]);
+                processor.Emit(OpCodes.Stelem_Ref);
             }
-            else
-            {
-                processor.Emit(OpCodes.Ldc_I4, parameters.Count);
-                processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter     = parameters[parameterIndex];
-                    var parameterType = parameter.ParameterType;
 
-                    processor.Emit(OpCodes.Dup);
-                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-
-                    if (method.IsStatic)
-                    {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex);
-                    }
-                    else 
-                    {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    }
-
-                    if (parameterType.IsByReference)
-                    {
-                        var elementType = parameterType.GetElementType();
-
-                        processor.EmitLdind(elementType);
-                        if (elementType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Box, elementType);
-                        }
-                    }
-                    else
-                    {
-                        if (parameterType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Box, parameterType);
-                        }
-                    }
-                    processor.Emit(OpCodes.Stelem_Ref);
-                }
-
-                processor.Emit(OpCodes.Newobj, TypeToConstructor[argumentsType]);
-            }
+            processor.Emit(OpCodes.Newobj, TypeToConstructor[argumentsType]);
         }
 
         /// <summary>
@@ -1070,7 +1035,7 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void NewArguments(this ILProcessor processor, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("NewArguments");
+            using var profile = Profiling.Profiler.Start("A");
 
             NewArguments(processor, null, targetMethod);
         }
@@ -1086,44 +1051,37 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void NewArguments(this ILProcessor processor, Instruction insert, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("NewArguments");
+            using var profile = Profiling.Profiler.Start("A");
 
             var method           = processor.Body.Method;
             var module           = method.Module;
             var stateMachineType = method.DeclaringType;
-            var argumentsType    = targetMethod.ArgumentsType();
+            var argumentsType    = typeof(Arguments);
             var parameters       = targetMethod.Parameters;
             var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
 
-            if (parameters.Count <= 8)
+            if (!TypeToConstructor.ContainsKey(argumentsType))
             {
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                }
-                processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(parameterTypes)));
+                TypeToConstructor.Add(argumentsType, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
             }
-            else
+
+            processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
+            processor.InsertBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
+            for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
             {
-                processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
-                processor.InsertBefore(insert, OpCodes.Newarr, module.ImportReference(typeof(object)));
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                var parameter = parameters[parameterIndex];
+                processor.InsertBefore(insert, OpCodes.Dup);
+                processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
+                processor.InsertBefore(insert, OpCodes.Ldarg_0);
+                processor.InsertBefore(insert, OpCodes.Ldfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
+                if (parameter.ParameterType.IsValueType)
                 {
-                    var parameter = parameters[parameterIndex];
-                    processor.InsertBefore(insert, OpCodes.Dup);
-                    processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
-                    processor.InsertBefore(insert, OpCodes.Ldarg_0);
-                    processor.InsertBefore(insert, OpCodes.Ldfld, stateMachineType.Fields.Single(f => f.Name == parameter.Name));
-                    if (parameter.ParameterType.IsValueType)
-                    {
-                        processor.InsertBefore(insert, OpCodes.Box, parameter.ParameterType);
-                    }
-                    processor.InsertBefore(insert, OpCodes.Stelem_Ref);
+                    processor.InsertBefore(insert, OpCodes.Box, parameter.ParameterType);
                 }
-                processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                processor.InsertBefore(insert, OpCodes.Stelem_Ref);
             }
+
+            processor.InsertBefore(insert, OpCodes.Newobj, TypeToConstructor[argumentsType]);
         }
 
         #endregion
@@ -1427,35 +1385,6 @@ namespace SoftCube.Aspects
             processor.InsertBefore(insert, OpCodes.Callvirt, TypeDefinitionToMethod[key]);
         }
 
-        ///// <summary>
-        ///// 末尾に仮想メソッドを呼びだすコードを追加します。
-        ///// </summary>
-        ///// <param name="processor">IL プロセッサー。</param>
-        ///// <param name="type">メソッドの宣言型。</param>
-        ///// <param name="methodName">メソッド名。</param>
-        //public static void CallVirtual(this ILProcessor processor, Type type, string methodName)
-        //{
-        //    var module = processor.Body.Method.Module;
-        //    processor.Emit(OpCodes.Callvirt, module.ImportReference(type.GetMethod(methodName)));
-        //}
-
-        ///// <summary>
-        ///// 指定命令の前に仮想メソッドを呼びだすコードを挿入します。
-        ///// </summary>
-        ///// <param name="processor">IL プロセッサー。</param>
-        ///// <param name="insert">挿入位置を示す命令。</param>
-        ///// <param name="type">メソッドの宣言型。</param>
-        ///// <param name="methodName">メソッド名。</param>
-        //public static void CallVirtual(this ILProcessor processor, Instruction insert, Type type, string methodName)
-        //{
-        //    var module = processor.Body.Method.Module;
-        //    processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(type.GetMethod(methodName)));
-        //}
-
-
-
-        //private static readonly Dictionary<(Type, string), MethodReference> contextToMethodInfo = new Dictionary<(Type, string), MethodReference>();
-
         /// <summary>
         /// 末尾に静的メソッドを呼びだすコードを追加します。
         /// </summary>
@@ -1465,7 +1394,7 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void CallStatic(this ILProcessor processor, Type type, string methodName, params Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("CallStatic");
+            using var profile = Profiling.Profiler.Start("A");
 
             var method = processor.Body.Method;
             var module = method.Module;
@@ -1671,12 +1600,17 @@ namespace SoftCube.Aspects
         /// </param>
         public static void UpdateArguments(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
         {
-            using var profile = Profiling.Profiler.Start("UpdateArguments1");
+            using var profile = Profiling.Profiler.Start("A");
 
-            var method          = processor.Body.Method;
-            var module          = method.Module;
-            var parameters      = method.Parameters;
-            var getItemProperty = module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod);
+            var method     = processor.Body.Method;
+            var module     = method.Module;
+            var parameters = method.Parameters;
+
+            var key = (typeof(Arguments), "Item");
+            if (!TypeToGetProperty.ContainsKey(key))
+            {
+                TypeToGetProperty.Add(key, module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod));
+            }
 
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
             {
@@ -1698,7 +1632,7 @@ namespace SoftCube.Aspects
 
                     processor.Emit(OpCodes.Ldloc, argumentsVariable);
                     processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, getItemProperty);
+                    processor.Emit(OpCodes.Call, TypeToGetProperty[key]);
                     if (elementType.IsValueType)
                     {
                         processor.Emit(OpCodes.Unbox, elementType);
@@ -1710,7 +1644,7 @@ namespace SoftCube.Aspects
                 {
                     processor.Emit(OpCodes.Ldloc, argumentsVariable);
                     processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, getItemProperty);
+                    processor.Emit(OpCodes.Call, TypeToGetProperty[key]);
                     if (parameterType.IsValueType)
                     {
                         processor.Emit(OpCodes.Unbox_Any, parameterType);
@@ -1739,7 +1673,7 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void UpdateArguments(this ILProcessor processor, FieldDefinition argumentsField, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("UpdateArguments");
+            using var profile = Profiling.Profiler.Start("A");
 
             UpdateArguments(processor, null, argumentsField, targetMethod);
         }
@@ -1757,14 +1691,19 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void UpdateArguments(this ILProcessor processor, Instruction insert, FieldDefinition argumentsField, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("UpdateArguments2");
+            using var profile = Profiling.Profiler.Start("A");
 
             var method           = processor.Body.Method;
             var module           = method.Module;
             var stateMachineType = method.DeclaringType;
             var parameters       = targetMethod.Parameters;
             var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
-            var getItemProperty  = module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod);
+
+            var key = (typeof(Arguments), "Item");
+            if (!TypeToGetProperty.ContainsKey(key))
+            {
+                TypeToGetProperty.Add(key, module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod));
+            }
 
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
             {
@@ -1776,8 +1715,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
                 processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
 
-                processor.InsertBefore(insert, OpCodes.Call, getItemProperty);
-                //processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(argumentsType.GetMethod(nameof(ArgumentsArray.GetArgument))));
+                processor.InsertBefore(insert, OpCodes.Call, TypeToGetProperty[key]);
                 if (parameterType.IsValueType)
                 {
                     processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);

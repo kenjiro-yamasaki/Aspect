@@ -84,7 +84,7 @@ namespace SoftCube.Aspects
             var processor               = targetMethod.Body.GetILProcessor();
             var aspectAttributeType     = rewriter.AspectAttributeType;
             var aspectAttributeVariable = targetMethod.AddVariable(aspectAttributeType);
-            var argumentsVariable       = targetMethod.AddVariable(targetMethod.ArgumentsType());
+            var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodInterceptionArgs));
 
             /// var aspectAttribute = new AspectAttribute(...) {...};
@@ -149,7 +149,7 @@ namespace SoftCube.Aspects
             var processor               = targetMethod.Body.GetILProcessor();
             var aspectAttributeType     = rewriter.AspectAttributeType;
             var aspectAttributeVariable = targetMethod.AddVariable(aspectAttributeType);
-            var argumentsVariable       = targetMethod.AddVariable(targetMethod.ArgumentsType());
+            var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodExecutionArgs));
 
             /// var aspectAttribute = new AspectAttribute(...) {...};

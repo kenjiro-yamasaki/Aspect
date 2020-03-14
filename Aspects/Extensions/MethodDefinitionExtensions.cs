@@ -23,30 +23,6 @@ namespace SoftCube.Aspects
             return method.ReturnType.FullName != "System.Void";
         }
 
-        /// <summary>
-        /// Arguments の型を取得します。
-        /// </summary>
-        /// <param name="method">メソッド。</param>
-        /// <returns>Arguments の型。</returns>
-        public static Type ArgumentsType(this MethodDefinition method)
-        {
-            var parameters = method.Parameters;
-            var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
-            return parameters.Count switch
-            {
-                0 => typeof(Arguments),
-                1 => typeof(Arguments<>).MakeGenericType(parameterTypes),
-                2 => typeof(Arguments<,>).MakeGenericType(parameterTypes),
-                3 => typeof(Arguments<,,>).MakeGenericType(parameterTypes),
-                4 => typeof(Arguments<,,,>).MakeGenericType(parameterTypes),
-                5 => typeof(Arguments<,,,,>).MakeGenericType(parameterTypes),
-                6 => typeof(Arguments<,,,,,>).MakeGenericType(parameterTypes),
-                7 => typeof(Arguments<,,,,,,>).MakeGenericType(parameterTypes),
-                8 => typeof(Arguments<,,,,,,,>).MakeGenericType(parameterTypes),
-                _ => typeof(ArgumentsArray),
-            };
-        }
-
         #endregion
 
         #region メソッド

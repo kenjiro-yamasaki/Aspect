@@ -69,7 +69,7 @@ namespace SoftCube.Aspects
             var aspectAttributeType     = rewriter.AspectAttributeType;
 
             var aspectAttributeVariable = targetMethod.AddVariable(aspectAttributeType);
-            var argumentsVariable       = targetMethod.AddVariable(targetMethod.ArgumentsType());
+            var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodExecutionArgs));
             var exceptionVariable       = targetMethod.AddVariable(typeof(Exception));
 
@@ -205,7 +205,7 @@ namespace SoftCube.Aspects
             var thisField            = rewriter.ThisField;
             var currentField         = rewriter.CurrentField;
             var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
+            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
             var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
 
@@ -351,7 +351,7 @@ namespace SoftCube.Aspects
 
             var thisField            = rewriter.ThisField;
             var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(targetMethod.ArgumentsType()));
+            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
             var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
 
