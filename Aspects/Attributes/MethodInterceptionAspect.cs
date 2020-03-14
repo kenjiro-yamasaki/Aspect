@@ -120,7 +120,7 @@ namespace SoftCube.Aspects
 
             processor.Load(aspectAttributeVariable);
             processor.Load(aspectArgsVariable);
-            processor.CallVirtual(typeof(MethodInterceptionAspect), nameof(OnInvoke));
+            processor.CallVirtual(aspectAttributeType, nameof(OnInvoke));
             processor.UpdateArguments(argumentsVariable, pointerOnly: true);
 
             if (rewriter.TargetMethod.HasReturnValue())

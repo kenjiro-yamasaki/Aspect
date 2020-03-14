@@ -18,6 +18,11 @@ namespace SoftCube.Aspects
         public CustomAttribute AspectAttribute { get; }
 
         /// <summary>
+        /// アスペクト属性の型。
+        /// </summary>
+        public TypeDefinition AspectAttributeType => AspectAttribute.AttributeType.Resolve();
+
+        /// <summary>
         /// アスペクト引数の型。
         /// </summary>
         public Type AspectArgsType { get; }

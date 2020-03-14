@@ -107,7 +107,7 @@ namespace SoftCube.Aspects
 
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
-                processor.CallVirtual(GetType(), nameof(OnEntry));
+                processor.CallVirtual(aspectAttributeType, nameof(OnEntry));
                 processor.UpdateArguments(argumentsVariable, pointerOnly: false);
             });
 
@@ -138,7 +138,7 @@ namespace SoftCube.Aspects
 
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
-                processor.CallVirtual(GetType(), nameof(OnSuccess));
+                processor.CallVirtual(aspectAttributeType, nameof(OnSuccess));
             });
 
             var onException = new Action<ILProcessor>(processor =>
@@ -153,7 +153,7 @@ namespace SoftCube.Aspects
 
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
-                processor.CallVirtual(GetType(), nameof(OnException));
+                processor.CallVirtual(aspectAttributeType, nameof(OnException));
                 processor.Rethrow();
             });
 
@@ -165,7 +165,7 @@ namespace SoftCube.Aspects
                 /// ...
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
-                processor.CallVirtual(GetType(), nameof(OnExit));
+                processor.CallVirtual(aspectAttributeType, nameof(OnExit));
                 processor.UpdateArguments(argumentsVariable, pointerOnly: true);
             });
 
@@ -196,6 +196,7 @@ namespace SoftCube.Aspects
         {
             var module               = rewriter.Module;
             var aspectAttribute      = rewriter.AspectAttribute;
+            var aspectAttributeType  = rewriter.AspectAttributeType;
             var aspectArgsType       = rewriter.AspectArgsType;
             var moveNextMethod       = rewriter.MoveNextMethod;
             var targetMethod         = rewriter.TargetMethod;
@@ -245,7 +246,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
-                processor.CallVirtual(GetType(), nameof(OnEntry));
+                processor.CallVirtual(aspectAttributeType, nameof(OnEntry));
                 processor.UpdateArguments(argumentsField, targetMethod);
             });
 
@@ -259,7 +260,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
-                processor.CallVirtual(GetType(), nameof(OnResume));
+                processor.CallVirtual(aspectAttributeType, nameof(OnResume));
                 processor.UpdateArguments(argumentsField, targetMethod);
             });
 
@@ -279,7 +280,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
-                processor.CallVirtual(GetType(), nameof(OnYield));
+                processor.CallVirtual(aspectAttributeType, nameof(OnYield));
 
                 processor.LoadThis();
                 processor.LoadThis();
@@ -296,7 +297,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
-                processor.CallVirtual(GetType(), nameof(OnSuccess));
+                processor.CallVirtual(aspectAttributeType, nameof(OnSuccess));
             });
 
             var onException = new Action<ILProcessor>(processor =>
@@ -314,7 +315,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
-                processor.CallVirtual(GetType(), nameof(OnException));
+                processor.CallVirtual(aspectAttributeType, nameof(OnException));
             });
 
             var onExit = new Action<ILProcessor>(processor =>
@@ -324,7 +325,7 @@ namespace SoftCube.Aspects
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
-                processor.CallVirtual(GetType(), nameof(OnExit));
+                processor.CallVirtual(aspectAttributeType, nameof(OnExit));
             });
 
             rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
@@ -342,6 +343,7 @@ namespace SoftCube.Aspects
         {
             var module               = rewriter.Module;
             var aspectAttribute      = rewriter.AspectAttribute;
+            var aspectAttributeType  = rewriter.AspectAttributeType;
             var aspectArgsType       = rewriter.AspectArgsType;
             var moveNextMethod       = rewriter.MoveNextMethod;
             var targetMethod         = rewriter.TargetMethod;
@@ -390,7 +392,7 @@ namespace SoftCube.Aspects
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
-                processor.CallVirtual(insert, GetType(), nameof(OnEntry));
+                processor.CallVirtual(insert, aspectAttributeType, nameof(OnEntry));
                 processor.UpdateArguments(insert, argumentsField, targetMethod);
             });
 
@@ -404,7 +406,7 @@ namespace SoftCube.Aspects
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
-                processor.CallVirtual(insert, GetType(), nameof(OnResume));
+                processor.CallVirtual(insert, aspectAttributeType, nameof(OnResume));
                 processor.UpdateArguments(insert, argumentsField, targetMethod);
             });
 
@@ -415,7 +417,7 @@ namespace SoftCube.Aspects
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
-                processor.CallVirtual(insert, GetType(), nameof(OnYield));
+                processor.CallVirtual(insert, aspectAttributeType, nameof(OnYield));
             });
 
             var onSuccess = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -437,7 +439,7 @@ namespace SoftCube.Aspects
                     processor.Load(insert, aspectAttributeField);
                     processor.LoadThis(insert);
                     processor.Load(insert, aspectArgsField);
-                    processor.CallVirtual(insert, GetType(), nameof(OnSuccess));
+                    processor.CallVirtual(insert, aspectAttributeType, nameof(OnSuccess));
 
                     processor.LoadThis(insert);
                     processor.Load(insert, aspectArgsField);
@@ -451,7 +453,7 @@ namespace SoftCube.Aspects
                     processor.Load(insert, aspectAttributeField);
                     processor.LoadThis(insert);
                     processor.Load(insert, aspectArgsField);
-                    processor.CallVirtual(insert, GetType(), nameof(OnSuccess));
+                    processor.CallVirtual(insert, aspectAttributeType, nameof(OnSuccess));
                 }
             });
 
@@ -469,7 +471,7 @@ namespace SoftCube.Aspects
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
-                processor.CallVirtual(insert, GetType(), nameof(OnException));
+                processor.CallVirtual(insert, aspectAttributeType, nameof(OnException));
             });
 
             var onExit = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -479,7 +481,7 @@ namespace SoftCube.Aspects
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
-                processor.CallVirtual(insert, GetType(), nameof(OnExit));
+                processor.CallVirtual(insert, aspectAttributeType, nameof(OnExit));
             });
 
             rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
