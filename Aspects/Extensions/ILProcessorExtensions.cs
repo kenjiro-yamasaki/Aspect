@@ -24,9 +24,14 @@ namespace SoftCube.Aspects
         private static readonly Dictionary<(Type, string), MethodReference> TypeToSetProperty = new Dictionary<(Type, string), MethodReference>();
 
         /// <summary>
-        /// (型, プロパティ名) → メソッド。
+        /// (型, プロパティ名) → コンストラクター。
         /// </summary>
         private static readonly Dictionary<Type, MethodReference> TypeToConstructor = new Dictionary<Type, MethodReference>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private static readonly Dictionary<(Type, string), MethodReference> TypeToMethod = new Dictionary<(Type, string), MethodReference>();
 
         /// <summary>
         /// 
@@ -726,7 +731,7 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void New(this ILProcessor processor, Type type, params Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("New");
+            using var profile = Profiling.Profiler.Start("A");
 
             if (!TypeToConstructor.ContainsKey(type))
             {
@@ -745,7 +750,7 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void New<T>(this ILProcessor processor, Instruction insert, params Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("New");
+            using var profile = Profiling.Profiler.Start("A");
 
             var type = typeof(T);
             if (!TypeToConstructor.ContainsKey(type))
@@ -764,7 +769,7 @@ namespace SoftCube.Aspects
         /// <param name="type">型。</param>
         public static void New(this ILProcessor processor, TypeDefinition type)
         {
-            using var profile = Profiling.Profiler.Start("New");
+            using var profile = Profiling.Profiler.Start("A");
 
             var module = processor.Body.Method.Module;
             processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
@@ -1793,98 +1798,61 @@ namespace SoftCube.Aspects
         /// </param>
         public static void UpdateArgumentsProperty(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
         {
-            using var profile = Profiling.Profiler.Start("UpdateArgumentsProperty");
+            using var profile = Profiling.Profiler.Start("A");
 
             var method     = processor.Body.Method;
             var module     = method.Module;
             var parameters = method.Parameters;
 
-            if (parameters.Count <= 8)
+            var key = (typeof(Arguments), nameof(Arguments.SetArgument));
+            if (!TypeToMethod.ContainsKey(key))
             {
-                var fieldNames = new string[] { "Arg0", "Arg1", "Arg2", "Arg3", "Arg4", "Arg5", "Arg6", "Arg7" };
-
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter     = parameters[parameterIndex];
-                    var parameterType = parameter.ParameterType;
-
-                    if (parameterType.IsByReference)
-                    {
-                        var elementType = parameterType.GetElementType();
-
-                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
-                        if (method.IsStatic)
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex);
-                        }
-                        else
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                        }
-                        processor.EmitLdind(elementType);
-                        processor.Emit(OpCodes.Stfld, module.ImportReference(method.ArgumentsType().GetField(fieldNames[parameterIndex])));
-                    }
-                    else if (!pointerOnly)
-                    {
-                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
-                        if (method.IsStatic)
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex);
-                        }
-                        else
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                        }
-                        processor.Emit(OpCodes.Stfld, module.ImportReference(method.ArgumentsType().GetField(fieldNames[parameterIndex])));
-                    }
-                }
+                TypeToMethod.Add(key, module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
             }
-            else
+
+            for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
             {
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                var parameter     = parameters[parameterIndex];
+                var parameterType = parameter.ParameterType;
+
+                if (parameterType.IsByReference)
                 {
-                    var parameter     = parameters[parameterIndex];
-                    var parameterType = parameter.ParameterType;
+                    var elementType = parameterType.GetElementType();
 
-                    if (parameterType.IsByReference)
+                    processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                    if (method.IsStatic)
                     {
-                        var elementType = parameterType.GetElementType();
-
-                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
-                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        if (method.IsStatic)
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex);
-                        }
-                        else
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                        }
-                        processor.EmitLdind(elementType);
-                        if (elementType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Box, elementType);
-                        }
-                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
                     }
                     else
                     {
-                        processor.Emit(OpCodes.Ldloc, argumentsVariable);
-                        processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        if (method.IsStatic)
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex);
-                        }
-                        else
-                        {
-                            processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                        }
-                        if (parameterType.IsValueType)
-                        {
-                            processor.Emit(OpCodes.Box, parameterType);
-                        }
-                        processor.Emit(OpCodes.Callvirt, module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                     }
+                    processor.EmitLdind(elementType);
+                    if (elementType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Box, elementType);
+                    }
+                    processor.Emit(OpCodes.Callvirt, TypeToMethod[key]);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Ldloc, argumentsVariable);
+                    processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+                    if (method.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
+                    if (parameterType.IsValueType)
+                    {
+                        processor.Emit(OpCodes.Box, parameterType);
+                    }
+                    processor.Emit(OpCodes.Callvirt, TypeToMethod[key]);
                 }
             }
         }
