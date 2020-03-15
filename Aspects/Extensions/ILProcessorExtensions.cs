@@ -1318,6 +1318,19 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, method);
         }
 
+        public static void CallConstructor(this ILProcessor processor, Type type, Type[] argumentTypes)
+        {
+            using var profile = Profiling.Profiler.Start("A");
+
+            if (!TypeToConstructor.ContainsKey(type))
+            {
+                var module = processor.Body.Method.Module;
+                TypeToConstructor.Add(type, module.ImportReference(type.GetConstructor(argumentTypes)));
+            }
+
+            processor.Emit(OpCodes.Call, TypeToConstructor[type]);
+        }
+
         /// <summary>
         /// 末尾に仮想メソッドを呼びだすコードを追加します。
         /// </summary>

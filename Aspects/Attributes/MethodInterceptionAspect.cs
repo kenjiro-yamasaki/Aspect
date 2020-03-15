@@ -34,7 +34,7 @@ namespace SoftCube.Aspects
         /// <param name="aspectAttribute">アスペクト属性。</param>
         sealed public override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
-            using var profile = Profiling.Profiler.Start($"{nameof(MethodInterceptionAspect)}.{nameof(InjectAdvice)}");
+            using var profile = Profiling.Profiler.Start($"InjectAdvice");
 
             var asyncStateMachineAttribute = targetMethod.GetAsyncStateMachineAttribute();
             var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
@@ -62,7 +62,6 @@ namespace SoftCube.Aspects
                 var aspectArgsRewriter   = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
 
                 targetMethodRewriter.CreateOriginalTargetMethod();
-
                 aspectArgsRewriter.CreateAspectArgsImpl();
                 aspectArgsRewriter.CreateConstructor();
                 ReplaceMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
@@ -80,6 +79,8 @@ namespace SoftCube.Aspects
         /// <param name="aspectArgsImplType">アスペクト引数の型。</param>
         private void ReplaceMethod(MethodRewriter rewriter, TypeDefinition aspectArgsImplType)
         {
+            using var profile = Profiling.Profiler.Start($"ReplaceMethod");
+
             var targetMethod            = rewriter.TargetMethod;
             var processor               = targetMethod.Body.GetILProcessor();
             var aspectAttributeType     = rewriter.AspectAttributeType;
@@ -144,6 +145,8 @@ namespace SoftCube.Aspects
         /// </remarks>
         private void ReplaceAsyncMethod(MethodRewriter rewriter, TypeDefinition aspectArgsImplType)
         {
+            using var profile = Profiling.Profiler.Start($"ReplaceAsyncMethod");
+
             var targetMethod            = rewriter.TargetMethod;
             var module                  = targetMethod.Module;
             var processor               = targetMethod.Body.GetILProcessor();

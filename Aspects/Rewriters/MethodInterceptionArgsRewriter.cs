@@ -50,6 +50,8 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void CreateAspectArgsImpl()
         {
+            using var profile = Profiling.Profiler.Start($"CreateAspectArgsImpl");
+
             var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsImplType      = new TypeDefinition(DeclaringType.Namespace, MethodInterceptionArgsImplTypeName, Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference) { IsNestedPrivate = true };
 
@@ -61,6 +63,8 @@ namespace SoftCube.Aspects
         /// </summary>
         public void CreateConstructor()
         {
+            using var profile = Profiling.Profiler.Start($"CreateConstructor");
+
             var methodAttributes = Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName;
             var constructor      = new MethodDefinition(".ctor", methodAttributes, Module.TypeSystem.Void);
 
@@ -68,20 +72,23 @@ namespace SoftCube.Aspects
             ///     : base(instance, arguments)
             /// {
             /// }
-            var instanceParameter  = new ParameterDefinition("instance", Mono.Cecil.ParameterAttributes.None, Module.TypeSystem.Object);
+            var instanceParameter  = new ParameterDefinition("instance",  Mono.Cecil.ParameterAttributes.None, Module.TypeSystem.Object);
             var argumentsParameter = new ParameterDefinition("arguments", Mono.Cecil.ParameterAttributes.None, Module.ImportReference(typeof(Arguments)));
             constructor.Parameters.Add(instanceParameter);
             constructor.Parameters.Add(argumentsParameter);
 
+            var aspectArgsImplType = DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
+            aspectArgsImplType.Methods.Add(constructor);
+
+            //
             var processor = constructor.Body.GetILProcessor();
             processor.Emit(OpCodes.Ldarg_0);
             processor.Emit(OpCodes.Ldarg_1);
             processor.Emit(OpCodes.Ldarg_2);
-            processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object), typeof(Arguments) })));
-            processor.Emit(OpCodes.Ret);
 
-            var aspectArgsImplType = DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
-            aspectArgsImplType.Methods.Add(constructor);
+            processor.CallConstructor(typeof(MethodInterceptionArgs), new[] { typeof(object), typeof(Arguments) });
+            //processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object), typeof(Arguments) })));
+            processor.Emit(OpCodes.Ret);
         }
 
         /// <summary>
@@ -94,6 +101,8 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void OverrideInvokeImplMethod(MethodDefinition originalMethod)
         {
+            using var profile = Profiling.Profiler.Start($"OverrideInvokeImplMethod");
+
             /// InvokeImpl メソッドのオーバーライドを追加します。
             var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsType          = aspectArgsTypeReference.Resolve();
@@ -138,7 +147,8 @@ namespace SoftCube.Aspects
 
                         processor.Emit(OpCodes.Ldarg_1);
                         processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+
+                        processor.GetProperty(typeof(Arguments), "Item");
                         if (elementType.IsValueType)
                         {
                             processor.Emit(OpCodes.Unbox_Any, elementType);
@@ -156,7 +166,7 @@ namespace SoftCube.Aspects
 
                         processor.Emit(OpCodes.Ldarg_1);
                         processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                        processor.Emit(OpCodes.Call, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetGetMethod()));
+                        processor.GetProperty(typeof(Arguments), "Item");
                         if (parameterType.IsValueType)
                         {
                             processor.Emit(OpCodes.Unbox_Any, parameterType);
@@ -173,7 +183,7 @@ namespace SoftCube.Aspects
                 if (!originalMethod.IsStatic)
                 {
                     processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AspectArgs).GetProperty(nameof(AspectArgs.Instance)).GetGetMethod()));
+                    processor.GetProperty(typeof(AspectArgs), nameof(AspectArgs.Instance));
                 }
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
@@ -222,7 +232,7 @@ namespace SoftCube.Aspects
                         {
                             processor.Emit(OpCodes.Box, elementType);
                         }
-                        processor.Emit(OpCodes.Callvirt, Module.ImportReference(typeof(Arguments).GetProperty("Item", BindingFlags.Public | BindingFlags.Instance).GetSetMethod()));
+                        processor.SetProperty(typeof(Arguments), "Item");
                     }
                 }
 
