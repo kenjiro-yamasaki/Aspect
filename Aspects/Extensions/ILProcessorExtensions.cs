@@ -41,8 +41,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction CreateBranch(this ILProcessor processor, OpCode opcode)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (opcode == OpCodes.Br || opcode == OpCodes.Br_S || opcode == OpCodes.Beq || opcode == OpCodes.Beq_S || opcode == OpCodes.Brtrue || opcode == OpCodes.Brtrue_S || opcode == OpCodes.Brfalse || opcode == OpCodes.Brfalse_S)
             {
                 var instruction = processor.Create(OpCodes.Nop);
@@ -69,8 +67,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction CreateLeave(this ILProcessor processor, OpCode opcode)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (opcode == OpCodes.Leave || opcode == OpCodes.Leave_S)
             {
                 var instruction = processor.Create(OpCodes.Nop);
@@ -95,8 +91,6 @@ namespace SoftCube.Aspects
         /// <param name="opcode">オペコード。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode);
             if (insert != null)
             {
@@ -117,8 +111,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, int operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -139,8 +131,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, long operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -161,8 +151,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, byte operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -183,8 +171,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, sbyte operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -205,8 +191,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, float operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -227,8 +211,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, double operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -249,8 +231,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, string operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -271,8 +251,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, TypeReference operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -293,8 +271,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, MethodReference operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -315,8 +291,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, FieldReference operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -337,8 +311,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, ParameterDefinition operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -359,8 +331,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, VariableDefinition operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -381,8 +351,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -403,8 +371,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, Instruction[] operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -425,8 +391,6 @@ namespace SoftCube.Aspects
         /// <param name="operand">オペランド。</param>
         public static void InsertBefore(this ILProcessor processor, Instruction insert, OpCode opcode, CallSite operand)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(opcode, operand);
             if (insert != null)
             {
@@ -453,8 +417,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction InsertBranchBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.CreateBranch(opcode);
             if (insert != null)
             {
@@ -482,8 +444,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction InsertLeaveBefore(this ILProcessor processor, Instruction insert, OpCode opcode)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.CreateLeave(opcode);
             if (insert != null)
             {
@@ -504,8 +464,6 @@ namespace SoftCube.Aspects
         /// <returns>追加された Nop 命令。</returns>
         public static Instruction InsertNopBefore(this ILProcessor processor, Instruction insert)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(OpCodes.Nop);
             if (insert != null)
             {
@@ -536,8 +494,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction EmitBranch(this ILProcessor processor, OpCode opcode)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.CreateBranch(opcode);
             processor.Append(instruction);
             return instruction;
@@ -557,8 +513,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static Instruction EmitLeave(this ILProcessor processor, OpCode opcode)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.CreateLeave(opcode);
             processor.Append(instruction);
             return instruction;
@@ -571,8 +525,6 @@ namespace SoftCube.Aspects
         /// <returns>追加された Nop 命令。</returns>
         public static Instruction EmitNop(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var instruction = processor.Create(OpCodes.Nop);
             processor.Append(instruction);
             return instruction;
@@ -585,8 +537,6 @@ namespace SoftCube.Aspects
         /// <param name="typeReference">型参照。</param>
         internal static void EmitLdind(this ILProcessor processor, TypeReference typeReference)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (!typeReference.IsValueType)
             {
                 processor.Emit(OpCodes.Ldind_Ref);
@@ -650,8 +600,6 @@ namespace SoftCube.Aspects
         /// <param name="typeReference">型参照。</param>
         internal static void EmitStind(this ILProcessor processor, TypeReference typeReference)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (!typeReference.IsValueType)
             {
                 processor.Emit(OpCodes.Stind_Ref);
@@ -702,7 +650,7 @@ namespace SoftCube.Aspects
 
         #region 高レベル命令
 
-        #region ToKey
+        #region GetMethodKey
 
         /// <summary>
         /// メソッドキーを取得します。
@@ -763,23 +711,14 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void New(this ILProcessor processor, Type type, params Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("B");
-
             var key = GetMethodKey(type, ".ctor", argumentTypes);
             if (!MethodCache.ContainsKey(key))
             {
-                using var q = Profiling.Profiler.Start("C");
-
                 var module = processor.Body.Method.Module;
                 MethodCache.Add(key, module.ImportReference(type.GetConstructor(argumentTypes)));
             }
             processor.Emit(OpCodes.Newobj, MethodCache[key]);
         }
-
-
-
-
-
 
         /// <summary>
         /// 末尾に指定型のインスタンスを生成するコードを追加します。
@@ -789,8 +728,6 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void New<T>(this ILProcessor processor, Instruction insert, params Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(typeof(T), ".ctor", argumentTypes);
             if (!MethodCache.ContainsKey(key))
             {
@@ -808,8 +745,6 @@ namespace SoftCube.Aspects
         /// <param name="type">型。</param>
         public static void New(this ILProcessor processor, TypeDefinition type)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var module = processor.Body.Method.Module;
             processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
         }
@@ -821,8 +756,6 @@ namespace SoftCube.Aspects
         /// <param name="aspectAttribute">アスペクト属性。</param>
         public static void NewAspectAttribute(this ILProcessor processor, CustomAttribute aspectAttribute)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             NewAspectAttribute(processor, null, aspectAttribute);
         }
 
@@ -834,8 +767,6 @@ namespace SoftCube.Aspects
         /// <param name="aspectAttribute">アスペクト属性。</param>
         public static void NewAspectAttribute(this ILProcessor processor, Instruction insert, CustomAttribute aspectAttribute)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method       = processor.Body.Method;
             var module       = method.Module;
             var instructions = method.Body.Instructions;
@@ -1007,8 +938,6 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         public static void NewArguments(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method         = processor.Body.Method;
             var module         = method.Module;
             var parameters     = method.Parameters;
@@ -1074,8 +1003,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void NewArguments(this ILProcessor processor, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             NewArguments(processor, null, targetMethod);
         }
 
@@ -1090,8 +1017,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void NewArguments(this ILProcessor processor, Instruction insert, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method           = processor.Body.Method;
             var module           = method.Module;
             var stateMachineType = method.DeclaringType;
@@ -1134,8 +1059,6 @@ namespace SoftCube.Aspects
         /// <param name="variable">ローカル変数のインデックス。</param>
         public static void Load(this ILProcessor processor, int variable)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Ldloc, variable);
         }
 
@@ -1146,8 +1069,6 @@ namespace SoftCube.Aspects
         /// <param name="variable">ローカル変数のインデックス。</param>
         public static void LoadAddress(this ILProcessor processor, int variable)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Ldloca, variable);
         }
 
@@ -1159,8 +1080,6 @@ namespace SoftCube.Aspects
         /// <param name="variable">ローカル変数のインデックス。</param>
         public static void Load(this ILProcessor processor, Instruction insert, int variable)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.InsertBefore(insert, OpCodes.Ldloc, variable);
         }
 
@@ -1171,8 +1090,6 @@ namespace SoftCube.Aspects
         /// <param name="field">フィールド。</param>
         public static void Load(this ILProcessor processor, FieldReference field)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Ldfld, field);
         }
 
@@ -1183,8 +1100,6 @@ namespace SoftCube.Aspects
         /// <param name="field">フィールド。</param>
         public static void LoadAddress(this ILProcessor processor, FieldReference field)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Ldflda, field);
         }
 
@@ -1196,8 +1111,6 @@ namespace SoftCube.Aspects
         /// <param name="field">フィールド。</param>
         public static void Load(this ILProcessor processor, Instruction insert, FieldReference field)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.InsertBefore(insert, OpCodes.Ldfld, field);
         }
 
@@ -1210,8 +1123,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void LoadThis(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method = processor.Body.Method;
 
             if (!method.IsStatic)
@@ -1230,8 +1141,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void LoadThis(this ILProcessor processor, Instruction insert)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method = processor.Body.Method;
 
             if (!method.IsStatic)
@@ -1246,8 +1155,6 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         public static void LoadNull(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Ldnull);
         }
 
@@ -1258,8 +1165,6 @@ namespace SoftCube.Aspects
         /// <param name="insert">挿入位置を示す命令。</param>
         public static void LoadNull(this ILProcessor processor, Instruction insert)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.InsertBefore(insert, OpCodes.Ldnull);
         }
 
@@ -1269,8 +1174,6 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         public static void LoadArguments(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method     = processor.Body.Method;
             var parameters = method.Parameters;
 
@@ -1298,8 +1201,6 @@ namespace SoftCube.Aspects
         /// <param name="variable">ローカル変数のインデックス。</param>
         public static void Store(this ILProcessor processor, int variable)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Stloc, variable);
         }
 
@@ -1311,8 +1212,6 @@ namespace SoftCube.Aspects
         /// <param name="variable">ローカル変数のインデックス。</param>
         public static void Store(this ILProcessor processor, Instruction insert, int variable)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.InsertBefore(insert, OpCodes.Stloc, variable);
         }
 
@@ -1323,8 +1222,6 @@ namespace SoftCube.Aspects
         /// <param name="field">フィールド。</param>
         public static void Store(this ILProcessor processor, FieldReference field)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Stfld, field);
         }
 
@@ -1336,8 +1233,6 @@ namespace SoftCube.Aspects
         /// <param name="field">フィールド。</param>
         public static void Store(this ILProcessor processor, Instruction insert, FieldReference field)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.InsertBefore(insert, OpCodes.Stfld, field);
         }
 
@@ -1352,8 +1247,6 @@ namespace SoftCube.Aspects
         /// <param name="method">メソッド。</param>
         public static void Call(this ILProcessor processor, MethodReference method)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Call, method);
         }
 
@@ -1365,8 +1258,6 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes"></param>
         public static void CallConstructor(this ILProcessor processor, Type type, Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(type, ".ctor", argumentTypes);
             if (!MethodCache.ContainsKey(key))
             {
@@ -1385,8 +1276,6 @@ namespace SoftCube.Aspects
         /// <param name="methodName">メソッド名。</param>
         public static void CallVirtual(this ILProcessor processor, TypeDefinition type, string methodName)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(type, methodName);
             if (!MethodCache.ContainsKey(key))
             {
@@ -1419,8 +1308,6 @@ namespace SoftCube.Aspects
         /// <param name="methodName">メソッド名。</param>
         public static void CallVirtual(this ILProcessor processor, Instruction insert, TypeDefinition type, string methodName)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(type, methodName);
             if (!MethodCache.ContainsKey(key))
             {
@@ -1453,11 +1340,7 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void CallStatic(this ILProcessor processor, Type type, string methodName, params Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
-            var method = processor.Body.Method;
-            var module = method.Module;
-
+            var module = processor.Body.Method.Module;
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethod(methodName, argumentTypes)));
         }
 
@@ -1473,8 +1356,6 @@ namespace SoftCube.Aspects
         /// <param name="propertyName">プロパティ名。</param>
         public static void SetProperty(this ILProcessor processor, Type type, string propertyName)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(type, "set_" + propertyName);
             if (!MethodCache.ContainsKey(key))
             {
@@ -1494,8 +1375,6 @@ namespace SoftCube.Aspects
         /// <param name="propertyName">プロパティ名。</param>
         public static void SetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(type, "set_" + propertyName);
             if (!MethodCache.ContainsKey(key))
             {
@@ -1514,8 +1393,6 @@ namespace SoftCube.Aspects
         /// <param name="propertyName">プロパティ名。</param>
         public static void GetProperty(this ILProcessor processor, Type type, string propertyName)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(type, "get_" + propertyName);
             if (!MethodCache.ContainsKey(key))
             {
@@ -1535,8 +1412,6 @@ namespace SoftCube.Aspects
         /// <param name="propertyName">プロパティ名。</param>
         public static void GetProperty(this ILProcessor processor, Instruction insert, Type type, string propertyName)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var key = GetMethodKey(type, "get_" + propertyName);
             if (!MethodCache.ContainsKey(key))
             {
@@ -1558,8 +1433,6 @@ namespace SoftCube.Aspects
         /// <param name="type">型。</param>
         public static void Box(this ILProcessor processor, TypeReference type)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (type.IsValueType)
             {
                 processor.Emit(OpCodes.Box, type);
@@ -1574,8 +1447,6 @@ namespace SoftCube.Aspects
         /// <param name="type">型。</param>
         public static void Box(this ILProcessor processor, Instruction insert, TypeReference type)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (type.IsValueType)
             {
                 processor.InsertBefore(insert, OpCodes.Box, type);
@@ -1589,8 +1460,6 @@ namespace SoftCube.Aspects
         /// <param name="type">型。</param>
         public static void Unbox(this ILProcessor processor, TypeReference type)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (type.IsValueType)
             {
                 processor.Emit(OpCodes.Unbox_Any, type);
@@ -1605,8 +1474,6 @@ namespace SoftCube.Aspects
         /// <param name="type">型。</param>
         public static void Unbox(this ILProcessor processor, Instruction insert, TypeReference type)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             if (type.IsValueType)
             {
                 processor.InsertBefore(insert, OpCodes.Unbox_Any, type);
@@ -1623,8 +1490,6 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         public static void Rethrow(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             processor.Emit(OpCodes.Rethrow);
         }
 
@@ -1638,8 +1503,6 @@ namespace SoftCube.Aspects
         /// <param name="processor">IL プロセッサー。</param>
         public static void Return(this ILProcessor processor)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
              processor.Emit(OpCodes.Ret);
         }
 
@@ -1659,8 +1522,6 @@ namespace SoftCube.Aspects
         /// </param>
         public static void UpdateArguments(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method     = processor.Body.Method;
             var module     = method.Module;
             var parameters = method.Parameters;
@@ -1732,8 +1593,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void UpdateArguments(this ILProcessor processor, FieldDefinition argumentsField, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             UpdateArguments(processor, null, argumentsField, targetMethod);
         }
 
@@ -1750,8 +1609,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public static void UpdateArguments(this ILProcessor processor, Instruction insert, FieldDefinition argumentsField, MethodDefinition targetMethod)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method           = processor.Body.Method;
             var module           = method.Module;
             var stateMachineType = method.DeclaringType;
@@ -1795,8 +1652,6 @@ namespace SoftCube.Aspects
         /// </param>
         public static void UpdateArgumentsProperty(this ILProcessor processor, int argumentsVariable, bool pointerOnly)
         {
-            using var profile = Profiling.Profiler.Start("A");
-
             var method     = processor.Body.Method;
             var module     = method.Module;
             var parameters = method.Parameters;

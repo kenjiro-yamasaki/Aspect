@@ -39,8 +39,6 @@ namespace SoftCube.Aspects
             {
                 if (customAttribute.IsMethodLevelAspect())
                 {
-                    using var p = Profiling.Profiler.Start($"AAA");
-
                     var aspect = customAttribute.Create<MethodLevelAspect>();
                     aspect.InjectAdvice(method, customAttribute);
                 }

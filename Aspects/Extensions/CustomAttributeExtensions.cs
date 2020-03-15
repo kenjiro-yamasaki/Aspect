@@ -22,8 +22,6 @@ namespace SoftCube.Aspects
         internal static TAspect Create<TAspect>(this CustomAttribute customAttribute)
             where TAspect : class
         {
-            using var profile = Profiling.Profiler.Start($"{nameof(CustomAttributeExtensions)}.{nameof(Create)}");
-
             /// カスタム属性のコンストラクター引数を取得します。
             var arguments = new List<object>();
             foreach (var argument in customAttribute.ConstructorArguments)
@@ -73,8 +71,6 @@ namespace SoftCube.Aspects
         /// <returns><see cref="MethodLevelAspect"/> か。</returns>
         internal static bool IsMethodLevelAspect(this CustomAttribute customAttribute)
         {
-            using var p = Profiling.Profiler.Start($"IsMethodLevelAspect");
-
             var baseCustomAttributeType = customAttribute.AttributeType.Resolve().BaseType.Resolve();
             while (baseCustomAttributeType != null && baseCustomAttributeType.BaseType != null)
             {

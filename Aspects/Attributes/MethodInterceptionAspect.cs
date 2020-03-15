@@ -79,8 +79,6 @@ namespace SoftCube.Aspects
         /// <param name="aspectArgsImplType">アスペクト引数の型。</param>
         private void ReplaceMethod(MethodRewriter rewriter, TypeDefinition aspectArgsImplType)
         {
-            using var profile = Profiling.Profiler.Start($"ReplaceMethod");
-
             var targetMethod            = rewriter.TargetMethod;
             var processor               = targetMethod.Body.GetILProcessor();
             var aspectAttributeType     = rewriter.AspectAttributeType;
@@ -145,8 +143,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         private void ReplaceAsyncMethod(MethodRewriter rewriter, TypeDefinition aspectArgsImplType)
         {
-            using var profile = Profiling.Profiler.Start($"ReplaceAsyncMethod");
-
             var targetMethod            = rewriter.TargetMethod;
             var module                  = targetMethod.Module;
             var processor               = targetMethod.Body.GetILProcessor();

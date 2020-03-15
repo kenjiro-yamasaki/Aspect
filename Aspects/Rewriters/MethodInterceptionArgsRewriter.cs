@@ -50,8 +50,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void CreateAspectArgsImpl()
         {
-            using var profile = Profiling.Profiler.Start($"CreateAspectArgsImpl");
-
             var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsImplType      = new TypeDefinition(DeclaringType.Namespace, MethodInterceptionArgsImplTypeName, Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference) { IsNestedPrivate = true };
 
@@ -63,8 +61,6 @@ namespace SoftCube.Aspects
         /// </summary>
         public void CreateConstructor()
         {
-            using var profile = Profiling.Profiler.Start($"CreateConstructor");
-
             var methodAttributes = Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName;
             var constructor      = new MethodDefinition(".ctor", methodAttributes, Module.TypeSystem.Void);
 
@@ -101,8 +97,6 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void OverrideInvokeImplMethod(MethodDefinition originalMethod)
         {
-            using var profile = Profiling.Profiler.Start($"OverrideInvokeImplMethod");
-
             /// InvokeImpl メソッドのオーバーライドを追加します。
             var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsType          = aspectArgsTypeReference.Resolve();

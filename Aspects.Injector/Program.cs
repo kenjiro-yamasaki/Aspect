@@ -47,7 +47,7 @@ namespace SoftCube.Aspects.Injector
                 {
                     Assembly.LoadFrom(copyAssemblyFilePath);
 
-                    assemblyDefinition.Inject();
+                    assemblyDefinition.InjectAdvice();
                     assemblyDefinition.Write(new WriterParameters() { WriteSymbols = true });
                 }
 

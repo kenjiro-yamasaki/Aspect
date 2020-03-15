@@ -13,9 +13,9 @@ namespace SoftCube.Aspects
         /// アスペクト (カスタムコード) を注入します。
         /// </summary>
         /// <param name="assembly">アセンブリ定義。</param>
-        public static void Inject(this AssemblyDefinition assembly)
+        public static void InjectAdvice(this AssemblyDefinition assembly)
         {
-            using var profile = Profiling.Profiler.Start($"{nameof(AssemblyDefinitionExtensions)}.{nameof(Inject)}");
+            using var profile = Profiling.Profiler.Start($"{nameof(AssemblyDefinitionExtensions)}.{nameof(InjectAdvice)}");
 
             foreach (var module in assembly.Modules)
             {
