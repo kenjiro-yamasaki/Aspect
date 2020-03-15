@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
 {
@@ -18,7 +20,7 @@ namespace SoftCube.Aspects
         {
             var instance = new Program();
 
-            正常().ToList();
+            instance.正常(0).Wait();
 
             Console.ReadKey();
         }
@@ -57,13 +59,33 @@ namespace SoftCube.Aspects
         }
 
         [EventLogger]
-        private static IEnumerable<int> 正常()
+        private async Task 正常(int arg0)
         {
-            Logger.Trace("A");
-            yield return 0;
-            Logger.Trace("B");
-            yield return 1;
-            Logger.Trace("C");
+            Logger.Trace(arg0.ToString());
+
+            await Task.Run(() =>
+            {
+                Thread.Sleep(10);
+                Logger.Trace("2");
+            });
+
+            Logger.Trace("3");
+
+            await Task.Run(() =>
+            {
+                Thread.Sleep(10);
+                Logger.Trace("4");
+            });
+
+            Logger.Trace("5");
+
+            await Task.Run(() =>
+            {
+                Thread.Sleep(10);
+                Logger.Trace("6");
+            });
+
+            Logger.Trace("7");
         }
     }
 }

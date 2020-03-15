@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -51,11 +52,16 @@ namespace SoftCube.Aspects
             }
             else if (asyncStateMachineAttribute != null)
             {
+                var stateMachineRewriter = new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs));
+                var methodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
+
+                RewriteTargetMethod(stateMachineRewriter, methodRewriter);
+                RewriteMoveNextMethod(stateMachineRewriter);
                 //RewriteMoveNextMethod(new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
 
-                ///// アスペクト属性を削除します。
-                //targetMethod.CustomAttributes.Remove(aspectAttribute);
-                //targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
+                /// アスペクト属性を削除します。
+                targetMethod.CustomAttributes.Remove(aspectAttribute);
+                targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
@@ -231,14 +237,7 @@ namespace SoftCube.Aspects
                     var parameter = parameters[parameterIndex];
 
                     processor.Emit(OpCodes.Dup);
-                    if (targetMethod.IsStatic)
-                    {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex);
-                    }
-                    else
-                    {
-                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    }
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
                     processor.Store(stateMachineRewriter.GetField("<>3__" + parameter.Name));
                 }
 
@@ -395,23 +394,80 @@ namespace SoftCube.Aspects
         #region 非同期メソッド
 
         /// <summary>
+        /// ターゲットメソッドを書き換えます。
+        /// </summary>
+        /// <param name="stateMachineRewriter">イテレーターステートマシンの書き換え。</param>
+        /// <param name="methodRewriter">ターゲットメソッドの書き換え。</param>
+        private void RewriteTargetMethod(AsyncStateMachineRewriter stateMachineRewriter, MethodRewriter methodRewriter)
+        {
+            var targetMethod = methodRewriter.TargetMethod;
+            if (stateMachineRewriter.ThisField == null && !targetMethod.IsStatic)
+            {
+                var module           = stateMachineRewriter.Module;
+                var thisField        = stateMachineRewriter.CreateField("<>4__this", Mono.Cecil.FieldAttributes.Public, module.ImportReference(methodRewriter.TargetMethod.DeclaringType));
+                var stateMachineType = stateMachineRewriter.StateMachineType.ToSystemType();
+                var builderType      = typeof(AsyncTaskMethodBuilder);
+
+                targetMethod.Body = new Mono.Cecil.Cil.MethodBody(targetMethod);
+                var stateMachineVariable = targetMethod.AddVariable(stateMachineRewriter.StateMachineType);
+                var builderVariable      = targetMethod.AddVariable(builderType);
+                var builderField         = stateMachineRewriter.GetField("<>t__builder");
+
+                var processor = targetMethod.Body.GetILProcessor();
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AsyncTaskMethodBuilder).GetMethod(nameof(AsyncTaskMethodBuilder.Create))));
+                processor.Emit(OpCodes.Stfld, builderField);
+
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Emit(OpCodes.Ldc_I4_M1);
+                processor.Emit(OpCodes.Stfld, stateMachineRewriter.GetField("<>1__state"));
+
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Store(thisField);
+
+                var parameters = targetMethod.Parameters;
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+
+                    processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    processor.Store(stateMachineRewriter.GetField(parameter.Name));
+                }
+
+                processor.Emit(OpCodes.Ldloc, stateMachineVariable);
+                processor.Emit(OpCodes.Ldfld, builderField);
+                processor.Emit(OpCodes.Stloc, builderVariable);
+
+                processor.Emit(OpCodes.Ldloca, builderVariable);
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Call(module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.LoadAddress(builderField);
+                processor.Call(module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
+                processor.Return();
+            }
+        }
+
+        /// <summary>
         /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="rewriter">非同期ステートマシンの書き換え。</param>
-        private void RewriteMoveNextMethod(AsyncStateMachineRewriter rewriter)
+        /// <param name="stateMachineRewriter">非同期ステートマシンの書き換え。</param>
+        private void RewriteMoveNextMethod(AsyncStateMachineRewriter stateMachineRewriter)
         {
-            var module               = rewriter.Module;
-            var aspectAttribute      = rewriter.AspectAttribute;
-            var aspectAttributeType  = rewriter.AspectAttributeType;
-            var aspectArgsType       = rewriter.AspectArgsType;
-            var moveNextMethod       = rewriter.MoveNextMethod;
-            var targetMethod         = rewriter.TargetMethod;
-            var stateMachineType     = rewriter.StateMachineType;
+            var module               = stateMachineRewriter.Module;
+            var aspectAttribute      = stateMachineRewriter.AspectAttribute;
+            var aspectAttributeType  = stateMachineRewriter.AspectAttributeType;
+            var aspectArgsType       = stateMachineRewriter.AspectArgsType;
+            var moveNextMethod       = stateMachineRewriter.MoveNextMethod;
+            var targetMethod         = stateMachineRewriter.TargetMethod;
+            var stateMachineType     = stateMachineRewriter.StateMachineType;
 
-            var thisField            = rewriter.ThisField;
-            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
-            var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
+            var thisField            = stateMachineRewriter.ThisField;
+            var aspectAttributeField = stateMachineRewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var argumentsField       = stateMachineRewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+            var aspectArgsField      = stateMachineRewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -543,7 +599,7 @@ namespace SoftCube.Aspects
                 processor.CallVirtual(insert, aspectAttributeType, nameof(OnExit));
             });
 
-            rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            stateMachineRewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion
