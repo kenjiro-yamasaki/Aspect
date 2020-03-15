@@ -18,7 +18,7 @@ namespace SoftCube.Aspects
         {
             var instance = new Program();
 
-            instance.正常().ToList();
+            正常().ToList();
 
             Console.ReadKey();
         }
@@ -57,7 +57,7 @@ namespace SoftCube.Aspects
         }
 
         [EventLogger]
-        private IEnumerable<int> 正常()
+        private static IEnumerable<int> 正常()
         {
             Logger.Trace("A");
             yield return 0;

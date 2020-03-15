@@ -39,15 +39,30 @@ namespace SoftCube.Aspects
 
             if (iteratorStateMachineAttribute != null)
             {
-                RewriteMoveNextMethod(new IteratorStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
+                var stateMachineRewriter = new IteratorStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs));
+                var methodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
+
+                RewriteTargetMethod(stateMachineRewriter, methodRewriter);
+                RewriteMoveNextMethod(stateMachineRewriter);
+
+                /// アスペクト属性を削除します。
+                targetMethod.CustomAttributes.Remove(aspectAttribute);
+                targetMethod.CustomAttributes.Remove(iteratorStateMachineAttribute);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                RewriteMoveNextMethod(new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
+                //RewriteMoveNextMethod(new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
+
+                ///// アスペクト属性を削除します。
+                //targetMethod.CustomAttributes.Remove(aspectAttribute);
+                //targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
                 RewriteTargetMethod(new MethodRewriter(targetMethod, aspectAttribute));
+
+                /// アスペクト属性を削除します。
+                targetMethod.CustomAttributes.Remove(aspectAttribute);
             }
         }
 
@@ -189,25 +204,68 @@ namespace SoftCube.Aspects
         #region イテレーターメソッド
 
         /// <summary>
+        /// ターゲットメソッドを書き換えます。
+        /// </summary>
+        /// <param name="stateMachineRewriter">イテレーターステートマシンの書き換え。</param>
+        /// <param name="methodRewriter">ターゲットメソッドの書き換え。</param>
+        private void RewriteTargetMethod(IteratorStateMachineRewriter stateMachineRewriter, MethodRewriter methodRewriter)
+        {
+            var targetMethod = methodRewriter.TargetMethod;
+            if (stateMachineRewriter.ThisField == null && !targetMethod.IsStatic)
+            {
+                var module = stateMachineRewriter.Module;
+                var thisField = stateMachineRewriter.CreateField("<>4__this", Mono.Cecil.FieldAttributes.Public, module.ImportReference(methodRewriter.TargetMethod.DeclaringType));
+
+                targetMethod.Body = new Mono.Cecil.Cil.MethodBody(targetMethod);
+                var processor = targetMethod.Body.GetILProcessor();
+
+                processor.Emit(OpCodes.Ldc_I4, -2);
+                processor.New(stateMachineRewriter.StateMachineType);
+                processor.Emit(OpCodes.Dup);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Store(thisField);
+
+                var parameters = targetMethod.Parameters;
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+
+                    processor.Emit(OpCodes.Dup);
+                    if (targetMethod.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
+                    processor.Store(stateMachineRewriter.GetField("<>3__" + parameter.Name));
+                }
+
+                processor.Emit(OpCodes.Ret);
+            }
+        }
+
+        /// <summary>
         /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
-        private void RewriteMoveNextMethod(IteratorStateMachineRewriter rewriter)
+        /// <param name="stateMachineRewriter">イテレーターステートマシンの書き換え。</param>
+        private void RewriteMoveNextMethod(IteratorStateMachineRewriter stateMachineRewriter)
         {
-            var module               = rewriter.Module;
-            var aspectAttribute      = rewriter.AspectAttribute;
-            var aspectAttributeType  = rewriter.AspectAttributeType;
-            var aspectArgsType       = rewriter.AspectArgsType;
-            var moveNextMethod       = rewriter.MoveNextMethod;
-            var targetMethod         = rewriter.TargetMethod;
-            var stateMachineType     = rewriter.StateMachineType;
+            var module               = stateMachineRewriter.Module;
+            var aspectAttribute      = stateMachineRewriter.AspectAttribute;
+            var aspectAttributeType  = stateMachineRewriter.AspectAttributeType;
+            var aspectArgsType       = stateMachineRewriter.AspectArgsType;
+            var moveNextMethod       = stateMachineRewriter.MoveNextMethod;
+            var targetMethod         = stateMachineRewriter.TargetMethod;
+            var stateMachineType     = stateMachineRewriter.StateMachineType;
 
-            var thisField            = rewriter.ThisField;
-            var currentField         = rewriter.CurrentField;
-            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
-            var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
-            var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
+            var thisField            = stateMachineRewriter.ThisField;
+            var currentField         = stateMachineRewriter.CurrentField;
+            var aspectAttributeField = stateMachineRewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var argumentsField       = stateMachineRewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+            var aspectArgsField      = stateMachineRewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
+            int exceptionVariable    = -1;
 
             var onEntry = new Action<ILProcessor>(processor =>
             {
@@ -304,6 +362,7 @@ namespace SoftCube.Aspects
             {
                 /// _aspectArgs.Exception = exception;
                 /// _aspectAttribute.OnException(_aspectArgs);
+                exceptionVariable = moveNextMethod.AddVariable(typeof(Exception));
                 processor.Store(exceptionVariable);
 
                 processor.LoadThis();
@@ -328,7 +387,7 @@ namespace SoftCube.Aspects
                 processor.CallVirtual(aspectAttributeType, nameof(OnExit));
             });
 
-            rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            stateMachineRewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion

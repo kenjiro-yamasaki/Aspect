@@ -140,25 +140,28 @@ namespace SoftCube.Aspects
         {
             var processor = method.Body.GetILProcessor();
 
-            Logger.Trace($"{method.FullName}");
+            Logger.Info($"{method.FullName}");
 
             foreach (var instruction in processor.Body.Instructions)
             {
-                Logger.Trace($"{instruction}");
+                Logger.Info($"{instruction}");
             }
 
             foreach (var handler in processor.Body.ExceptionHandlers)
             {
-                Logger.Trace($"TryStart     : {handler.TryStart}");
-                Logger.Trace($"TryEnd       : {handler.TryEnd}");
-                Logger.Trace($"HandlerStart : {handler.HandlerStart}");
-                Logger.Trace($"HandlerEnd   : {handler.HandlerEnd}");
+                Logger.Info($"TryStart     : {handler.TryStart}");
+                Logger.Info($"TryEnd       : {handler.TryEnd}");
+                Logger.Info($"HandlerStart : {handler.HandlerStart}");
+                Logger.Info($"HandlerEnd   : {handler.HandlerEnd}");
             }
         }
 
-
-
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static int AddVariable(this MethodDefinition method, TypeReference type)
         {
             var variables = method.Body.Variables;
@@ -166,10 +169,16 @@ namespace SoftCube.Aspects
 
             var variable = variables.Count();
             variables.Add(new VariableDefinition(module.ImportReference(type)));
-        
+
             return variable;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static int AddVariable(this MethodDefinition method, Type type)
         {
             var variables = method.Body.Variables;

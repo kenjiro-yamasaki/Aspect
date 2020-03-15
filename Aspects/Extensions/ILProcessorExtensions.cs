@@ -743,10 +743,10 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
         /// <param name="type">型。</param>
-        public static void New(this ILProcessor processor, TypeDefinition type)
+        public static void New(this ILProcessor processor, TypeReference type)
         {
             var module = processor.Body.Method.Module;
-            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Methods.Single(m => m.Name == ".ctor")));
+            processor.Emit(OpCodes.Newobj, module.ImportReference(type.Resolve().Methods.Single(m => m.Name == ".ctor")));
         }
 
         /// <summary>

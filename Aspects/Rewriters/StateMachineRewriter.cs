@@ -151,6 +151,16 @@ namespace SoftCube.Aspects
             return field;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        public FieldDefinition GetField(string fieldName)
+        {
+            return StateMachineType.Fields.SingleOrDefault(f => f.Name == fieldName);
+        }
+
         #endregion
     }
 }
