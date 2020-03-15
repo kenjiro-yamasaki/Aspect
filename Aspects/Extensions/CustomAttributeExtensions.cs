@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using SoftCube.Logging;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -16,14 +17,16 @@ namespace SoftCube.Aspects
         /// アスペクトを生成します。
         /// </summary>
         /// <typeparam name="TAspect">アスペクトの型。</typeparam>
-        /// <param name="aspect">アスペクト属性。</param>
+        /// <param name="customAttribute">カスタム属性。</param>
         /// <returns>アスペクト。</returns>
-        internal static TAspect Create<TAspect>(this CustomAttribute aspect)
+        internal static TAspect Create<TAspect>(this CustomAttribute customAttribute)
             where TAspect : class
         {
+            using var profile = Profiling.Profiler.Start($"{nameof(CustomAttributeExtensions)}.{nameof(Create)}");
+
             /// カスタム属性のコンストラクター引数を取得します。
             var arguments = new List<object>();
-            foreach (var argument in aspect.ConstructorArguments)
+            foreach (var argument in customAttribute.ConstructorArguments)
             {
                 var argumentType = argument.Type.ToSystemType();
 
@@ -43,11 +46,11 @@ namespace SoftCube.Aspects
             }
 
             /// 属性のインスタンスを生成します。
-            var aspectType = aspect.AttributeType.ToSystemType();
+            var aspectType = customAttribute.AttributeType.ToSystemType();
             var instance = Activator.CreateInstance(aspectType, arguments.ToArray()) as TAspect;
 
             /// 属性のプロパティを設定します。
-            foreach (var property in aspect.Properties)
+            foreach (var property in customAttribute.Properties)
             {
                 if (property.Argument.Type.FullName == "System.Type")
                 {
@@ -61,6 +64,31 @@ namespace SoftCube.Aspects
             }
 
             return instance;
+        }
+
+        /// <summary>
+        /// <see cref="MethodLevelAspect"/> かを判断します。
+        /// </summary>
+        /// <param name="customAttribute">カスタム属性。</param>
+        /// <returns><see cref="MethodLevelAspect"/> か。</returns>
+        internal static bool IsMethodLevelAspect(this CustomAttribute customAttribute)
+        {
+            using var p = Profiling.Profiler.Start($"IsMethodLevelAspect");
+
+            var baseCustomAttributeType = customAttribute.AttributeType.Resolve().BaseType.Resolve();
+            while (baseCustomAttributeType != null && baseCustomAttributeType.BaseType != null)
+            {
+                var baseFullName  = $"{nameof(SoftCube)}.{nameof(Aspects)}.{nameof(MethodLevelAspect)}";
+                var baseScopeName = $"{nameof(SoftCube)}.{nameof(Aspects)}.dll";
+                if (baseCustomAttributeType.FullName == baseFullName && baseCustomAttributeType.Scope.Name == baseScopeName)
+                {
+                    return true;
+                }
+
+                baseCustomAttributeType = baseCustomAttributeType.BaseType.Resolve();
+            }
+
+            return false;
         }
 
         #endregion

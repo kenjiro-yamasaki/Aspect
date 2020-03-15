@@ -15,6 +15,8 @@ namespace SoftCube.Aspects
         /// <param name="assembly">アセンブリ定義。</param>
         public static void Inject(this AssemblyDefinition assembly)
         {
+            using var profile = Profiling.Profiler.Start($"{nameof(AssemblyDefinitionExtensions)}.{nameof(Inject)}");
+
             foreach (var module in assembly.Modules)
             {
                 module.Inject();

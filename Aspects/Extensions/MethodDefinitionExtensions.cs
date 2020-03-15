@@ -33,23 +33,16 @@ namespace SoftCube.Aspects
         /// <param name="method">メソッド。</param>
         public static void InjectAdvice(this MethodDefinition method)
         {
-            var baseFullName  = $"{nameof(SoftCube)}.{nameof(Aspects)}.{nameof(MethodLevelAspect)}";
-            var baseScopeName = $"{nameof(SoftCube)}.{nameof(Aspects)}.dll";
+            using var profile = Profiling.Profiler.Start($"{nameof(MethodDefinitionExtensions)}.{nameof(InjectAdvice)}");
 
-            foreach (var attribute in method.CustomAttributes.ToList())
+            foreach (var customAttribute in method.CustomAttributes.ToList())
             {
-                var baseAttributeType = attribute.AttributeType.Resolve().BaseType.Resolve();
-
-                while (baseAttributeType != null && baseAttributeType.BaseType != null)
+                if (customAttribute.IsMethodLevelAspect())
                 {
-                    if (baseAttributeType.FullName == baseFullName && baseAttributeType.Scope.Name == baseScopeName)
-                    {
-                        var aspect = attribute.Create<MethodLevelAspect>();
-                        aspect.InjectAdvice(method, attribute);
-                        break;
-                    }
+                    using var p = Profiling.Profiler.Start($"AAA");
 
-                    baseAttributeType = baseAttributeType.BaseType.Resolve();
+                    var aspect = customAttribute.Create<MethodLevelAspect>();
+                    aspect.InjectAdvice(method, customAttribute);
                 }
             }
         }

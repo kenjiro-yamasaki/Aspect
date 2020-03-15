@@ -34,7 +34,7 @@ namespace SoftCube.Aspects
         /// <param name="aspectAttribute">アスペクト属性。</param>
         sealed public override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
-            using var profile = Profiling.Profiler.Start($"InjectAdvice");
+            using var profile = Profiling.Profiler.Start($"{nameof(MethodInterceptionAspect)}.{nameof(InjectAdvice)}");
 
             var asyncStateMachineAttribute = targetMethod.GetAsyncStateMachineAttribute();
             var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));

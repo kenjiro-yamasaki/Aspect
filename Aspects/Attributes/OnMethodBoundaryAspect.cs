@@ -32,7 +32,7 @@ namespace SoftCube.Aspects
         /// <param name="aspectAttribute">アスペクト属性。</param>
         sealed public override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
         {
-            //using var profile = Profiling.Profiler.Start($"{nameof(OnMethodBoundaryAspect)}.{nameof(InjectAdvice)}");
+            using var profile = Profiling.Profiler.Start($"{nameof(OnMethodBoundaryAspect)}.{nameof(InjectAdvice)}");
 
             var iteratorStateMachineAttribute = targetMethod.GetIteratorStateMachineAttribute();
             var asyncStateMachineAttribute    = targetMethod.GetAsyncStateMachineAttribute();

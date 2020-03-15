@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace SoftCube.Aspects
 {
@@ -14,29 +15,9 @@ namespace SoftCube.Aspects
         #region フィールド
 
         /// <summary>
-        /// (型, プロパティ名) → プロパティ取得メソッド。
+        /// (型名, プロパティ名, 引数型配列) → コンストラクター。
         /// </summary>
-        private static readonly Dictionary<(Type, string), MethodReference> TypeToGetProperty = new Dictionary<(Type, string), MethodReference>();
-
-        /// <summary>
-        /// (型, プロパティ名) → プロパティ設定メソッド。
-        /// </summary>
-        private static readonly Dictionary<(Type, string), MethodReference> TypeToSetProperty = new Dictionary<(Type, string), MethodReference>();
-
-        /// <summary>
-        /// (型, プロパティ名) → コンストラクター。
-        /// </summary>
-        private static readonly Dictionary<Type, MethodReference> TypeToConstructor = new Dictionary<Type, MethodReference>();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private static readonly Dictionary<(Type, string), MethodReference> TypeToMethod = new Dictionary<(Type, string), MethodReference>();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private static readonly Dictionary<(TypeDefinition, string), MethodReference> TypeDefinitionToMethod = new Dictionary<(TypeDefinition, string), MethodReference>();
+        private static readonly Dictionary<string, MethodReference> MethodCache = new Dictionary<string, MethodReference>();
 
         #endregion
 
@@ -721,6 +702,57 @@ namespace SoftCube.Aspects
 
         #region 高レベル命令
 
+        #region ToKey
+
+        /// <summary>
+        /// メソッドキーを取得します。
+        /// </summary>
+        /// <param name="type">型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        /// <param name="argumentTypes">引数型配列。</param>
+        /// <returns>メソッドキー。</returns>
+        private static string GetMethodKey(Type type, string methodName, Type[] argumentTypes)
+        {
+            var sb = new StringBuilder();
+            sb.Append(type.FullName);
+            sb.Append(methodName);
+            foreach (var argumentType in argumentTypes)
+            {
+                sb.Append(argumentType.FullName);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// メソッドキーを取得します。
+        /// </summary>
+        /// <param name="type">型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        /// <returns>メソッドキー。</returns>
+        private static string GetMethodKey(Type type, string methodName)
+        {
+            var sb = new StringBuilder();
+            sb.Append(type.FullName);
+            sb.Append(methodName);
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// メソッドキーを取得します。
+        /// </summary>
+        /// <param name="type">型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        /// <returns>メソッドキー。</returns>
+        private static string GetMethodKey(TypeReference type, string methodName)
+        {
+            var sb = new StringBuilder();
+            sb.Append(type.FullName);
+            sb.Append(methodName);
+            return sb.ToString();
+        }
+
+        #endregion
+
         #region New
 
         /// <summary>
@@ -731,16 +763,23 @@ namespace SoftCube.Aspects
         /// <param name="argumentTypes">引数型配列。</param>
         public static void New(this ILProcessor processor, Type type, params Type[] argumentTypes)
         {
-            using var profile = Profiling.Profiler.Start("A");
+            using var profile = Profiling.Profiler.Start("B");
 
-            if (!TypeToConstructor.ContainsKey(type))
+            var key = GetMethodKey(type, ".ctor", argumentTypes);
+            if (!MethodCache.ContainsKey(key))
             {
-                var module = processor.Body.Method.Module;
-                TypeToConstructor.Add(type, module.ImportReference(type.GetConstructor(argumentTypes)));
-            }
+                using var q = Profiling.Profiler.Start("C");
 
-            processor.Emit(OpCodes.Newobj, TypeToConstructor[type]);
+                var module = processor.Body.Method.Module;
+                MethodCache.Add(key, module.ImportReference(type.GetConstructor(argumentTypes)));
+            }
+            processor.Emit(OpCodes.Newobj, MethodCache[key]);
         }
+
+
+
+
+
 
         /// <summary>
         /// 末尾に指定型のインスタンスを生成するコードを追加します。
@@ -752,14 +791,14 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            var type = typeof(T);
-            if (!TypeToConstructor.ContainsKey(type))
+            var key = GetMethodKey(typeof(T), ".ctor", argumentTypes);
+            if (!MethodCache.ContainsKey(key))
             {
                 var module = processor.Body.Method.Module;
-                TypeToConstructor.Add(type, module.ImportReference(type.GetConstructor(argumentTypes)));
+                MethodCache.Add(key, module.ImportReference(typeof(T).GetConstructor(argumentTypes)));
             }
 
-            processor.InsertBefore(insert, OpCodes.Newobj, TypeToConstructor[type]);
+            processor.InsertBefore(insert, OpCodes.Newobj, MethodCache[key]);
         }
 
         /// <summary>
@@ -972,13 +1011,13 @@ namespace SoftCube.Aspects
 
             var method         = processor.Body.Method;
             var module         = method.Module;
-            var argumentsType  = typeof(Arguments);
             var parameters     = method.Parameters;
             var parameterTypes = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
 
-            if (!TypeToConstructor.ContainsKey(argumentsType))
+            var key = GetMethodKey(typeof(Arguments), ".ctor", new Type[] { typeof(object[]) });
+            if (!MethodCache.ContainsKey(key))
             {
-                TypeToConstructor.Add(argumentsType, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                MethodCache.Add(key, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) })));
             }
 
             /// Arguments を生成して、ローカル変数にストアします。
@@ -1021,7 +1060,7 @@ namespace SoftCube.Aspects
                 processor.Emit(OpCodes.Stelem_Ref);
             }
 
-            processor.Emit(OpCodes.Newobj, TypeToConstructor[argumentsType]);
+            processor.Emit(OpCodes.Newobj, MethodCache[key]);
         }
 
         /// <summary>
@@ -1056,13 +1095,13 @@ namespace SoftCube.Aspects
             var method           = processor.Body.Method;
             var module           = method.Module;
             var stateMachineType = method.DeclaringType;
-            var argumentsType    = typeof(Arguments);
             var parameters       = targetMethod.Parameters;
             var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType(removePointer : true)).ToArray();
 
-            if (!TypeToConstructor.ContainsKey(argumentsType))
+            var key = GetMethodKey(typeof(Arguments), ".ctor", new Type[] { typeof(object[]) });
+            if (!MethodCache.ContainsKey(key))
             {
-                TypeToConstructor.Add(argumentsType, module.ImportReference(argumentsType.GetConstructor(new Type[] { typeof(object[]) })));
+                MethodCache.Add(key, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) })));
             }
 
             processor.InsertBefore(insert, OpCodes.Ldc_I4, parameters.Count);
@@ -1081,7 +1120,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Stelem_Ref);
             }
 
-            processor.InsertBefore(insert, OpCodes.Newobj, TypeToConstructor[argumentsType]);
+            processor.InsertBefore(insert, OpCodes.Newobj, MethodCache[key]);
         }
 
         #endregion
@@ -1318,17 +1357,24 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, method);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type"></param>
+        /// <param name="argumentTypes"></param>
         public static void CallConstructor(this ILProcessor processor, Type type, Type[] argumentTypes)
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            if (!TypeToConstructor.ContainsKey(type))
+            var key = GetMethodKey(type, ".ctor", argumentTypes);
+            if (!MethodCache.ContainsKey(key))
             {
                 var module = processor.Body.Method.Module;
-                TypeToConstructor.Add(type, module.ImportReference(type.GetConstructor(argumentTypes)));
+                MethodCache.Add(key, module.ImportReference(type.GetConstructor(argumentTypes)));
             }
 
-            processor.Emit(OpCodes.Call, TypeToConstructor[type]);
+            processor.Emit(OpCodes.Call, MethodCache[key]);
         }
 
         /// <summary>
@@ -1341,8 +1387,8 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            var key = (type, methodName);
-            if (!TypeDefinitionToMethod.ContainsKey(key))
+            var key = GetMethodKey(type, methodName);
+            if (!MethodCache.ContainsKey(key))
             {
                 var currentType = type;
                 while (true)
@@ -1351,7 +1397,7 @@ namespace SoftCube.Aspects
                     if (method != null)
                     {
                         var module = processor.Body.Method.Module;
-                        TypeDefinitionToMethod.Add(key, module.ImportReference(method));
+                        MethodCache.Add(key, module.ImportReference(method));
                         break;
                     }
                     else
@@ -1361,7 +1407,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            processor.Emit(OpCodes.Callvirt, TypeDefinitionToMethod[key]);
+            processor.Emit(OpCodes.Callvirt, MethodCache[key]);
         }
 
         /// <summary>
@@ -1375,8 +1421,8 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            var key = (type, methodName);
-            if (!TypeDefinitionToMethod.ContainsKey(key))
+            var key = GetMethodKey(type, methodName);
+            if (!MethodCache.ContainsKey(key))
             {
                 var currentType = type;
                 while (true)
@@ -1385,7 +1431,7 @@ namespace SoftCube.Aspects
                     if (method != null)
                     {
                         var module = processor.Body.Method.Module;
-                        TypeDefinitionToMethod.Add(key, module.ImportReference(method));
+                        MethodCache.Add(key, module.ImportReference(method));
                         break;
                     }
                     else
@@ -1395,7 +1441,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            processor.InsertBefore(insert, OpCodes.Callvirt, TypeDefinitionToMethod[key]);
+            processor.InsertBefore(insert, OpCodes.Callvirt, MethodCache[key]);
         }
 
         /// <summary>
@@ -1429,14 +1475,14 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            var key = (type, propertyName);
-            if (!TypeToSetProperty.ContainsKey(key))
+            var key = GetMethodKey(type, "set_" + propertyName);
+            if (!MethodCache.ContainsKey(key))
             {
                 var module = processor.Body.Method.Module;
-                TypeToSetProperty.Add(key, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
+                MethodCache.Add(key, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
             }
 
-            processor.Emit(OpCodes.Call, TypeToSetProperty[key]);
+            processor.Emit(OpCodes.Call, MethodCache[key]);
         }
 
         /// <summary>
@@ -1450,14 +1496,14 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            var key = (type, propertyName);
-            if (!TypeToSetProperty.ContainsKey(key))
+            var key = GetMethodKey(type, "set_" + propertyName);
+            if (!MethodCache.ContainsKey(key))
             {
                 var module = processor.Body.Method.Module;
-                TypeToSetProperty.Add(key, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
+                MethodCache.Add(key, module.ImportReference(type.GetProperty(propertyName).GetSetMethod()));
             }
 
-            processor.InsertBefore(insert, OpCodes.Call, TypeToSetProperty[key]);
+            processor.InsertBefore(insert, OpCodes.Call, MethodCache[key]);
         }
 
         /// <summary>
@@ -1470,14 +1516,14 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            var key = (type, propertyName);
-            if (!TypeToGetProperty.ContainsKey(key))
+            var key = GetMethodKey(type, "get_" + propertyName);
+            if (!MethodCache.ContainsKey(key))
             {
                 var module = processor.Body.Method.Module;
-                TypeToGetProperty.Add(key, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
+                MethodCache.Add(key, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
             }
 
-            processor.Emit(OpCodes.Call, TypeToGetProperty[key]);
+            processor.Emit(OpCodes.Call, MethodCache[key]);
         }
 
         /// <summary>
@@ -1491,14 +1537,14 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start("A");
 
-            var key = (type, propertyName);
-            if (!TypeToGetProperty.ContainsKey(key))
+            var key = GetMethodKey(type, "get_" + propertyName);
+            if (!MethodCache.ContainsKey(key))
             {
                 var module = processor.Body.Method.Module;
-                TypeToGetProperty.Add(key, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
+                MethodCache.Add(key, module.ImportReference(type.GetProperty(propertyName).GetGetMethod()));
             }
 
-            processor.InsertBefore(insert, OpCodes.Call, TypeToGetProperty[key]);
+            processor.InsertBefore(insert, OpCodes.Call, MethodCache[key]);
         }
 
         #endregion
@@ -1619,10 +1665,10 @@ namespace SoftCube.Aspects
             var module     = method.Module;
             var parameters = method.Parameters;
 
-            var key = (typeof(Arguments), "Item");
-            if (!TypeToGetProperty.ContainsKey(key))
+            var key = GetMethodKey(typeof(Arguments), "get_Item");
+            if (!MethodCache.ContainsKey(key))
             {
-                TypeToGetProperty.Add(key, module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod));
+                MethodCache.Add(key, module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod));
             }
 
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
@@ -1645,7 +1691,7 @@ namespace SoftCube.Aspects
 
                     processor.Emit(OpCodes.Ldloc, argumentsVariable);
                     processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, TypeToGetProperty[key]);
+                    processor.Emit(OpCodes.Call, MethodCache[key]);
                     if (elementType.IsValueType)
                     {
                         processor.Emit(OpCodes.Unbox, elementType);
@@ -1657,7 +1703,7 @@ namespace SoftCube.Aspects
                 {
                     processor.Emit(OpCodes.Ldloc, argumentsVariable);
                     processor.Emit(OpCodes.Ldc_I4, parameterIndex);
-                    processor.Emit(OpCodes.Call, TypeToGetProperty[key]);
+                    processor.Emit(OpCodes.Call, MethodCache[key]);
                     if (parameterType.IsValueType)
                     {
                         processor.Emit(OpCodes.Unbox_Any, parameterType);
@@ -1712,10 +1758,10 @@ namespace SoftCube.Aspects
             var parameters       = targetMethod.Parameters;
             var parameterTypes   = parameters.Select(p => p.ParameterType.ToSystemType()).ToArray();
 
-            var key = (typeof(Arguments), "Item");
-            if (!TypeToGetProperty.ContainsKey(key))
+            var key = GetMethodKey(typeof(Arguments), "get_Item");
+            if (!MethodCache.ContainsKey(key))
             {
-                TypeToGetProperty.Add(key, module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod));
+                MethodCache.Add(key, module.ImportReference(module.ImportReference(typeof(Arguments)).Resolve().Properties.Single(p => p.Name == "Item").GetMethod));
             }
 
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
@@ -1728,7 +1774,7 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Ldfld, argumentsField);
                 processor.InsertBefore(insert, OpCodes.Ldc_I4, parameterIndex);
 
-                processor.InsertBefore(insert, OpCodes.Call, TypeToGetProperty[key]);
+                processor.InsertBefore(insert, OpCodes.Call, MethodCache[key]);
                 if (parameterType.IsValueType)
                 {
                     processor.InsertBefore(insert, OpCodes.Unbox_Any, parameterType);
@@ -1755,10 +1801,10 @@ namespace SoftCube.Aspects
             var module     = method.Module;
             var parameters = method.Parameters;
 
-            var key = (typeof(Arguments), nameof(Arguments.SetArgument));
-            if (!TypeToMethod.ContainsKey(key))
+            var key = GetMethodKey(typeof(Arguments), nameof(Arguments.SetArgument));
+            if (!MethodCache.ContainsKey(key))
             {
-                TypeToMethod.Add(key, module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
+                MethodCache.Add(key, module.ImportReference(typeof(Arguments).GetMethod(nameof(Arguments.SetArgument))));
             }
 
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
@@ -1785,7 +1831,7 @@ namespace SoftCube.Aspects
                     {
                         processor.Emit(OpCodes.Box, elementType);
                     }
-                    processor.Emit(OpCodes.Callvirt, TypeToMethod[key]);
+                    processor.Emit(OpCodes.Callvirt, MethodCache[key]);
                 }
                 else
                 {
@@ -1803,7 +1849,7 @@ namespace SoftCube.Aspects
                     {
                         processor.Emit(OpCodes.Box, parameterType);
                     }
-                    processor.Emit(OpCodes.Callvirt, TypeToMethod[key]);
+                    processor.Emit(OpCodes.Callvirt, MethodCache[key]);
                 }
             }
         }
