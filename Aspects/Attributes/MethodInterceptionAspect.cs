@@ -41,20 +41,20 @@ namespace SoftCube.Aspects
 
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                //var targetMethodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
-                //var aspectArgsRewriter = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
+                var targetMethodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
+                var aspectArgsRewriter = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
 
-                //targetMethodRewriter.CreateOriginalTargetMethod();
+                targetMethodRewriter.CreateOriginalTargetMethod();
 
-                //aspectArgsRewriter.CreateAspectArgsImpl();
-                //aspectArgsRewriter.CreateConstructor();
-                //ReplaceAsyncMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
-                //aspectArgsRewriter.OverrideInvokeAsyncImplMethod(targetMethodRewriter.OriginalTargetMethod);
-                //aspectArgsRewriter.OverrideTaskResultProperty();
+                aspectArgsRewriter.CreateAspectArgsImpl();
+                aspectArgsRewriter.CreateConstructor();
+                ReplaceAsyncMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
+                aspectArgsRewriter.OverrideInvokeAsyncImplMethod(targetMethodRewriter.OriginalTargetMethod);
+                aspectArgsRewriter.OverrideTaskResultProperty();
 
-                ///// アスペクト属性を削除します。
-                //targetMethod.CustomAttributes.Remove(aspectAttribute);
-                //targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
+                /// アスペクト属性を削除します。
+                targetMethod.CustomAttributes.Remove(aspectAttribute);
+                targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
