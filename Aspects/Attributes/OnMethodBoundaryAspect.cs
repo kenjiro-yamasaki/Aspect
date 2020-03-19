@@ -57,6 +57,7 @@ namespace SoftCube.Aspects
             }
             else
             {
+                // ターゲットメソッドを書き換えます。
                 RewriteTargetMethod(new MethodRewriter(targetMethod, aspectAttribute));
 
                 // アスペクト属性を削除します。
