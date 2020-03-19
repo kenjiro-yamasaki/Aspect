@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using SoftCube.Logging;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -22,7 +21,7 @@ namespace SoftCube.Aspects
         internal static TAspect Create<TAspect>(this CustomAttribute customAttribute)
             where TAspect : class
         {
-            /// カスタム属性のコンストラクター引数を取得します。
+            // カスタム属性のコンストラクター引数を取得します。
             var arguments = new List<object>();
             foreach (var argument in customAttribute.ConstructorArguments)
             {
@@ -43,11 +42,11 @@ namespace SoftCube.Aspects
                 }
             }
 
-            /// 属性のインスタンスを生成します。
+            // 属性のインスタンスを生成します。
             var aspectType = customAttribute.AttributeType.ToSystemType();
             var instance = Activator.CreateInstance(aspectType, arguments.ToArray()) as TAspect;
 
-            /// 属性のプロパティを設定します。
+            // 属性のプロパティを設定します。
             foreach (var property in customAttribute.Properties)
             {
                 if (property.Argument.Type.FullName == "System.Type")

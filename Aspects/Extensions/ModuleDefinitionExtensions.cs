@@ -11,14 +11,14 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="module">モジュール定義。</param>
-        internal static void Inject(this ModuleDefinition module)
+        /// <param name="module">モジュール。</param>
+        internal static void InjectAdvice(this ModuleDefinition module)
         {
             foreach (var type in module.Types.ToList())
             {
-                type.Inject();
+                type.InjectAdvice();
             }
         }
 

@@ -28,15 +28,15 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="parameter">注入対象のパラメーター定義。</param>
-        protected override void OnInject(ParameterDefinition parameter)
+        /// <param name="parameter">ターゲットパラメーター。</param>
+        protected override void InjectAdvice(ParameterDefinition parameter)
         {
             if (!parameter.ParameterType.IsValueType)
             {
                 var methodDefinition = parameter.Method as MethodDefinition;
-                var module           = methodDefinition.DeclaringType.Module.Assembly.MainModule;
+                var module           = methodDefinition.DeclaringType.Module;
                 var processor        = methodDefinition.Body.GetILProcessor();
                 var first            = processor.Body.Instructions[0];
 

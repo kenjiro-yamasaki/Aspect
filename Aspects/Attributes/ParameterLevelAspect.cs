@@ -22,24 +22,10 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="parameter">注入対象のパラメーター定義。</param>
-        public void Inject(ParameterDefinition parameter)
-        {
-            if (parameter == null)
-            {
-                throw new ArgumentNullException(nameof(parameter));
-            }
-
-            OnInject(parameter);
-        }
-
-        /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
-        /// </summary>
-        /// <param name="parameter">注入対象のパラメーター定義。</param>
-        protected abstract void OnInject(ParameterDefinition parameter);
+        /// <param name="parameter">ターゲットパラメーター。</param>
+        protected abstract void InjectAdvice(ParameterDefinition parameter);
 
         #endregion
     }

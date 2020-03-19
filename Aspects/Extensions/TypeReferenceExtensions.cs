@@ -12,10 +12,10 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// 型参照を <see cref="Type"/> に変換します。
+        /// TypeReference を Type に変換します。
         /// </summary>
-        /// <param name="typeReference">型参照。</param>
-        /// <returns><see cref="Type"/>。</returns>
+        /// <param name="typeReference">TypeReference。</param>
+        /// <returns>Type。</returns>
         internal static Type ToSystemType(this TypeReference typeReference, bool removePointer = false)
         {
             if (typeReference is GenericInstanceType genericInstanceType)

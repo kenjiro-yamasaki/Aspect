@@ -771,7 +771,7 @@ namespace SoftCube.Aspects
             var module       = method.Module;
             var instructions = method.Body.Instructions;
 
-            /// 属性を生成して、ローカル変数にストアします。
+            // 属性を生成して、ローカル変数にストアします。
             var attributeType  = aspectAttribute.AttributeType.Resolve();
             var argumentTypes  = aspectAttribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
             var argumentValues = aspectAttribute.ConstructorArguments.Select(a => a.Value);
@@ -850,7 +850,7 @@ namespace SoftCube.Aspects
 
             processor.InsertBefore(insert, OpCodes.Newobj, module.ImportReference(attributeType.Methods.SingleOrDefault(m => m.Name == ".ctor")));
 
-            /// プロパティを設定します。
+            // プロパティを設定します。
             foreach (var property in aspectAttribute.Properties)
             {
                 var propertyName  = property.Name;
@@ -949,7 +949,7 @@ namespace SoftCube.Aspects
                 MethodCache.Add(key, module.ImportReference(typeof(Arguments).GetConstructor(new Type[] { typeof(object[]) })));
             }
 
-            /// Arguments を生成して、ローカル変数にストアします。
+            // Arguments を生成して、ローカル変数にストアします。
             processor.Emit(OpCodes.Ldc_I4, parameters.Count);
             processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(object)));
             for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)

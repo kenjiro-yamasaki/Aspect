@@ -10,11 +10,10 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="type">型定義。</param>
-        /// <param name="assembly">アセンブリ。</param>
-        internal static void Inject(this TypeDefinition type)
+        /// <param name="type">型。</param>
+        internal static void InjectAdvice(this TypeDefinition type)
         {
             foreach (var method in type.Methods.ToArray())
             {
@@ -23,7 +22,7 @@ namespace SoftCube.Aspects
 
             foreach (var nestedType in type.NestedTypes)
             {
-                nestedType.Inject();
+                nestedType.InjectAdvice();
             }
         }
 

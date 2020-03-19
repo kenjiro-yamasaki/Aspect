@@ -52,7 +52,7 @@ namespace SoftCube.Aspects
                 aspectArgsRewriter.OverrideInvokeAsyncImplMethod(targetMethodRewriter.OriginalTargetMethod);
                 aspectArgsRewriter.OverrideTaskResultProperty();
 
-                /// アスペクト属性を削除します。
+                // アスペクト属性を削除します。
                 targetMethod.CustomAttributes.Remove(aspectAttribute);
                 targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
@@ -67,7 +67,7 @@ namespace SoftCube.Aspects
                 ReplaceMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
                 aspectArgsRewriter.OverrideInvokeImplMethod(targetMethodRewriter.OriginalTargetMethod);
 
-                /// アスペクト属性を削除します。
+                // アスペクト属性を削除します。
                 targetMethod.CustomAttributes.Remove(aspectAttribute);
             }
         }
@@ -86,15 +86,15 @@ namespace SoftCube.Aspects
             var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodInterceptionArgs));
 
-            /// var aspectAttribute = new AspectAttribute(...) {...};
-            /// var arguments       = new Arguments(...);
-            /// var aspectArgs      = new MethodInterceptionArgs(this, arguments);
-            /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-            /// aspectAttribute.OnInvoke(aspectArgs);
-            /// arg0 = (TArg0)arguments[0];
-            /// arg1 = (TArg1)arguments[1];
-            /// ...
-            /// return (TResult)aspectArgs.ReturnValue;
+            // var aspectAttribute = new AspectAttribute(...) {...};
+            // var arguments       = new Arguments(...);
+            // var aspectArgs      = new MethodInterceptionArgs(this, arguments);
+            // aspectArgs.Method = MethodBase.GetCurrentMethod();
+            // aspectAttribute.OnInvoke(aspectArgs);
+            // arg0 = (TArg0)arguments[0];
+            // arg1 = (TArg1)arguments[1];
+            // ...
+            // return (TResult)aspectArgs.ReturnValue;
             processor.NewAspectAttribute(rewriter.AspectAttribute);
             processor.Store(aspectAttributeVariable);
 
@@ -151,10 +151,10 @@ namespace SoftCube.Aspects
             var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodExecutionArgs));
 
-            /// var aspectAttribute = new AspectAttribute(...) {...};
-            /// var arguments       = new Arguments(...);
-            /// var aspectArgs      = new MethodInterceptionArgs(this, arguments);
-            /// aspectArgs.Method = MethodBase.GetCurrentMethod();
+            // var aspectAttribute = new AspectAttribute(...) {...};
+            // var arguments       = new Arguments(...);
+            // var aspectArgs      = new MethodInterceptionArgs(this, arguments);
+            // aspectArgs.Method = MethodBase.GetCurrentMethod();
             processor.NewAspectAttribute(rewriter.AspectAttribute);
             processor.Store(aspectAttributeVariable);
 
@@ -177,10 +177,10 @@ namespace SoftCube.Aspects
             processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
             processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
 
-            /// var stateMachine = new MethodInterceptionAsyncStateMachine(aspectAttribute, aspectArgs);
-            /// var builder      = stateMachine.Builder;
-            /// builder.Start(ref stateMachine);
-            /// return stateMachine.Builder.Task;
+            // var stateMachine = new MethodInterceptionAsyncStateMachine(aspectAttribute, aspectArgs);
+            // var builder      = stateMachine.Builder;
+            // builder.Start(ref stateMachine);
+            // return stateMachine.Builder.Task;
             Type stateMachineType;
             Type builderType;
             if (targetMethod.ReturnType is GenericInstanceType taskType)

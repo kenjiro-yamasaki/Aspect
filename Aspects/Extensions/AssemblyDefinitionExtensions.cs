@@ -10,16 +10,16 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アスペクト (カスタムコード) を注入します。
+        /// アドバイスを注入します。
         /// </summary>
-        /// <param name="assembly">アセンブリ定義。</param>
+        /// <param name="assembly">アセンブリ。</param>
         public static void InjectAdvice(this AssemblyDefinition assembly)
         {
             using var profile = Profiling.Profiler.Start($"{nameof(AssemblyDefinitionExtensions)}.{nameof(InjectAdvice)}");
 
             foreach (var module in assembly.Modules)
             {
-                module.Inject();
+                module.InjectAdvice();
             }
         }
 
