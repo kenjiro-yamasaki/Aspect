@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -30,6 +31,7 @@ namespace SoftCube.Aspects
         public AsyncStateMachineRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
             : base(targetMethod, aspectAttribute, aspectArgsType)
         {
+            RewriteTargetMethod();
         }
 
         #endregion
@@ -65,19 +67,19 @@ namespace SoftCube.Aspects
             handlers.Add(innerFinally);
             handlers.Add(outerCatch);
 
-            /// try
-            /// {
-            ///     if (!resumeFlag)
-            ///     {
-            ///         onEntry();
-            ///         resumeFlag = true;
-            ///     }
-            ///     else
-            ///     {
-            ///         onResume();
-            ///     }
-            ///     try
-            ///     {
+            // try
+            // {
+            //     if (!resumeFlag)
+            //     {
+            //         onEntry();
+            //         resumeFlag = true;
+            //     }
+            //     else
+            //     {
+            //         onResume();
+            //     }
+            //     try
+            //     {
             {
                 var branch = new Instruction[2];
                 var insert = innerCatch.TryStart;
@@ -100,15 +102,15 @@ namespace SoftCube.Aspects
                 branch[1].Operand = processor.InsertNopBefore(insert);
             }
 
-            ///         IL_XXXX: // leaveTarget
-            ///         if (<> 1__state != -1)
-            ///         {
-            ///             onYield();
-            ///         }
-            ///         else
-            ///         {
-            ///             onSuccess();
-            ///         }
+            //         IL_XXXX: // leaveTarget
+            //         if (<> 1__state != -1)
+            //         {
+            //             onYield();
+            //         }
+            //         else
+            //         {
+            //             onSuccess();
+            //         }
             Instruction leave;
             {
                 var instruction = outerCatch.HandlerStart.Previous;
@@ -141,8 +143,8 @@ namespace SoftCube.Aspects
                 branch[0].Operand = processor.InsertNopBefore(insert);
                 onSuccess(processor, insert);
 
-                /// try 内の Leave 命令の転送先を書き換えます。
-                /// この書き換えにより OnYield と OnSuccess の呼びだし処理に転送します。
+                // try 内の Leave 命令の転送先を書き換えます。
+                // この書き換えにより OnYield と OnSuccess の呼びだし処理に転送します。
                 for (var instruction = innerCatch.TryStart; instruction != leaveTarget; instruction = instruction.Next)
                 {
                     if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
@@ -153,12 +155,12 @@ namespace SoftCube.Aspects
                 }
             }
 
-            ///     }
-            ///     catch (Exception exception)
-            ///     {
-            ///         onException();
-            ///         throw;
-            ///     }
+            //     }
+            //     catch (Exception exception)
+            //     {
+            //         onException();
+            //         throw;
+            //     }
             {
                 var insert = outerCatch.HandlerStart;
 
@@ -167,13 +169,13 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Rethrow);
             }
 
-            ///     finally
-            ///     {
-            ///         if (<>1__state == -1)
-            ///         {
-            ///             onExit();
-            ///         }
-            ///     }
+            //     finally
+            //     {
+            //         if (<>1__state == -1)
+            //         {
+            //             onExit();
+            //         }
+            //     }
             {
                 var insert = outerCatch.HandlerStart;
                 var branch = new Instruction[2];
@@ -193,15 +195,15 @@ namespace SoftCube.Aspects
                 innerFinally.HandlerEnd = insert;
             }
 
-            /// }
-            /// catch (Exception exception)
-            /// {
-            ///     ...
-            /// }
-            /// if (<> 1__state == -1)
-            /// {
-            ///     ...
-            /// }
+            // }
+            // catch (Exception exception)
+            // {
+            //     ...
+            // }
+            // if (<> 1__state == -1)
+            // {
+            //     ...
+            // }
             {
                 var insert = outerCatch.HandlerEnd;
 
@@ -214,8 +216,66 @@ namespace SoftCube.Aspects
                 processor.InsertBefore(insert, OpCodes.Br, instructions.Last());
             }
 
-            /// IL コードを最適化します。
+            // IL コードを最適化します。
             MoveNextMethod.Optimize();
+        }
+
+        /// <summary>
+        /// ターゲットメソッドを書き換えます。
+        /// </summary>
+        /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
+        /// <remarks>
+        /// ソリューション構成が Release の場合、ステートマシンの <>4__this フィールドが生成されません。
+        /// この問題を解決するためにステートマシンに <>4__this フィールドを追加して、ターゲットメソッド内で値を設定するように書き換えます。
+        /// </remarks>
+        private void RewriteTargetMethod()
+        {
+            if (ThisField == null && !TargetMethod.IsStatic)
+            {
+                var thisField        = CreateField("<>4__this", FieldAttributes.Public, Module.ImportReference(TargetMethod.DeclaringType));
+                var stateMachineType = StateMachineType.ToSystemType();
+                var builderType      = typeof(AsyncTaskMethodBuilder);
+
+                TargetMethod.Body = new MethodBody(TargetMethod);
+                var stateMachineVariable = TargetMethod.AddVariable(StateMachineType);
+                var builderVariable      = TargetMethod.AddVariable(builderType);
+                var builderField         = GetField("<>t__builder");
+
+                var processor = TargetMethod.Body.GetILProcessor();
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AsyncTaskMethodBuilder).GetMethod(nameof(AsyncTaskMethodBuilder.Create))));
+                processor.Emit(OpCodes.Stfld, builderField);
+
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Emit(OpCodes.Ldc_I4_M1);
+                processor.Emit(OpCodes.Stfld, GetField("<>1__state"));
+
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Store(thisField);
+
+                var parameters = TargetMethod.Parameters;
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+
+                    processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    processor.Store(GetField(parameter.Name));
+                }
+
+                processor.Emit(OpCodes.Ldloc, stateMachineVariable);
+                processor.Emit(OpCodes.Ldfld, builderField);
+                processor.Emit(OpCodes.Stloc, builderVariable);
+
+                processor.Emit(OpCodes.Ldloca, builderVariable);
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Call(Module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
+                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.LoadAddress(builderField);
+                processor.Call(Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
+                processor.Return();
+            }
         }
 
         #endregion

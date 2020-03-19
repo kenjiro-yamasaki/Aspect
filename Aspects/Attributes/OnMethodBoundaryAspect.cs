@@ -2,7 +2,6 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -40,23 +39,19 @@ namespace SoftCube.Aspects
 
             if (iteratorStateMachineAttribute != null)
             {
-                var rewriter = new IteratorStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs));
+                // MoveNext メソッドを書き換えます。
+                RewriteMoveNextMethod(new IteratorStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
 
-                RewriteTargetMethod(rewriter);
-                RewriteMoveNextMethod(rewriter);
-
-                /// アスペクト属性を削除します。
+                // アスペクト属性を削除します。
                 targetMethod.CustomAttributes.Remove(aspectAttribute);
                 targetMethod.CustomAttributes.Remove(iteratorStateMachineAttribute);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                var rewriter = new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs));
+                // MoveNext メソッドを書き換えます。
+                RewriteMoveNextMethod(new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
 
-                RewriteTargetMethod(rewriter);
-                RewriteMoveNextMethod(rewriter);
-
-                /// アスペクト属性を削除します。
+                // アスペクト属性を削除します。
                 targetMethod.CustomAttributes.Remove(aspectAttribute);
                 targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
@@ -64,7 +59,7 @@ namespace SoftCube.Aspects
             {
                 RewriteTargetMethod(new MethodRewriter(targetMethod, aspectAttribute));
 
-                /// アスペクト属性を削除します。
+                // アスペクト属性を削除します。
                 targetMethod.CustomAttributes.Remove(aspectAttribute);
             }
         }
@@ -77,10 +72,10 @@ namespace SoftCube.Aspects
         /// <param name="rewriter">ターゲットメソッドの書き換え。</param>
         private void RewriteTargetMethod(MethodRewriter rewriter)
         {
-            /// オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
+            // オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
             rewriter.CreateOriginalTargetMethod();
 
-            /// ターゲットメソッドを書き換えます。
+            // ターゲットメソッドを書き換えます。
             var targetMethod            = rewriter.TargetMethod;
             var originalTargetMethod    = rewriter.OriginalTargetMethod;
             var aspectAttribute         = rewriter.AspectAttribute;
@@ -93,14 +88,14 @@ namespace SoftCube.Aspects
 
             var onEntry = new Action<ILProcessor>(processor =>
             {
-                /// var aspectAttribute = new AspectAttribute(...) {...};
-                /// var arguments       = new Arguments(...);
-                /// var aspectArgs      = new MethodExecutionArgs(this, arguments);
-                /// aspectArgs.Method = MethodBase.GetCurrentMethod();
-                /// aspectAttribute.OnEntry(aspectArgs);
-                /// arg0 = (TArg0)arguments[0];
-                /// arg1 = (TArg1)arguments[1];
-                /// ...
+                // var aspectAttribute = new AspectAttribute(...) {...};
+                // var arguments       = new Arguments(...);
+                // var aspectArgs      = new MethodExecutionArgs(this, arguments);
+                // aspectArgs.Method = MethodBase.GetCurrentMethod();
+                // aspectAttribute.OnEntry(aspectArgs);
+                // arg0 = (TArg0)arguments[0];
+                // arg1 = (TArg1)arguments[1];
+                // ...
                 processor.NewAspectAttribute(aspectAttribute);
                 processor.Store(aspectAttributeVariable);
 
@@ -131,12 +126,12 @@ namespace SoftCube.Aspects
 
             var onInvoke = new Action<ILProcessor>(processor =>
             {
-                /// var returnValue = OriginalMethod(arg0, arg1, ...);
-                /// aspectArgs.ReturnValue = returnValue;
-                /// arguments[0] = arg0;
-                /// arguments[1] = arg1;
-                /// ...
-                /// aspectAttribute.OnSuccess(aspectArgs);
+                // var returnValue = OriginalMethod(arg0, arg1, ...);
+                // aspectArgs.ReturnValue = returnValue;
+                // arguments[0] = arg0;
+                // arguments[1] = arg1;
+                // ...
+                // aspectAttribute.OnSuccess(aspectArgs);
                 if (targetMethod.HasReturnValue())
                 {
                     processor.Load(aspectArgsVariable);
@@ -161,9 +156,9 @@ namespace SoftCube.Aspects
 
             var onException = new Action<ILProcessor>(processor =>
             {
-                /// aspectArgs.Exception = ex;
-                /// aspectAttribute.OnException(aspectArgs);
-                /// rethrow;
+                // aspectArgs.Exception = ex;
+                // aspectAttribute.OnException(aspectArgs);
+                // rethrow;
                 processor.Store(exceptionVariable);
                 processor.Load(aspectArgsVariable);
                 processor.Load(exceptionVariable);
@@ -177,10 +172,10 @@ namespace SoftCube.Aspects
 
             var onExit = new Action<ILProcessor>(processor =>
             {
-                /// aspectAttribute.OnExit(aspectArgs);
-                /// arg0 = (TArg0)arguments[0];
-                /// arg1 = (TArg1)arguments[1];
-                /// ...
+                // aspectAttribute.OnExit(aspectArgs);
+                // arg0 = (TArg0)arguments[0];
+                // arg1 = (TArg1)arguments[1];
+                // ...
                 processor.Load(aspectAttributeVariable);
                 processor.Load(aspectArgsVariable);
                 processor.CallVirtual(aspectAttributeType, nameof(OnExit));
@@ -189,7 +184,7 @@ namespace SoftCube.Aspects
 
             var onReturn = new Action<ILProcessor>(processor =>
             {
-                /// return (TResult)aspectArgs.ReturnValue;
+                // return (TResult)aspectArgs.ReturnValue;
                 if (targetMethod.HasReturnValue())
                 {
                     processor.Load(aspectArgsVariable);
@@ -205,41 +200,6 @@ namespace SoftCube.Aspects
         #endregion
 
         #region イテレーターメソッド
-
-        /// <summary>
-        /// ターゲットメソッドを書き換えます。
-        /// </summary>
-        /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
-        private void RewriteTargetMethod(IteratorStateMachineRewriter rewriter)
-        {
-            var targetMethod = rewriter.TargetMethod;
-            if (rewriter.ThisField == null && !targetMethod.IsStatic)
-            {
-                var module = rewriter.Module;
-                var thisField = rewriter.CreateField("<>4__this", Mono.Cecil.FieldAttributes.Public, module.ImportReference(targetMethod.DeclaringType));
-
-                targetMethod.Body = new Mono.Cecil.Cil.MethodBody(targetMethod);
-                var processor = targetMethod.Body.GetILProcessor();
-
-                processor.Emit(OpCodes.Ldc_I4, -2);
-                processor.New(rewriter.StateMachineType);
-                processor.Emit(OpCodes.Dup);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Store(thisField);
-
-                var parameters = targetMethod.Parameters;
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-
-                    processor.Emit(OpCodes.Dup);
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    processor.Store(rewriter.GetField("<>3__" + parameter.Name));
-                }
-
-                processor.Emit(OpCodes.Ret);
-            }
-        }
 
         /// <summary>
         /// MoveNext メソッドを書き換えます。
@@ -264,13 +224,13 @@ namespace SoftCube.Aspects
 
             var onEntry = new Action<ILProcessor>(processor =>
             {
-                /// _aspectAttribute = new AspectAttribute(...) {...};
-                /// _arguments       = new Arguments(...);
-                /// _aspectArgs      = new MethodExecutionArgs(<>4__this, _arguments);
-                /// _aspectAttribute.OnEntry(_aspectArgs);
-                /// arg0 = _arguments.Arg0;
-                /// arg1 = _arguments.Arg1;
-                /// ...
+                // _aspectAttribute = new AspectAttribute(...) {...};
+                // _arguments       = new Arguments(...);
+                // _aspectArgs      = new MethodExecutionArgs(<>4__this, _arguments);
+                // _aspectAttribute.OnEntry(_aspectArgs);
+                // arg0 = _arguments.Arg0;
+                // arg1 = _arguments.Arg1;
+                // ...
                 processor.LoadThis();
                 processor.NewAspectAttribute(aspectAttribute);
                 processor.Store(aspectAttributeField);
@@ -305,10 +265,10 @@ namespace SoftCube.Aspects
 
             var onResume = new Action<ILProcessor>(processor =>
             {
-                /// _aspectAttribute.OnResume(_aspectArgs);
-                /// arg0 = _arguments.Arg0;
-                /// arg1 = _arguments.Arg1;
-                /// ...
+                // _aspectAttribute.OnResume(_aspectArgs);
+                // arg0 = _arguments.Arg0;
+                // arg1 = _arguments.Arg1;
+                // ...
                 processor.LoadThis();
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
@@ -319,9 +279,9 @@ namespace SoftCube.Aspects
 
             var onYield = new Action<ILProcessor>(processor =>
             {
-                /// _aspectArgs.YieldValue = <> 2__current;
-                /// _aspectAttribute.OnYield(_aspectArgs);
-                /// <>2__current = (TResult)_aspectArgs.YieldValue;
+                // _aspectArgs.YieldValue = <> 2__current;
+                // _aspectAttribute.OnYield(_aspectArgs);
+                // <>2__current = (TResult)_aspectArgs.YieldValue;
                 processor.LoadThis();
                 processor.Load(aspectArgsField);
                 processor.LoadThis();
@@ -345,7 +305,7 @@ namespace SoftCube.Aspects
 
             var onSuccess = new Action<ILProcessor>(processor =>
             {
-                /// _aspectAttribute.OnSuccess(_aspectArgs);
+                // _aspectAttribute.OnSuccess(_aspectArgs);
                 processor.LoadThis();
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
@@ -355,8 +315,8 @@ namespace SoftCube.Aspects
 
             var onException = new Action<ILProcessor>(processor =>
             {
-                /// _aspectArgs.Exception = exception;
-                /// _aspectAttribute.OnException(_aspectArgs);
+                // _aspectArgs.Exception = exception;
+                // _aspectAttribute.OnException(_aspectArgs);
                 exceptionVariable = moveNextMethod.AddVariable(typeof(Exception));
                 processor.Store(exceptionVariable);
 
@@ -374,7 +334,7 @@ namespace SoftCube.Aspects
 
             var onExit = new Action<ILProcessor>(processor =>
             {
-                /// _aspectAttribute.OnExit(_aspectArgs);
+                // _aspectAttribute.OnExit(_aspectArgs);
                 processor.LoadThis();
                 processor.Load(aspectAttributeField);
                 processor.LoadThis();
@@ -388,62 +348,6 @@ namespace SoftCube.Aspects
         #endregion
 
         #region 非同期メソッド
-
-        /// <summary>
-        /// ターゲットメソッドを書き換えます。
-        /// </summary>
-        /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
-        private void RewriteTargetMethod(AsyncStateMachineRewriter rewriter)
-        {
-            var targetMethod = rewriter.TargetMethod;
-            if (rewriter.ThisField == null && !targetMethod.IsStatic)
-            {
-                var module           = rewriter.Module;
-                var thisField        = rewriter.CreateField("<>4__this", Mono.Cecil.FieldAttributes.Public, module.ImportReference(targetMethod.DeclaringType));
-                var stateMachineType = rewriter.StateMachineType.ToSystemType();
-                var builderType      = typeof(AsyncTaskMethodBuilder);
-
-                targetMethod.Body = new Mono.Cecil.Cil.MethodBody(targetMethod);
-                var stateMachineVariable = targetMethod.AddVariable(rewriter.StateMachineType);
-                var builderVariable      = targetMethod.AddVariable(builderType);
-                var builderField         = rewriter.GetField("<>t__builder");
-
-                var processor = targetMethod.Body.GetILProcessor();
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.Emit(OpCodes.Call, module.ImportReference(typeof(AsyncTaskMethodBuilder).GetMethod(nameof(AsyncTaskMethodBuilder.Create))));
-                processor.Emit(OpCodes.Stfld, builderField);
-
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.Emit(OpCodes.Ldc_I4_M1);
-                processor.Emit(OpCodes.Stfld, rewriter.GetField("<>1__state"));
-
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Store(thisField);
-
-                var parameters = targetMethod.Parameters;
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-
-                    processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    processor.Store(rewriter.GetField(parameter.Name));
-                }
-
-                processor.Emit(OpCodes.Ldloc, stateMachineVariable);
-                processor.Emit(OpCodes.Ldfld, builderField);
-                processor.Emit(OpCodes.Stloc, builderVariable);
-
-                processor.Emit(OpCodes.Ldloca, builderVariable);
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.Call(module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.LoadAddress(builderField);
-                processor.Call(module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
-                processor.Return();
-            }
-        }
 
         /// <summary>
         /// MoveNext メソッドを書き換えます。
@@ -467,13 +371,13 @@ namespace SoftCube.Aspects
 
             var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// _aspectAttribute = new AspectAttribute(...) {...};
-                /// _arguments       = new Arguments(...);
-                /// _aspectArgs      = new MethodExecutionArgs(4__this, _arguments);
-                /// _aspectAttribute.OnEntry(_aspectArgs);
-                /// arg0 = _arguments.Arg0;
-                /// arg1 = _arguments.Arg1;
-                /// ...
+                // _aspectAttribute = new AspectAttribute(...) {...};
+                // _arguments       = new Arguments(...);
+                // _aspectArgs      = new MethodExecutionArgs(4__this, _arguments);
+                // _aspectAttribute.OnEntry(_aspectArgs);
+                // arg0 = _arguments.Arg0;
+                // arg1 = _arguments.Arg1;
+                // ...
                 processor.LoadThis(insert);
                 processor.NewAspectAttribute(insert, aspectAttribute);
                 processor.Store(insert, aspectAttributeField);
@@ -508,10 +412,10 @@ namespace SoftCube.Aspects
 
             var onResume = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// _aspectAttribute.OnResume(_aspectArgs);
-                /// arg0 = _arguments.Arg0;
-                /// arg1 = _arguments.Arg1;
-                /// ...
+                // _aspectAttribute.OnResume(_aspectArgs);
+                // arg0 = _arguments.Arg0;
+                // arg1 = _arguments.Arg1;
+                // ...
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
@@ -522,7 +426,7 @@ namespace SoftCube.Aspects
 
             var onYield = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// _aspectAttribute.OnYield(_aspectArgs);
+                // _aspectAttribute.OnYield(_aspectArgs);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);
@@ -532,9 +436,9 @@ namespace SoftCube.Aspects
 
             var onSuccess = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// _aspectArgs.ReturnValue = result;
-                /// _aspectAttribute.OnSuccess(_aspectArgs);
-                /// result = (TResult)_aspectArgs.ReturnValue;
+                // _aspectArgs.ReturnValue = result;
+                // _aspectAttribute.OnSuccess(_aspectArgs);
+                // result = (TResult)_aspectArgs.ReturnValue;
                 int resultVariable = 1;
                 if (targetMethod.ReturnType is GenericInstanceType genericReturnType)
                 {
@@ -569,8 +473,8 @@ namespace SoftCube.Aspects
 
             var onException = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// _aspectArgs.Exception = exception;
-                /// _aspectAttribute.OnException(_aspectArgs);
+                // _aspectArgs.Exception = exception;
+                // _aspectAttribute.OnException(_aspectArgs);
                 processor.Store(insert, exceptionVariable);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectArgsField);
@@ -586,7 +490,7 @@ namespace SoftCube.Aspects
 
             var onExit = new Action<ILProcessor, Instruction>((processor, insert) =>
             {
-                /// _aspectAttribute.OnExit(_aspectArgs);
+                // _aspectAttribute.OnExit(_aspectArgs);
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectAttributeField);
                 processor.LoadThis(insert);

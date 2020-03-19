@@ -71,6 +71,7 @@ namespace SoftCube.Aspects
             ExitFlagField    = CreateField("*exitFlag", FieldAttributes.Private, Module.TypeSystem.Boolean);
             IsDisposingField = CreateField("*isDisposing", FieldAttributes.Private, Module.TypeSystem.Int32);
 
+            RewriteTargetMethod();
             RewriteDisposeMethod();
         }
 
@@ -89,21 +90,21 @@ namespace SoftCube.Aspects
         /// <param name="onExit">OnExit アドバイスの注入処理。</param>
         public void RewriteMoveNextMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onResume, Action<ILProcessor> onYield, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
         {
-            /// 新たなメソッドを生成し、MoveNext メソッドのコードをコピーします。
+            // 新たなメソッドを生成し、MoveNext メソッドのコードをコピーします。
             CreateOriginalMoveNextMethod();
 
-            /// 元々の MoveNext メソッドを書き換えます。
+            // 元々の MoveNext メソッドを書き換えます。
             {
                 var moveNextMethod = MoveNextMethod;
                 moveNextMethod.Body = new MethodBody(moveNextMethod);
 
-                /// ローカル変数を追加します。
+                // ローカル変数を追加します。
                 var variables = moveNextMethod.Body.Variables;
 
                 int exitVariable = variables.Count;
                 variables.Add(new VariableDefinition(Module.TypeSystem.Boolean));
 
-                /// 例外ハンドラーを追加します。
+                // 例外ハンドラーを追加します。
                 var handlers = moveNextMethod.Body.ExceptionHandlers;
                 var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = Module.ImportReference(typeof(Exception)) };
                 var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
@@ -112,18 +113,18 @@ namespace SoftCube.Aspects
 
                 var processor = moveNextMethod.Body.GetILProcessor();
 
-                /// if (!_exitFlag && _isDisposing == 0)
-                /// {
-                ///     if (!_resumeFlag)
-                ///     {
-                ///         onEntry();
-                ///         _resumeFlag = true;
-                ///     }
-                ///     else
-                ///     {
-                ///         onResume();
-                ///     }
-                /// }
+                // if (!_exitFlag && _isDisposing == 0)
+                // {
+                //     if (!_resumeFlag)
+                //     {
+                //         onEntry();
+                //         _resumeFlag = true;
+                //     }
+                //     else
+                //     {
+                //         onResume();
+                //     }
+                // }
                 {
                     var branch = new Instruction[4];
 
@@ -151,27 +152,27 @@ namespace SoftCube.Aspects
                     branch[0].Operand = branch[1].Operand = branch[3].Operand = processor.EmitNop();
                 }
 
-                /// bool exit;
-                /// try
-                /// {
-                ///     exit = true;
-                ///     bool result;
-                ///     if (_isDisposing != 2)
-                ///     {
-                ///         result = OriginalMoveNext();
-                ///     }
-                ///     exit = _isDisposing != 0 || !result;
-                ///     if (!_exitFlag && _resumeFlag)
-                ///     {
-                ///         if (exit)
-                ///         {
-                ///             onSuccess();
-                ///         }
-                ///         else
-                ///         {
-                ///             onYield();
-                ///         }
-                ///     }
+                // bool exit;
+                // try
+                // {
+                //     exit = true;
+                //     bool result;
+                //     if (_isDisposing != 2)
+                //     {
+                //         result = OriginalMoveNext();
+                //     }
+                //     exit = _isDisposing != 0 || !result;
+                //     if (!_exitFlag && _resumeFlag)
+                //     {
+                //         if (exit)
+                //         {
+                //             onSuccess();
+                //         }
+                //         else
+                //         {
+                //             onYield();
+                //         }
+                //     }
                 Instruction leave;
                 {
                     var branch = new Instruction[8];
@@ -228,25 +229,25 @@ namespace SoftCube.Aspects
                     branch[4].Operand = branch[5].Operand = branch[7].Operand = leave = processor.EmitLeave(OpCodes.Leave);
                 }
 
-                /// }
-                /// catch (Exception exception)
-                /// {
-                ///     onException();
-                ///     throw;
+                // }
+                // catch (Exception exception)
+                // {
+                //     onException();
+                //     throw;
                 {
                     @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
                     onException(processor);
                     processor.Emit(OpCodes.Rethrow);
                 }
 
-                /// }
-                /// finally
-                /// {
-                ///     if (!exitFlag && resumeFlag && exit)
-                ///     {
-                ///         exitFlag = true;
-                ///         onExit();
-                ///     }
+                // }
+                // finally
+                // {
+                //     if (!exitFlag && resumeFlag && exit)
+                //     {
+                //         exitFlag = true;
+                //         onExit();
+                //     }
                 {
                     var branch = new Instruction[3];
 
@@ -271,8 +272,8 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Endfinally);
                 }
 
-                /// }
-                /// return !exit;
+                // }
+                // return !exit;
                 {
                     int resultVariable = variables.Count;
                     variables.Add(new VariableDefinition(Module.TypeSystem.Boolean));
@@ -286,8 +287,46 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ret);
                 }
 
-                /// IL コードを最適化します。
+                // IL コードを最適化します。
                 moveNextMethod.Optimize();
+            }
+        }
+
+        /// <summary>
+        /// ターゲットメソッドを書き換えます。
+        /// </summary>
+        /// <param name="rewriter">イテレーターステートマシンの書き換え。</param>
+        /// <remarks>
+        /// ソリューション構成が Release の場合、ステートマシンの <>4__this フィールドが生成されません。
+        /// この問題を解決するためにステートマシンに <>4__this フィールドを追加して、ターゲットメソッド内で値を設定するように書き換えます。
+        /// </remarks>
+        private void RewriteTargetMethod()
+        {
+            var targetMethod = TargetMethod;
+            if (ThisField == null && !targetMethod.IsStatic)
+            {
+                var thisField = CreateField("<>4__this", FieldAttributes.Public, Module.ImportReference(targetMethod.DeclaringType));
+
+                targetMethod.Body = new Mono.Cecil.Cil.MethodBody(targetMethod);
+                var processor = targetMethod.Body.GetILProcessor();
+
+                processor.Emit(OpCodes.Ldc_I4, -2);
+                processor.New(StateMachineType);
+                processor.Emit(OpCodes.Dup);
+                processor.Emit(OpCodes.Ldarg_0);
+                processor.Store(thisField);
+
+                var parameters = targetMethod.Parameters;
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+
+                    processor.Emit(OpCodes.Dup);
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    processor.Store(GetField("<>3__" + parameter.Name));
+                }
+
+                processor.Emit(OpCodes.Ret);
             }
         }
 
@@ -296,24 +335,23 @@ namespace SoftCube.Aspects
         /// </summary>
         private void RewriteDisposeMethod()
         {
-            /// オリジナル Dispose メソッド (Dispose メソッドの元々のコード) を生成します。
+            // オリジナル Dispose メソッド (Dispose メソッドの元々のコード) を生成します。
             CreateOriginalDisposeMethod();
 
-            /// Dispose のメソッドのコードを書き換えます。
+            // Dispose のメソッドのコードを書き換えます。
             {
-                //var disposeMethod = injector.DisposeMethod;
                 DisposeMethod.Body = new MethodBody(DisposeMethod);
 
-                /// 例外ハンドラーを追加します。
+                // 例外ハンドラーを追加します。
                 var handlers = DisposeMethod.Body.ExceptionHandlers;
                 var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
                 handlers.Add(@finally);
 
                 var processor = DisposeMethod.Body.GetILProcessor();
 
-                /// if (isDisposing == 0)
-                /// {
-                ///     isDisposing = 1;
+                // if (isDisposing == 0)
+                // {
+                //     isDisposing = 1;
                 {
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldfld, IsDisposingField);
@@ -326,9 +364,9 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Stfld, IsDisposingField);
                 }
 
-                ///     try
-                ///     {
-                ///         System.IDisposable.Dispose<Original>();
+                //     try
+                //     {
+                //         System.IDisposable.Dispose<Original>();
                 Instruction leave;
                 {
                     @finally.TryStart = processor.EmitNop();
@@ -337,12 +375,12 @@ namespace SoftCube.Aspects
                     leave = processor.EmitLeave(OpCodes.Leave_S);
                 }
 
-                ///     }
-                ///     finally
-                ///     {
-                ///         isDisposing = 2;
-                ///         MoveNext();
-                ///         isDisposing = 0;
+                //     }
+                //     finally
+                //     {
+                //         isDisposing = 2;
+                //         MoveNext();
+                //         isDisposing = 0;
                 {
                     @finally.HandlerStart = @finally.TryEnd = processor.EmitNop();
                     processor.Emit(OpCodes.Ldarg_0);
@@ -359,8 +397,8 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Endfinally);
                 }
 
-                ///     }
-                /// }
+                //     }
+                // }
                 {
                     leave.Operand = @finally.HandlerEnd = processor.EmitNop();
                     processor.Emit(OpCodes.Ret);
