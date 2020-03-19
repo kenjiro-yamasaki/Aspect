@@ -352,21 +352,21 @@ namespace SoftCube.Aspects
         /// <summary>
         /// MoveNext メソッドを書き換えます。
         /// </summary>
-        /// <param name="stateMachineRewriter">非同期ステートマシンの書き換え。</param>
-        private void RewriteMoveNextMethod(AsyncStateMachineRewriter stateMachineRewriter)
+        /// <param name="rewriter">非同期ステートマシンの書き換え。</param>
+        private void RewriteMoveNextMethod(AsyncStateMachineRewriter rewriter)
         {
-            var module               = stateMachineRewriter.Module;
-            var aspectAttribute      = stateMachineRewriter.AspectAttribute;
-            var aspectAttributeType  = stateMachineRewriter.AspectAttributeType;
-            var aspectArgsType       = stateMachineRewriter.AspectArgsType;
-            var moveNextMethod       = stateMachineRewriter.MoveNextMethod;
-            var targetMethod         = stateMachineRewriter.TargetMethod;
-            var stateMachineType     = stateMachineRewriter.StateMachineType;
+            var module               = rewriter.Module;
+            var aspectAttribute      = rewriter.AspectAttribute;
+            var aspectAttributeType  = rewriter.AspectAttributeType;
+            var aspectArgsType       = rewriter.AspectArgsType;
+            var moveNextMethod       = rewriter.MoveNextMethod;
+            var targetMethod         = rewriter.TargetMethod;
+            var stateMachineType     = rewriter.StateMachineType;
 
-            var thisField            = stateMachineRewriter.ThisField;
-            var aspectAttributeField = stateMachineRewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
-            var argumentsField       = stateMachineRewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
-            var aspectArgsField      = stateMachineRewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
+            var thisField            = rewriter.ThisField;
+            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
+            var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor, Instruction>((processor, insert) =>
@@ -498,7 +498,7 @@ namespace SoftCube.Aspects
                 processor.CallVirtual(insert, aspectAttributeType, nameof(OnExit));
             });
 
-            stateMachineRewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
+            rewriter.RewriteMoveNextMethod(onEntry, onResume, onYield, onSuccess, onException, onExit);
         }
 
         #endregion
