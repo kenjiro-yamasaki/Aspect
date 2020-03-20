@@ -36,9 +36,12 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start($"{nameof(MethodInterceptionAspect)}.{nameof(InjectAdvice)}");
 
-            var asyncStateMachineAttribute = targetMethod.GetAsyncStateMachineAttribute();
-            var isInvokeAsyncOverridden = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
+            // アスペクト属性を削除します。
+            targetMethod.CustomAttributes.Remove(aspectAttribute);
 
+            //
+            var asyncStateMachineAttribute = targetMethod.GetAsyncStateMachineAttribute();
+            var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
                 var targetMethodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
@@ -51,10 +54,6 @@ namespace SoftCube.Aspects
                 ReplaceAsyncMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
                 aspectArgsRewriter.OverrideInvokeAsyncImplMethod(targetMethodRewriter.OriginalTargetMethod);
                 aspectArgsRewriter.OverrideTaskResultProperty();
-
-                // アスペクト属性を削除します。
-                targetMethod.CustomAttributes.Remove(aspectAttribute);
-                targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
@@ -66,9 +65,6 @@ namespace SoftCube.Aspects
                 aspectArgsRewriter.CreateConstructor();
                 ReplaceMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
                 aspectArgsRewriter.OverrideInvokeImplMethod(targetMethodRewriter.OriginalTargetMethod);
-
-                // アスペクト属性を削除します。
-                targetMethod.CustomAttributes.Remove(aspectAttribute);
             }
         }
 

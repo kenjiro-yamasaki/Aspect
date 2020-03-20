@@ -1,12 +1,11 @@
 ﻿using Mono.Cecil;
-using System;
 
 namespace SoftCube.Aspects
 {
     /// <summary>
     /// メソッドレベルアスペクト。
     /// </summary>
-    public abstract class MethodLevelAspect : Attribute
+    public abstract class MethodLevelAspect : MulticastAttribute
     {
         #region コンストラクター
 

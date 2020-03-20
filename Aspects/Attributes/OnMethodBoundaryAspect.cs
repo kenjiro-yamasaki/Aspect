@@ -34,34 +34,23 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start($"{nameof(OnMethodBoundaryAspect)}.{nameof(InjectAdvice)}");
 
+            // アスペクト属性を削除します。
+            targetMethod.CustomAttributes.Remove(aspectAttribute);
+
+            //
             var iteratorStateMachineAttribute = targetMethod.GetIteratorStateMachineAttribute();
             var asyncStateMachineAttribute    = targetMethod.GetAsyncStateMachineAttribute();
-
             if (iteratorStateMachineAttribute != null)
             {
-                // MoveNext メソッドを書き換えます。
                 RewriteMoveNextMethod(new IteratorStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
-
-                // アスペクト属性を削除します。
-                targetMethod.CustomAttributes.Remove(aspectAttribute);
-                targetMethod.CustomAttributes.Remove(iteratorStateMachineAttribute);
             }
             else if (asyncStateMachineAttribute != null)
             {
-                // MoveNext メソッドを書き換えます。
                 RewriteMoveNextMethod(new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
-
-                // アスペクト属性を削除します。
-                targetMethod.CustomAttributes.Remove(aspectAttribute);
-                targetMethod.CustomAttributes.Remove(asyncStateMachineAttribute);
             }
             else
             {
-                // ターゲットメソッドを書き換えます。
                 RewriteTargetMethod(new MethodRewriter(targetMethod, aspectAttribute));
-
-                // アスペクト属性を削除します。
-                targetMethod.CustomAttributes.Remove(aspectAttribute);
             }
         }
 
