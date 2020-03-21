@@ -21,20 +21,22 @@ namespace SoftCube.Aspects
 
             // アセンブリのマルチキャスト属性を生成します。
             var multicastAttributes = new List<MulticastAttribute>();
-            foreach (var customAttribute in assembly.CustomAttributes)
+            foreach (var customAttribute in assembly.CustomAttributes.ToList())
             {
                 if (customAttribute.IsMulticastAttribute())
                 {
                     var multicastAttribute = customAttribute.Create<MulticastAttribute>();
                     multicastAttribute.CustomAttribute = customAttribute;
                     multicastAttributes.Add(multicastAttribute);
+
+                    assembly.CustomAttributes.Remove(customAttribute);
                 }
             }
 
             // モジュールにアドバイスを注入します。
             foreach (var module in assembly.Modules)
             {
-                module.InjectAdvice(multicastAttributes.OrderBy(ma => ma.AttributePriority));
+                module.InjectAdvice(multicastAttributes.OrderByDescending(ma => ma.AttributePriority));
             }
         }
 

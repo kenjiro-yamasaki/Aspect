@@ -18,74 +18,43 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            var instance = new Program();
+            var instance = new MyClass();
 
-            instance.正常(0).Wait();
+            instance.Method1();
 
             Console.ReadKey();
         }
 
-        private class EventLogger : OnMethodBoundaryAspect
+        public class TraceAttribute : OnMethodBoundaryAspect
         {
+            public string Category { get; set; }
+
             public override void OnEntry(MethodExecutionArgs args)
             {
-                Logger.Trace("OnEntry");
-            }
-
-            public override void OnSuccess(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnSuccess");
-            }
-
-            public override void OnException(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnException");
-            }
-
-            public override void OnExit(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnExit");
-            }
-
-            public override void OnResume(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnResume");
-            }
-
-            public override void OnYield(MethodExecutionArgs args)
-            {
-                Logger.Trace("OnYield");
+                Logger.Trace("Entering " + args.Method.DeclaringType.FullName + "." + args.Method.Name + " " + Category);
             }
         }
 
-        [EventLogger]
-        private async Task 正常(int arg0)
+        [Trace(Category = "A")]
+        public class MyClass
         {
-            Logger.Trace(arg0.ToString());
+            ////[Trace(Category = "A")]
+            //public MyClass()
+            //{
+            //}
 
-            await Task.Run(() =>
+            //[Trace(Category = "A")]
+            public void Method1()
             {
-                Thread.Sleep(10);
-                Logger.Trace("2");
-            });
+            }
 
-            Logger.Trace("3");
-
-            await Task.Run(() =>
+            public void Method2()
             {
-                Thread.Sleep(10);
-                Logger.Trace("4");
-            });
+            }
 
-            Logger.Trace("5");
-
-            await Task.Run(() =>
+            public void Method3()
             {
-                Thread.Sleep(10);
-                Logger.Trace("6");
-            });
-
-            Logger.Trace("7");
+            }
         }
     }
 }

@@ -34,9 +34,6 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start($"{nameof(MethodInterceptionAspect)}.{nameof(InjectAdvice)}");
 
-            // アスペクト属性を削除します。
-            TargetMethod.CustomAttributes.Remove(CustomAttribute);
-
             //
             var asyncStateMachineAttribute = TargetMethod.GetAsyncStateMachineAttribute();
             var isInvokeAsyncOverridden    = CustomAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));

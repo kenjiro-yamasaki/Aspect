@@ -39,24 +39,39 @@ namespace SoftCube.Aspects
 
             // メソッドのマルチキャスト属性を生成します。
             var currentMulticastAttributes = new List<MulticastAttribute>();
-            foreach (var customAttribute in method.CustomAttributes)
+            foreach (var customAttribute in method.CustomAttributes.ToList())
             {
                 if (customAttribute.IsMulticastAttribute())
                 {
                     var multicastAttribute = customAttribute.Create<MulticastAttribute>();
                     multicastAttribute.CustomAttribute = customAttribute;
                     currentMulticastAttributes.Add(multicastAttribute);
+
+                    method.CustomAttributes.Remove(customAttribute);
                 }
             }
-            multicastAttributes = multicastAttributes.Concat(currentMulticastAttributes.OrderBy(ma => ma.AttributePriority));
+            multicastAttributes = currentMulticastAttributes.Concat(multicastAttributes.OrderByDescending(ma => ma.AttributePriority));
 
             // メソッドレベルアスペクトを適用します。
-            foreach (var multicastAttribute in multicastAttributes)
+            foreach (var group in multicastAttributes.GroupBy(ma => ma.GetType()))
             {
-                if (multicastAttribute is MethodLevelAspect methodLevelAspect)
+                foreach (var multicastAttribute in group)
                 {
-                    methodLevelAspect.TargetMethod = method;
-                    methodLevelAspect.InjectAdvice();
+                    if (multicastAttribute is MethodLevelAspect methodLevelAspect)
+                    {
+                        if (methodLevelAspect.AttributeExclude)
+                        {
+                            break;
+                        }
+
+                        methodLevelAspect.TargetMethod = method;
+                        methodLevelAspect.InjectAdvice();
+
+                        if (methodLevelAspect.AttributeReplace)
+                        {
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -173,35 +188,35 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 
+        /// ローカル変数を追加します。
         /// </summary>
-        /// <param name="method"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static int AddVariable(this MethodDefinition method, TypeReference type)
+        /// <param name="method">メソッド。</param>
+        /// <param name="variableType">ローカル変数の型。</param>
+        /// <returns>ローカル変数のインデックス。</returns>
+        public static int AddVariable(this MethodDefinition method, TypeReference variableType)
         {
             var variables = method.Body.Variables;
             var module    = method.Module;
 
             var variable = variables.Count();
-            variables.Add(new VariableDefinition(module.ImportReference(type)));
+            variables.Add(new VariableDefinition(module.ImportReference(variableType)));
 
             return variable;
         }
 
         /// <summary>
-        /// 
+        /// ローカル変数を追加します。
         /// </summary>
-        /// <param name="method"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static int AddVariable(this MethodDefinition method, Type type)
+        /// <param name="method">メソッド。</param>
+        /// <param name="variableType">ローカル変数の型。</param>
+        /// <returns>ローカル変数のインデックス。</returns>
+        public static int AddVariable(this MethodDefinition method, Type variableType)
         {
             var variables = method.Body.Variables;
             var module    = method.Module;
 
             var variable = variables.Count();
-            variables.Add(new VariableDefinition(module.ImportReference(type)));
+            variables.Add(new VariableDefinition(module.ImportReference(variableType)));
         
             return variable;
         }

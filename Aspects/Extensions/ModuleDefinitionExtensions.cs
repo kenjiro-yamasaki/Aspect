@@ -20,16 +20,18 @@ namespace SoftCube.Aspects
         {
             // モジュールのマルチキャスト属性を生成します。
             var currentMulticastAttributes = new List<MulticastAttribute>();
-            foreach (var customAttribute in module.CustomAttributes)
+            foreach (var customAttribute in module.CustomAttributes.ToList())
             {
                 if (customAttribute.IsMulticastAttribute())
                 {
                     var multicastAttribute = customAttribute.Create<MulticastAttribute>();
                     multicastAttribute.CustomAttribute = customAttribute;
                     currentMulticastAttributes.Add(multicastAttribute);
+
+                    module.CustomAttributes.Remove(customAttribute);
                 }
             }
-            multicastAttributes = multicastAttributes.Concat(currentMulticastAttributes.OrderBy(ma => ma.AttributePriority));
+            multicastAttributes = currentMulticastAttributes.Concat(multicastAttributes.OrderByDescending(ma => ma.AttributePriority));
 
             // 型にアドバイスを注入します。
             foreach (var type in module.Types.ToList())

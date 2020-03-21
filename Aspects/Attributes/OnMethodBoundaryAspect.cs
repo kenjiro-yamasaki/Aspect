@@ -33,9 +33,6 @@ namespace SoftCube.Aspects
         {
             using var profile = Profiling.Profiler.Start($"{nameof(OnMethodBoundaryAspect)}.{nameof(InjectAdvice)}");
 
-            // アスペクト属性を削除します。
-            TargetMethod.CustomAttributes.Remove(CustomAttribute);
-
             //
             var iteratorStateMachineAttribute = TargetMethod.GetIteratorStateMachineAttribute();
             var asyncStateMachineAttribute    = TargetMethod.GetAsyncStateMachineAttribute();

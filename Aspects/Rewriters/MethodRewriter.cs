@@ -142,9 +142,11 @@ namespace SoftCube.Aspects
         {
             Assert.Null(OriginalTargetMethod);
 
-            /// オリジナルターゲットメソッドを生成します。
+            // オリジナルターゲットメソッドを生成します。
             {
-                OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, TargetMethod.Attributes, TargetMethod.ReturnType);
+                var methodAttribute =  TargetMethod.Attributes & ~(MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+
+                OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, methodAttribute, TargetMethod.ReturnType);
                 OriginalTargetMethod.Body = TargetMethod.Body;
                 foreach (var parameter in TargetMethod.Parameters)
                 {
@@ -157,7 +159,7 @@ namespace SoftCube.Aspects
                 TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
             }
 
-            /// ターゲットメソッドの Body を新規作成します。
+            // ターゲットメソッドの Body を新規作成します。
             TargetMethod.Body = new MethodBody(TargetMethod);
         }
 
