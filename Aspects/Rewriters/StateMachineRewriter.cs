@@ -13,14 +13,14 @@ namespace SoftCube.Aspects
         #region プロパティ
 
         /// <summary>
-        /// アスペクト属性。
+        /// カスタム属性。
         /// </summary>
-        public CustomAttribute AspectAttribute { get; }
+        public CustomAttribute CustomAttribute { get; }
 
         /// <summary>
         /// アスペクト属性の型。
         /// </summary>
-        public TypeDefinition AspectAttributeType => AspectAttribute.AttributeType.Resolve();
+        public TypeDefinition AspectAttributeType => CustomAttribute.AttributeType.Resolve();
 
         /// <summary>
         /// アスペクト引数の型。
@@ -96,11 +96,11 @@ namespace SoftCube.Aspects
         /// コンストラクター。
         /// </summary>
         /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspectAttribute">アスペクト属性。</param>
+        /// <param name="customAttribute">アスペクト属性。</param>
         /// <param name="aspectArgsType">アスペクト引数の型。</param>
-        public StateMachineRewriter(MethodDefinition targetMethod, CustomAttribute aspectAttribute, Type aspectArgsType)
+        public StateMachineRewriter(MethodDefinition targetMethod, CustomAttribute customAttribute, Type aspectArgsType)
         {
-            AspectAttribute  = aspectAttribute ?? throw new ArgumentNullException(nameof(aspectAttribute));
+            CustomAttribute  = customAttribute ?? throw new ArgumentNullException(nameof(customAttribute));
             AspectArgsType   = aspectArgsType ?? throw new ArgumentNullException(nameof(aspectArgsType));
             TargetMethod     = targetMethod ?? throw new ArgumentNullException(nameof(targetMethod));
             Module           = TargetMethod.Module;

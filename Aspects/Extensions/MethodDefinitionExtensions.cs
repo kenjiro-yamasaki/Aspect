@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using SoftCube.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SoftCube.Aspects
@@ -31,16 +32,31 @@ namespace SoftCube.Aspects
         /// アドバイスを注入します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        public static void InjectAdvice(this MethodDefinition method)
+        /// <param name="multicastAttributes">マルチキャスト属性コレクション。</param>
+        public static void InjectAdvice(this MethodDefinition method, IEnumerable<MulticastAttribute> multicastAttributes)
         {
             using var profile = Profiling.Profiler.Start($"{nameof(MethodDefinitionExtensions)}.{nameof(InjectAdvice)}");
 
-            foreach (var customAttribute in method.CustomAttributes.ToList())
+            // メソッドのマルチキャスト属性を生成します。
+            var currentMulticastAttributes = new List<MulticastAttribute>();
+            foreach (var customAttribute in method.CustomAttributes)
             {
-                if (customAttribute.IsMethodLevelAspect())
+                if (customAttribute.IsMulticastAttribute())
                 {
-                    var aspect = customAttribute.Create<MethodLevelAspect>();
-                    aspect.InjectAdvice(method, customAttribute);
+                    var multicastAttribute = customAttribute.Create<MulticastAttribute>();
+                    multicastAttribute.CustomAttribute = customAttribute;
+                    currentMulticastAttributes.Add(multicastAttribute);
+                }
+            }
+            multicastAttributes = multicastAttributes.Concat(currentMulticastAttributes.OrderBy(ma => ma.AttributePriority));
+
+            // メソッドレベルアスペクトを適用します。
+            foreach (var multicastAttribute in multicastAttributes)
+            {
+                if (multicastAttribute is MethodLevelAspect methodLevelAspect)
+                {
+                    methodLevelAspect.TargetMethod = method;
+                    methodLevelAspect.InjectAdvice();
                 }
             }
         }

@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SoftCube.Aspects
@@ -14,11 +15,26 @@ namespace SoftCube.Aspects
         /// アドバイスを注入します。
         /// </summary>
         /// <param name="module">モジュール。</param>
-        internal static void InjectAdvice(this ModuleDefinition module)
+        /// <param name="multicastAttributes">マルチキャスト属性コレクション。</param>
+        internal static void InjectAdvice(this ModuleDefinition module, IEnumerable<MulticastAttribute> multicastAttributes)
         {
+            // モジュールのマルチキャスト属性を生成します。
+            var currentMulticastAttributes = new List<MulticastAttribute>();
+            foreach (var customAttribute in module.CustomAttributes)
+            {
+                if (customAttribute.IsMulticastAttribute())
+                {
+                    var multicastAttribute = customAttribute.Create<MulticastAttribute>();
+                    multicastAttribute.CustomAttribute = customAttribute;
+                    currentMulticastAttributes.Add(multicastAttribute);
+                }
+            }
+            multicastAttributes = multicastAttributes.Concat(currentMulticastAttributes.OrderBy(ma => ma.AttributePriority));
+
+            // 型にアドバイスを注入します。
             foreach (var type in module.Types.ToList())
             {
-                type.InjectAdvice();
+                type.InjectAdvice(multicastAttributes);
             }
         }
 

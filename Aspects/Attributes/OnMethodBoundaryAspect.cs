@@ -28,29 +28,28 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アドバイスを注入します。
         /// </summary>
-        /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspectAttribute">アスペクト属性。</param>
-        sealed public override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
+        /// 
+        sealed public override void InjectAdvice()
         {
             using var profile = Profiling.Profiler.Start($"{nameof(OnMethodBoundaryAspect)}.{nameof(InjectAdvice)}");
 
             // アスペクト属性を削除します。
-            targetMethod.CustomAttributes.Remove(aspectAttribute);
+            TargetMethod.CustomAttributes.Remove(CustomAttribute);
 
             //
-            var iteratorStateMachineAttribute = targetMethod.GetIteratorStateMachineAttribute();
-            var asyncStateMachineAttribute    = targetMethod.GetAsyncStateMachineAttribute();
+            var iteratorStateMachineAttribute = TargetMethod.GetIteratorStateMachineAttribute();
+            var asyncStateMachineAttribute    = TargetMethod.GetAsyncStateMachineAttribute();
             if (iteratorStateMachineAttribute != null)
             {
-                RewriteMoveNextMethod(new IteratorStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
+                RewriteMoveNextMethod(new IteratorStateMachineRewriter(TargetMethod, CustomAttribute, typeof(MethodExecutionArgs)));
             }
             else if (asyncStateMachineAttribute != null)
             {
-                RewriteMoveNextMethod(new AsyncStateMachineRewriter(targetMethod, aspectAttribute, typeof(MethodExecutionArgs)));
+                RewriteMoveNextMethod(new AsyncStateMachineRewriter(TargetMethod, CustomAttribute, typeof(MethodExecutionArgs)));
             }
             else
             {
-                RewriteTargetMethod(new MethodRewriter(targetMethod, aspectAttribute));
+                RewriteTargetMethod(new MethodRewriter(TargetMethod, CustomAttribute));
             }
         }
 
@@ -198,7 +197,7 @@ namespace SoftCube.Aspects
         private void RewriteMoveNextMethod(IteratorStateMachineRewriter rewriter)
         {
             var module               = rewriter.Module;
-            var aspectAttribute      = rewriter.AspectAttribute;
+            var customAttribute      = rewriter.CustomAttribute;
             var aspectAttributeType  = rewriter.AspectAttributeType;
             var aspectArgsType       = rewriter.AspectArgsType;
             var moveNextMethod       = rewriter.MoveNextMethod;
@@ -207,7 +206,7 @@ namespace SoftCube.Aspects
 
             var thisField            = rewriter.ThisField;
             var currentField         = rewriter.CurrentField;
-            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(customAttribute.AttributeType));
             var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
             var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             int exceptionVariable    = -1;
@@ -222,7 +221,7 @@ namespace SoftCube.Aspects
                 // arg1 = _arguments.Arg1;
                 // ...
                 processor.LoadThis();
-                processor.NewAspectAttribute(aspectAttribute);
+                processor.NewAspectAttribute(customAttribute);
                 processor.Store(aspectAttributeField);
 
                 processor.LoadThis();
@@ -346,7 +345,7 @@ namespace SoftCube.Aspects
         private void RewriteMoveNextMethod(AsyncStateMachineRewriter rewriter)
         {
             var module               = rewriter.Module;
-            var aspectAttribute      = rewriter.AspectAttribute;
+            var customAttribute      = rewriter.CustomAttribute;
             var aspectAttributeType  = rewriter.AspectAttributeType;
             var aspectArgsType       = rewriter.AspectArgsType;
             var moveNextMethod       = rewriter.MoveNextMethod;
@@ -354,7 +353,7 @@ namespace SoftCube.Aspects
             var stateMachineType     = rewriter.StateMachineType;
 
             var thisField            = rewriter.ThisField;
-            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectAttribute.AttributeType));
+            var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(customAttribute.AttributeType));
             var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
             var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
             var exceptionVariable    = moveNextMethod.AddVariable(typeof(Exception));
@@ -369,7 +368,7 @@ namespace SoftCube.Aspects
                 // arg1 = _arguments.Arg1;
                 // ...
                 processor.LoadThis(insert);
-                processor.NewAspectAttribute(insert, aspectAttribute);
+                processor.NewAspectAttribute(insert, customAttribute);
                 processor.Store(insert, aspectAttributeField);
 
                 processor.LoadThis(insert);

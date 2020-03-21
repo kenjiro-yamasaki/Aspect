@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mono.Cecil;
+using System;
 
 namespace SoftCube.Aspects
 {
@@ -13,10 +14,15 @@ namespace SoftCube.Aspects
         #region プロパティ。
 
         /// <summary>
+        /// カスタム属性。
+        /// </summary>
+        public CustomAttribute CustomAttribute { get; set; }
+
+        /// <summary>
         /// 属性の優先度。
         /// </summary>
         /// <remarks>
-        /// 同じ要素に複数のインスタンスが定義されている場合に、現在の属性の優先度を取得または設定します (低い値は前に処理されます)。
+        /// 同じターゲットに複数のインスタンスが定義されている場合に、現在の属性の優先度を指定します (優先度の低い属性は前に処理されます)。
         /// </remarks>
         public int AttributePriority { get; set; }
 

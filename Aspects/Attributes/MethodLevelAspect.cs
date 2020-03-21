@@ -7,6 +7,15 @@ namespace SoftCube.Aspects
     /// </summary>
     public abstract class MethodLevelAspect : MulticastAttribute
     {
+        #region プロパティ
+
+        /// <summary>
+        /// ターゲットメソッド。
+        /// </summary>
+        public MethodDefinition TargetMethod { get; set; }
+
+        #endregion
+
         #region コンストラクター
 
         /// <summary>
@@ -24,9 +33,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アドバイスを注入します。
         /// </summary>
-        /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspectAttribute">アスペクト属性。</param>
-        public abstract void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute);
+        public abstract void InjectAdvice();
 
         #endregion
     }

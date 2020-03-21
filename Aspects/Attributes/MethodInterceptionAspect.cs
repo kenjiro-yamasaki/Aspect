@@ -30,22 +30,20 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アドバイスを注入します。
         /// </summary>
-        /// <param name="targetMethod">ターゲットメソッド。</param>
-        /// <param name="aspectAttribute">アスペクト属性。</param>
-        sealed public override void InjectAdvice(MethodDefinition targetMethod, CustomAttribute aspectAttribute)
+        sealed public override void InjectAdvice()
         {
             using var profile = Profiling.Profiler.Start($"{nameof(MethodInterceptionAspect)}.{nameof(InjectAdvice)}");
 
             // アスペクト属性を削除します。
-            targetMethod.CustomAttributes.Remove(aspectAttribute);
+            TargetMethod.CustomAttributes.Remove(CustomAttribute);
 
             //
-            var asyncStateMachineAttribute = targetMethod.GetAsyncStateMachineAttribute();
-            var isInvokeAsyncOverridden    = aspectAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
+            var asyncStateMachineAttribute = TargetMethod.GetAsyncStateMachineAttribute();
+            var isInvokeAsyncOverridden    = CustomAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                var targetMethodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
-                var aspectArgsRewriter = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
+                var targetMethodRewriter = new MethodRewriter(TargetMethod, CustomAttribute);
+                var aspectArgsRewriter   = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
 
                 targetMethodRewriter.CreateOriginalTargetMethod();
 
@@ -57,8 +55,8 @@ namespace SoftCube.Aspects
             }
             else
             {
-                var targetMethodRewriter = new MethodRewriter(targetMethod, aspectAttribute);
-                var aspectArgsRewriter = new MethodInterceptionArgsRewriter(targetMethod, aspectAttribute);
+                var targetMethodRewriter = new MethodRewriter(TargetMethod, CustomAttribute);
+                var aspectArgsRewriter = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
 
                 targetMethodRewriter.CreateOriginalTargetMethod();
                 aspectArgsRewriter.CreateAspectArgsImpl();
