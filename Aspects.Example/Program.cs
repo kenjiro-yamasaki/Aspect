@@ -43,7 +43,7 @@ namespace SoftCube.Aspects
             //{
             //}
 
-            //[Trace(Category = "A")]
+            [Trace(Category = "B")]
             public void Method1()
             {
             }

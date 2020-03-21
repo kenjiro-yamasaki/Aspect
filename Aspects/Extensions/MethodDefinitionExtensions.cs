@@ -50,28 +50,34 @@ namespace SoftCube.Aspects
                     method.CustomAttributes.Remove(customAttribute);
                 }
             }
-            multicastAttributes = currentMulticastAttributes.Concat(multicastAttributes.OrderByDescending(ma => ma.AttributePriority));
+            multicastAttributes = multicastAttributes.Concat(currentMulticastAttributes.OrderBy(ma => ma.AttributePriority));
 
             // メソッドレベルアスペクトを適用します。
             foreach (var group in multicastAttributes.GroupBy(ma => ma.GetType()))
             {
-                foreach (var multicastAttribute in group)
+                // 
+                var methodLevelAsspects = new List<MethodLevelAspect>();
+                foreach (var methodLevelAspect in group.OfType<MethodLevelAspect>().Reverse())
                 {
-                    if (multicastAttribute is MethodLevelAspect methodLevelAspect)
+                    if (methodLevelAspect.AttributeExclude)
                     {
-                        if (methodLevelAspect.AttributeExclude)
-                        {
-                            break;
-                        }
-
-                        methodLevelAspect.TargetMethod = method;
-                        methodLevelAspect.InjectAdvice();
-
-                        if (methodLevelAspect.AttributeReplace)
-                        {
-                            break;
-                        }
+                        break;
                     }
+
+                    methodLevelAsspects.Add(methodLevelAspect);
+
+                    if (methodLevelAspect.AttributeReplace)
+                    {
+                        break;
+                    }
+                }
+                methodLevelAsspects.Reverse();
+
+                //
+                foreach (var methodLevelAspect in methodLevelAsspects)
+                {
+                    methodLevelAspect.TargetMethod = method;
+                    methodLevelAspect.InjectAdvice();
                 }
             }
         }

@@ -31,7 +31,7 @@ namespace SoftCube.Aspects
                     module.CustomAttributes.Remove(customAttribute);
                 }
             }
-            multicastAttributes = currentMulticastAttributes.Concat(multicastAttributes.OrderByDescending(ma => ma.AttributePriority));
+            multicastAttributes = multicastAttributes.Concat(currentMulticastAttributes.OrderBy(ma => ma.AttributePriority));
 
             // 型にアドバイスを注入します。
             foreach (var type in module.Types.ToList())
