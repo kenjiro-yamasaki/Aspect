@@ -16,7 +16,7 @@ namespace SoftCube.Aspects
         /// 指定メソッドの末尾にコードを注入します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        public static void Emit(this ILProcessor processor, MethodBody methodBody)
+        public static void Append(this ILProcessor processor, MethodBody methodBody)
         {
             // ローカル変数コレクションを追加します。
             int variableOffset     = processor.Body.Variables.Count();
@@ -146,7 +146,6 @@ namespace SoftCube.Aspects
             }
         }
 
-
         /// <summary>
         /// メソッドを書き換えます。
         /// </summary>
@@ -173,7 +172,7 @@ namespace SoftCube.Aspects
         /// ...OnReturn アドバイス...
         /// </code>
         /// </remarks>
-        public static void Emit(this ILProcessor processor, Action<ILProcessor> onEntry, Action<ILProcessor> onInvoke, Action<ILProcessor> onException, Action<ILProcessor> onExit, Action<ILProcessor> onReturn)
+        public static void RewriteMethod(this ILProcessor processor, Action onEntry, Action onInvoke, Action onException, Action onExit, Action onReturn)
         {
             var method = processor.Body.Method;
             var module = method.Module;
@@ -186,13 +185,13 @@ namespace SoftCube.Aspects
             handlers.Add(@finally);
 
             /// ...OnEntry アドバイス...
-            onEntry(processor);
+            onEntry();
 
             /// try
             /// {
             ///     ...OnInvoke アドバイス...
             @catch.TryStart = @finally.TryStart = processor.EmitNop();
-            onInvoke(processor);
+            onInvoke();
             var leave = processor.EmitLeave(OpCodes.Leave);
 
             /// }
@@ -201,19 +200,19 @@ namespace SoftCube.Aspects
             ///     ...OnException アドバイス...
             /// }
             @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
-            onException(processor);
+            onException();
 
             /// finally
             /// {
             ///     ...OnFinally アドバイス...
             /// }
             @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
-            onExit(processor);
+            onExit();
             processor.Emit(OpCodes.Endfinally);
 
             /// ...OnReturn アドバイス...
             leave.Operand = @finally.HandlerEnd = processor.EmitNop();
-            onReturn(processor);
+            onReturn();
 
             /// IL コードを最適化します。
             method.Optimize();
