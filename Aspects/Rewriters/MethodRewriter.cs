@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using SoftCube.Asserts;
 using System;
 
 namespace SoftCube.Aspects
@@ -27,14 +26,14 @@ namespace SoftCube.Aspects
         /// </summary>
         public MethodDefinition TargetMethod { get; }
 
-        /// <summary>
-        /// オリジナルターゲットメソッド。
-        /// </summary>
-        /// <remarks>
-        /// ターゲットメソッドの元々のコードをコピーしたメソッド。
-        /// </remarks>
-        /// <seealso cref="CreateOriginalTargetMethod"/>
-        public MethodDefinition OriginalTargetMethod { get; private set; }
+        ///// <summary>
+        ///// オリジナルターゲットメソッド。
+        ///// </summary>
+        ///// <remarks>
+        ///// ターゲットメソッドの元々のコードをコピーしたメソッド。
+        ///// </remarks>
+        ///// <seealso cref="CreateOriginalTargetMethod"/>
+        //public MethodBody OriginalTargetMethod { get; private set; }
 
         /// <summary>
         /// モジュール。
@@ -134,34 +133,51 @@ namespace SoftCube.Aspects
             TargetMethod.Optimize();
         }
 
-        /// <summary>
-        /// オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
-        /// </summary>
-        /// <seealso cref="OriginalTargetMethod"/>
-        public void CreateOriginalTargetMethod()
-        {
-            Assert.Null(OriginalTargetMethod);
+        ///// <summary>
+        ///// オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
+        ///// </summary>
+        ///// <seealso cref="OriginalTargetMethod"/>
+        //public MethodBody CreateOriginalTargetMethod()
+        //{
+        //    var targetMethodBody = TargetMethod.Body;
 
-            // オリジナルターゲットメソッドを生成します。
-            {
-                var methodAttribute =  TargetMethod.Attributes & ~(MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+        //    TargetMethod.DebugInformation.SequencePoints.Clear();
+        //    TargetMethod.Body = new MethodBody(TargetMethod);
 
-                OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, methodAttribute, TargetMethod.ReturnType);
-                OriginalTargetMethod.Body = TargetMethod.Body;
-                foreach (var parameter in TargetMethod.Parameters)
-                {
-                    OriginalTargetMethod.Parameters.Add(parameter);
-                }
-                foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
-                {
-                    OriginalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
-                }
-                TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
-            }
+        //    return targetMethodBody;
+        //}
 
-            // ターゲットメソッドの Body を新規作成します。
-            TargetMethod.Body = new MethodBody(TargetMethod);
-        }
+        ///// <summary>
+        ///// オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
+        ///// </summary>
+        ///// <seealso cref="OriginalTargetMethod"/>
+        //public void CreateOriginalTargetMethod()
+        //{
+        //    Assert.Null(OriginalTargetMethod);
+
+        //    // オリジナルターゲットメソッドを生成します。
+        //    {
+        //        OriginalTargetMethod = TargetMethod.Body;
+
+        //        //var methodAttribute =  TargetMethod.Attributes & ~(MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+
+        //        //OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, methodAttribute, TargetMethod.ReturnType);
+        //        //OriginalTargetMethod.Body = TargetMethod.Body;
+        //        //foreach (var parameter in TargetMethod.Parameters)
+        //        //{
+        //        //    OriginalTargetMethod.Parameters.Add(parameter);
+        //        //}
+        //        //foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
+        //        //{
+        //        //    OriginalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+        //        //}
+        //        //TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
+        //    }
+
+        //    // ターゲットメソッドの Body を新規作成します。
+        //    TargetMethod.DebugInformation.SequencePoints.Clear();
+        //    TargetMethod.Body = new MethodBody(TargetMethod);
+        //}
 
         #endregion
     }

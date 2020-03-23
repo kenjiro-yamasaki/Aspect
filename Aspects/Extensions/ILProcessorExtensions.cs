@@ -10,7 +10,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// <see cref="ILProcessor"/> の拡張メソッド。
     /// </summary>
-    public static class ILProcessorExtensions
+    public static partial class ILProcessorExtensions
     {
         #region フィールド
 

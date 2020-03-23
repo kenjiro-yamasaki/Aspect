@@ -35,19 +35,22 @@ namespace SoftCube.Aspects
             using var profile = Profiling.Profiler.Start($"{nameof(MethodInterceptionAspect)}.{nameof(InjectAdvice)}");
 
             //
+            var originalTargetMethod = CreateOriginalTargetMethod();
+            TargetMethod.DebugInformation.SequencePoints.Clear();
+            TargetMethod.Body = new Mono.Cecil.Cil.MethodBody(TargetMethod);
+
+            //
             var asyncStateMachineAttribute = TargetMethod.GetAsyncStateMachineAttribute();
-            var isInvokeAsyncOverridden    = CustomAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
+            var isInvokeAsyncOverridden = CustomAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
                 var targetMethodRewriter = new MethodRewriter(TargetMethod, CustomAttribute);
-                var aspectArgsRewriter   = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
-
-                targetMethodRewriter.CreateOriginalTargetMethod();
+                var aspectArgsRewriter = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
 
                 aspectArgsRewriter.CreateAspectArgsImpl();
                 aspectArgsRewriter.CreateConstructor();
                 ReplaceAsyncMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
-                aspectArgsRewriter.OverrideInvokeAsyncImplMethod(targetMethodRewriter.OriginalTargetMethod);
+                aspectArgsRewriter.OverrideInvokeAsyncImplMethod(originalTargetMethod);
                 aspectArgsRewriter.OverrideTaskResultProperty();
             }
             else
@@ -55,13 +58,41 @@ namespace SoftCube.Aspects
                 var targetMethodRewriter = new MethodRewriter(TargetMethod, CustomAttribute);
                 var aspectArgsRewriter = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
 
-                targetMethodRewriter.CreateOriginalTargetMethod();
                 aspectArgsRewriter.CreateAspectArgsImpl();
                 aspectArgsRewriter.CreateConstructor();
                 ReplaceMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
-                aspectArgsRewriter.OverrideInvokeImplMethod(targetMethodRewriter.OriginalTargetMethod);
+                aspectArgsRewriter.OverrideInvokeImplMethod(originalTargetMethod);
             }
         }
+
+        /// <summary>
+        /// オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
+        /// </summary>
+        /// <seealso cref="OriginalTargetMethod"/>
+        public MethodDefinition CreateOriginalTargetMethod()
+        {
+            var methodAttribute = TargetMethod.Attributes & ~(Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName);
+
+            var OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, methodAttribute, TargetMethod.ReturnType);
+            OriginalTargetMethod.Body = TargetMethod.Body;
+            foreach (var parameter in TargetMethod.Parameters)
+            {
+                OriginalTargetMethod.Parameters.Add(parameter);
+            }
+            foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
+            {
+                OriginalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
+            TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
+
+            return OriginalTargetMethod;
+
+
+            // ターゲットメソッドの Body を新規作成します。
+            //TargetMethod.DebugInformation.SequencePoints.Clear();
+            //TargetMethod.Body = new MethodBody(TargetMethod);
+        }
+
 
         /// <summary>
         /// ターゲットメソッドを書き換えます。

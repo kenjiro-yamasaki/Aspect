@@ -167,6 +167,13 @@ namespace SoftCube.Aspects
                     instruction.OpCode = OpCodes.Leave;
                 }
             }
+
+            var exceptionHandlers = method.Body.ExceptionHandlers.OrderBy(eh => eh.HandlerStart.Offset).ToList();
+            method.Body.ExceptionHandlers.Clear();
+            foreach (var exceptionHandler in exceptionHandlers)
+            {
+                method.Body.ExceptionHandlers.Add(exceptionHandler);
+            }
         }
 
         /// <summary>

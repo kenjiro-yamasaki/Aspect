@@ -59,18 +59,18 @@ namespace SoftCube.Aspects
         private void RewriteTargetMethod(MethodRewriter rewriter)
         {
             // オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
-            rewriter.CreateOriginalTargetMethod();
+            var originalTargetMethodBody = TargetMethod.Body;
+            TargetMethod.DebugInformation.SequencePoints.Clear();
+            TargetMethod.Body = new Mono.Cecil.Cil.MethodBody(TargetMethod);
 
             // ターゲットメソッドを書き換えます。
-            var targetMethod            = rewriter.TargetMethod;
-            var originalTargetMethod    = rewriter.OriginalTargetMethod;
             var aspectAttribute         = rewriter.AspectAttribute;
             var aspectAttributeType     = rewriter.AspectAttributeType;
 
-            var aspectAttributeVariable = targetMethod.AddVariable(aspectAttributeType);
-            var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
-            var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodExecutionArgs));
-            var exceptionVariable       = targetMethod.AddVariable(typeof(Exception));
+            var aspectAttributeVariable = TargetMethod.AddVariable(aspectAttributeType);
+            var argumentsVariable       = TargetMethod.AddVariable(typeof(Arguments));
+            var aspectArgsVariable      = TargetMethod.AddVariable(typeof(MethodExecutionArgs));
+            var exceptionVariable       = TargetMethod.AddVariable(typeof(Exception));
 
             var onEntry = new Action<ILProcessor>(processor =>
             {
@@ -88,7 +88,7 @@ namespace SoftCube.Aspects
                 processor.NewArguments();
                 processor.Store(argumentsVariable);
 
-                if (targetMethod.IsStatic)
+                if (TargetMethod.IsStatic)
                 {
                     processor.LoadNull();
                 }
@@ -118,20 +118,20 @@ namespace SoftCube.Aspects
                 // arguments[1] = arg1;
                 // ...
                 // aspectAttribute.OnSuccess(aspectArgs);
-                if (targetMethod.HasReturnValue())
+                if (TargetMethod.HasReturnValue())
                 {
                     processor.Load(aspectArgsVariable);
-                    processor.LoadThis();
-                    processor.LoadArguments();
-                    processor.Call(originalTargetMethod);
-                    processor.Box(targetMethod.ReturnType);
+                    //processor.LoadThis();
+                    //processor.LoadArguments();
+                    processor.Emit(originalTargetMethodBody);
+                    processor.Box(TargetMethod.ReturnType);
                     processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
                 }
                 else
                 {
-                    processor.LoadThis();
-                    processor.LoadArguments();
-                    processor.Call(originalTargetMethod);
+                    //processor.LoadThis();
+                    // processor.LoadArguments();
+                    processor.Emit(originalTargetMethodBody);
                 }
                 processor.UpdateArgumentsProperty(argumentsVariable, pointerOnly: true);
 
@@ -171,16 +171,18 @@ namespace SoftCube.Aspects
             var onReturn = new Action<ILProcessor>(processor =>
             {
                 // return (TResult)aspectArgs.ReturnValue;
-                if (targetMethod.HasReturnValue())
+                if (TargetMethod.HasReturnValue())
                 {
                     processor.Load(aspectArgsVariable);
                     processor.GetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
-                    processor.Unbox(targetMethod.ReturnType);
+                    processor.Unbox(TargetMethod.ReturnType);
                 }
                 processor.Return();
             });
 
             rewriter.RewriteMethod(onEntry, onInvoke, onException, onExit, onReturn);
+
+            //rewriter.TargetMethod.Log();
         }
 
         #endregion
