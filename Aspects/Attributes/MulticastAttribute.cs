@@ -19,6 +19,11 @@ namespace SoftCube.Aspects
         public CustomAttribute CustomAttribute { get; set; }
 
         /// <summary>
+        /// アスペクト属性の型。
+        /// </summary>
+        public TypeDefinition CustomAttributeType => CustomAttribute.AttributeType.Resolve();
+
+        /// <summary>
         /// 属性の優先度。
         /// </summary>
         /// <remarks>

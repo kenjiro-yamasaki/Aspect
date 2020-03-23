@@ -91,10 +91,6 @@ namespace SoftCube.Aspects
         /// <see cref="MethodInterceptionArgs.InvokeImpl(Arguments)"/> をオーバーライドします。
         /// </summary>
         /// <param name="injector">メソッドへの注入。</param>
-        /// <remarks>
-        /// <see cref="MethodInterceptionArgs.InvokeImpl(Arguments)"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodRewriter)"/> を呼びだしてください。
-        /// </remarks>
         public void OverrideInvokeImplMethod(MethodDefinition originalMethod)
         {
             /// InvokeImpl メソッドのオーバーライドを追加します。
@@ -239,10 +235,6 @@ namespace SoftCube.Aspects
         /// <see cref="MethodInterceptionArgs.InvokeAsyncImpl(Arguments)"/> をオーバーライドします。
         /// </summary>
         /// <param name="injector">メソッドへの注入。</param>
-        /// <remarks>
-        /// <see cref="MethodInterceptionArgs.InvokeAsyncImpl(Arguments)"/> をオーバーライドして、元々のメソッドを呼びだすコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="ReplaceMethod(MethodRewriter)"/> を呼びだしてください。
-        /// </remarks>
         public void OverrideInvokeAsyncImplMethod(MethodDefinition originalMethod)
         {
             /// InvokeAsyncImpl メソッドのオーバーライドを追加します。

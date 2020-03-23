@@ -44,24 +44,22 @@ namespace SoftCube.Aspects
             var isInvokeAsyncOverridden = CustomAttribute.AttributeType.Resolve().Methods.Any(m => m.Name == nameof(OnInvokeAsync));
             if (asyncStateMachineAttribute != null && isInvokeAsyncOverridden)
             {
-                var targetMethodRewriter = new MethodRewriter(TargetMethod, CustomAttribute);
-                var aspectArgsRewriter = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
+                var rewriter = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
 
-                aspectArgsRewriter.CreateAspectArgsImpl();
-                aspectArgsRewriter.CreateConstructor();
-                ReplaceAsyncMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
-                aspectArgsRewriter.OverrideInvokeAsyncImplMethod(originalTargetMethod);
-                aspectArgsRewriter.OverrideTaskResultProperty();
+                rewriter.CreateAspectArgsImpl();
+                rewriter.CreateConstructor();
+                ReplaceAsyncMethod(rewriter.AspectArgsImplType);
+                rewriter.OverrideInvokeAsyncImplMethod(originalTargetMethod);
+                rewriter.OverrideTaskResultProperty();
             }
             else
             {
-                var targetMethodRewriter = new MethodRewriter(TargetMethod, CustomAttribute);
-                var aspectArgsRewriter = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
+                var rewriter = new MethodInterceptionArgsRewriter(TargetMethod, CustomAttribute);
 
-                aspectArgsRewriter.CreateAspectArgsImpl();
-                aspectArgsRewriter.CreateConstructor();
-                ReplaceMethod(targetMethodRewriter, aspectArgsRewriter.AspectArgsImplType);
-                aspectArgsRewriter.OverrideInvokeImplMethod(originalTargetMethod);
+                rewriter.CreateAspectArgsImpl();
+                rewriter.CreateConstructor();
+                ReplaceMethod(rewriter.AspectArgsImplType);
+                rewriter.OverrideInvokeImplMethod(originalTargetMethod);
             }
         }
 
@@ -86,27 +84,19 @@ namespace SoftCube.Aspects
             TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
 
             return OriginalTargetMethod;
-
-
-            // ターゲットメソッドの Body を新規作成します。
-            //TargetMethod.DebugInformation.SequencePoints.Clear();
-            //TargetMethod.Body = new MethodBody(TargetMethod);
         }
-
 
         /// <summary>
         /// ターゲットメソッドを書き換えます。
         /// </summary>
         /// <param name="rewriter">ターゲットメソッドの書き換え。</param>
         /// <param name="aspectArgsImplType">アスペクト引数の型。</param>
-        private void ReplaceMethod(MethodRewriter rewriter, TypeDefinition aspectArgsImplType)
+        private void ReplaceMethod(TypeDefinition aspectArgsImplType)
         {
-            var targetMethod            = rewriter.TargetMethod;
-            var processor               = targetMethod.Body.GetILProcessor();
-            var aspectAttributeType     = rewriter.AspectAttributeType;
-            var aspectAttributeVariable = targetMethod.AddVariable(aspectAttributeType);
-            var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
-            var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodInterceptionArgs));
+            var processor               = TargetMethod.Body.GetILProcessor();
+            var aspectAttributeVariable = TargetMethod.AddVariable(CustomAttributeType);
+            var argumentsVariable       = TargetMethod.AddVariable(typeof(Arguments));
+            var aspectArgsVariable      = TargetMethod.AddVariable(typeof(MethodInterceptionArgs));
 
             // var aspectAttribute = new AspectAttribute(...) {...};
             // var arguments       = new Arguments(...);
@@ -117,13 +107,13 @@ namespace SoftCube.Aspects
             // arg1 = (TArg1)arguments[1];
             // ...
             // return (TResult)aspectArgs.ReturnValue;
-            processor.NewAspectAttribute(rewriter.AspectAttribute);
+            processor.NewAspectAttribute(CustomAttribute);
             processor.Store(aspectAttributeVariable);
 
             processor.NewArguments();
             processor.Store(argumentsVariable);
 
-            if (rewriter.TargetMethod.IsStatic)
+            if (TargetMethod.IsStatic)
             {
                 processor.LoadNull();
             }
@@ -141,14 +131,14 @@ namespace SoftCube.Aspects
 
             processor.Load(aspectAttributeVariable);
             processor.Load(aspectArgsVariable);
-            processor.CallVirtual(aspectAttributeType, nameof(OnInvoke));
+            processor.CallVirtual(CustomAttributeType, nameof(OnInvoke));
             processor.UpdateArguments(argumentsVariable, pointerOnly: true);
 
-            if (rewriter.TargetMethod.HasReturnValue())
+            if (TargetMethod.HasReturnValue())
             {
                 processor.Load(aspectArgsVariable);
                 processor.GetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
-                processor.Unbox(rewriter.TargetMethod.ReturnType);
+                processor.Unbox(TargetMethod.ReturnType);
             }
             processor.Return();
         }
@@ -156,19 +146,13 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 非同期メソッドを書き換えます。
         /// </summary>
-        /// <param name="rewriter">対象メソッドへの注入。</param>
-        /// <param name="aspectArgsInjector">アスペクト引数への注入。</param>
-        /// <remarks>
-        /// 新たなメソッドを生成し、対象メソッドのコードをコピーします。
-        /// 対象メソッドのコードを、<see cref="OnInvoke(MethodInterceptionArgs)"/> を呼び出すコードに書き換えます。
-        /// このメソッドを呼びだす前に <see cref="CreateDerivedAspectArgs(MethodRewriter)"/> を呼びだしてください。
-        /// </remarks>
-        private void ReplaceAsyncMethod(MethodRewriter rewriter, TypeDefinition aspectArgsImplType)
+        /// <param name="aspectArgsImplType">具体アスペクト引数の型。</param>
+        private void ReplaceAsyncMethod(TypeDefinition aspectArgsImplType)
         {
-            var targetMethod            = rewriter.TargetMethod;
+            var targetMethod            = TargetMethod;
             var module                  = targetMethod.Module;
             var processor               = targetMethod.Body.GetILProcessor();
-            var aspectAttributeType     = rewriter.AspectAttributeType;
+            var aspectAttributeType     = CustomAttributeType;
             var aspectAttributeVariable = targetMethod.AddVariable(aspectAttributeType);
             var argumentsVariable       = targetMethod.AddVariable(typeof(Arguments));
             var aspectArgsVariable      = targetMethod.AddVariable(typeof(MethodExecutionArgs));
@@ -177,7 +161,7 @@ namespace SoftCube.Aspects
             // var arguments       = new Arguments(...);
             // var aspectArgs      = new MethodInterceptionArgs(this, arguments);
             // aspectArgs.Method = MethodBase.GetCurrentMethod();
-            processor.NewAspectAttribute(rewriter.AspectAttribute);
+            processor.NewAspectAttribute(CustomAttribute);
             processor.Store(aspectAttributeVariable);
 
             processor.NewArguments();

@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil.Cil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -112,11 +113,6 @@ namespace SoftCube.Aspects
                 {
                     instruction.OpCode = OpCodes.Stloc;
                 }
-                //else if (instruction.OpCode == OpCodes.Leave_S || instruction.OpCode == OpCodes.Leave)
-                //{
-                //    instruction.OpCode = OpCodes.Leave;
-                //    instruction.Operand = leaveTarget;
-                //}
                 else if (instruction.OpCode == OpCodes.Ret)
                 {
                     if (instruction == instructions.Last())
@@ -148,6 +144,79 @@ namespace SoftCube.Aspects
 
                 processor.Body.ExceptionHandlers.Add(exceptionHandler);
             }
+        }
+
+
+        /// <summary>
+        /// メソッドを書き換えます。
+        /// </summary>
+        /// <param name="onEntry">OnEntory アドバイスの注入処理。</param>
+        /// <param name="onInvoke">OnInvoke アドバイスの注入処理。</param>
+        /// <param name="onException">OnException アドバイスの注入処理。</param>
+        /// <param name="onExit">OnFinally アドバイスの注入処理。</param>
+        /// <remarks>
+        /// メソッドを以下のように書き換えます。
+        /// <code>
+        /// ...OnEntry アドバイス...
+        /// try
+        /// {
+        ///     ...OnInvoke アドバイス...
+        /// }
+        /// catch (Exception ex)
+        /// {
+        ///     ...OnException アドバイス...
+        /// }
+        /// finally
+        /// {
+        ///     ...OnFinally アドバイス...
+        /// }
+        /// ...OnReturn アドバイス...
+        /// </code>
+        /// </remarks>
+        public static void Emit(this ILProcessor processor, Action<ILProcessor> onEntry, Action<ILProcessor> onInvoke, Action<ILProcessor> onException, Action<ILProcessor> onExit, Action<ILProcessor> onReturn)
+        {
+            var method = processor.Body.Method;
+            var module = method.Module;
+
+            /// 例外ハンドラーを追加します。
+            var handlers = method.Body.ExceptionHandlers;
+            var @catch   = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = module.ImportReference(typeof(Exception)) };
+            var @finally = new ExceptionHandler(ExceptionHandlerType.Finally);
+            handlers.Add(@catch);
+            handlers.Add(@finally);
+
+            /// ...OnEntry アドバイス...
+            onEntry(processor);
+
+            /// try
+            /// {
+            ///     ...OnInvoke アドバイス...
+            @catch.TryStart = @finally.TryStart = processor.EmitNop();
+            onInvoke(processor);
+            var leave = processor.EmitLeave(OpCodes.Leave);
+
+            /// }
+            /// catch (Exception ex)
+            /// {
+            ///     ...OnException アドバイス...
+            /// }
+            @catch.TryEnd = @catch.HandlerStart = processor.EmitNop();
+            onException(processor);
+
+            /// finally
+            /// {
+            ///     ...OnFinally アドバイス...
+            /// }
+            @catch.HandlerEnd = @finally.TryEnd = @finally.HandlerStart = processor.EmitNop();
+            onExit(processor);
+            processor.Emit(OpCodes.Endfinally);
+
+            /// ...OnReturn アドバイス...
+            leave.Operand = @finally.HandlerEnd = processor.EmitNop();
+            onReturn(processor);
+
+            /// IL コードを最適化します。
+            method.Optimize();
         }
 
         #endregion
