@@ -46,6 +46,7 @@ namespace SoftCube.Aspects
             [Trace(Category = "B")]
             public void Method1()
             {
+                Logger.Trace("AAA");
             }
 
             public void Method2()

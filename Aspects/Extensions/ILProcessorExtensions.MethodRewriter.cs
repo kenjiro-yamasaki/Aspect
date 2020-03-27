@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,51 +17,19 @@ namespace SoftCube.Aspects
         /// 指定メソッドの末尾にコードを注入します。
         /// </summary>
         /// <param name="method">メソッド。</param>
-        public static void Append(this ILProcessor processor, MethodBody methodBody)
+        public static void Append(this ILProcessor processor, MethodDefinition method)
         {
             // ローカル変数コレクションを追加します。
-            int variableOffset     = processor.Body.Variables.Count();
-            var variableToVariable = new Dictionary<VariableDefinition, VariableDefinition>();      // 元々の命令→複製された命令。
-            foreach (var originalVariable in methodBody.Variables)
+            int variableOffset = processor.Body.Variables.Count();
+            foreach (var variable in method.Body.Variables)
             {
-                var variable = new VariableDefinition(originalVariable.VariableType);
                 processor.Body.Variables.Add(variable);
-
-                variableToVariable.Add(originalVariable, variable);
-            }
-
-            // 命令コレクションを複製 (ディープクローン) します。
-            var instructions             = new List<Instruction>();                                 // 複製された命令コレクション。
-            var instructionToInstruction = new Dictionary<Instruction, Instruction>();              // 元々の命令→複製された命令。
-            foreach (var originalInstruction in methodBody.Instructions)
-            {
-                var instruction = processor.Create(OpCodes.Nop);
-                instruction.OpCode  = originalInstruction.OpCode;
-                instruction.Operand = originalInstruction.Operand;
-                instructions.Add(instruction);
-
-                instructionToInstruction.Add(originalInstruction, instruction);
             }
 
             // 命令コレクションを追加します。
             var leaveTarget = processor.Create(OpCodes.Nop);
-            foreach (var instruction in instructions)
+            foreach (var instruction in method.Body.Instructions)
             {
-                switch (instruction.Operand)
-                {
-                    case Instruction originalInstruction:
-                        instruction.Operand = instructionToInstruction[originalInstruction];
-                        break;
-
-                    case Instruction[] originalInstructions:
-                        instruction.Operand = originalInstructions.Select(oi => instructionToInstruction[oi]).ToArray();
-                        break;
-
-                    case VariableDefinition originalVariable:
-                        instruction.Operand = variableToVariable[originalVariable];
-                        break;
-                }
-
                 if (instruction.OpCode == OpCodes.Ldloc_0)
                 {
                     instruction.OpCode  = OpCodes.Ldloc;
@@ -115,7 +84,7 @@ namespace SoftCube.Aspects
                 }
                 else if (instruction.OpCode == OpCodes.Ret)
                 {
-                    if (instruction == instructions.Last())
+                    if (instruction == method.Body.Instructions.Last())
                     {
                         instruction.OpCode  = OpCodes.Nop;
                         instruction.Operand = null;
@@ -131,17 +100,15 @@ namespace SoftCube.Aspects
             }
             processor.Append(leaveTarget);
 
-            // 例外ハンドラーコレクションを追加します。
-            foreach (var originalExceptionHandler in methodBody.ExceptionHandlers)
+            //
+            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
             {
-                var exceptionHandler = new ExceptionHandler(originalExceptionHandler.HandlerType);
-                exceptionHandler.CatchType    = originalExceptionHandler.CatchType;
-                exceptionHandler.TryStart     = originalExceptionHandler.TryStart     == null ? null : instructionToInstruction[originalExceptionHandler.TryStart];
-                exceptionHandler.TryEnd       = originalExceptionHandler.TryEnd       == null ? null : instructionToInstruction[originalExceptionHandler.TryEnd];
-                exceptionHandler.FilterStart  = originalExceptionHandler.FilterStart  == null ? null : instructionToInstruction[originalExceptionHandler.FilterStart];
-                exceptionHandler.HandlerStart = originalExceptionHandler.HandlerStart == null ? null : instructionToInstruction[originalExceptionHandler.HandlerStart];
-                exceptionHandler.HandlerEnd   = originalExceptionHandler.HandlerEnd   == null ? null : instructionToInstruction[originalExceptionHandler.HandlerEnd];
+                processor.Body.Method.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
 
+            // 例外ハンドラーコレクションを追加します。
+            foreach (var exceptionHandler in method.Body.ExceptionHandlers)
+            {
                 processor.Body.ExceptionHandlers.Add(exceptionHandler);
             }
         }
@@ -176,6 +143,11 @@ namespace SoftCube.Aspects
         {
             var method = processor.Body.Method;
             var module = method.Module;
+
+            method.DebugInformation.SequencePoints.Clear();
+            method.Body.Instructions.Clear();
+            method.Body.Variables.Clear();
+            method.Body.ExceptionHandlers.Clear();
 
             /// 例外ハンドラーを追加します。
             var handlers = method.Body.ExceptionHandlers;

@@ -234,6 +234,90 @@ namespace SoftCube.Aspects
             return variable;
         }
 
+        /// <summary>
+        /// メソッドを複製 (ディープクローン) します。
+        /// </summary>
+        /// <param name="method">メソッド。</param>
+        /// <returns>複製されたメソッド。</returns>
+        public static MethodDefinition Clone(this MethodDefinition method)
+        {
+            var methodAttribute = method.Attributes & ~(MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+            var clonedMethod = new MethodDefinition("*" + method.Name, methodAttribute, method.ReturnType);
+
+            // ローカル変数コレクションを複製 (ディープクローン) します。
+            var variableToVariable = new Dictionary<VariableDefinition, VariableDefinition>();      // 元々の命令→複製された命令。
+            foreach (var variable in method.Body.Variables)
+            {
+                var clonedVariable = new VariableDefinition(variable.VariableType);
+                clonedMethod.Body.Variables.Add(clonedVariable);
+
+                variableToVariable.Add(variable, clonedVariable);
+            }
+
+            // 命令コレクションを複製 (ディープクローン) します。
+            var processor = clonedMethod.Body.GetILProcessor();
+            var instructionToInstruction = new Dictionary<Instruction, Instruction>();              // 元々の命令→複製された命令。
+            var offsetToInstruction      = new Dictionary<int, Instruction>();
+            foreach (var instruction in method.Body.Instructions)
+            {
+                var clonedInstruction = processor.Create(OpCodes.Nop);
+                clonedInstruction.Offset  = instruction.Offset;
+                clonedInstruction.OpCode  = instruction.OpCode;
+                clonedInstruction.Operand = instruction.Operand;
+                processor.Append(clonedInstruction);
+
+                offsetToInstruction.Add(instruction.Offset, clonedInstruction);
+                instructionToInstruction.Add(instruction, clonedInstruction);
+            }
+
+            //
+            foreach (var instruction in clonedMethod.Body.Instructions)
+            {
+                switch (instruction.Operand)
+                {
+                    case Instruction originalInstruction:
+                        instruction.Operand = instructionToInstruction[originalInstruction];
+                        break;
+
+                    case Instruction[] originalInstructions:
+                        instruction.Operand = originalInstructions.Select(oi => instructionToInstruction[oi]).ToArray();
+                        break;
+
+                    case VariableDefinition originalVariable:
+                        instruction.Operand = variableToVariable[originalVariable];
+                        break;
+                }
+            }
+
+            // 例外ハンドラーコレクションを複製します。
+            foreach (var handler in method.Body.ExceptionHandlers)
+            {
+                var clonedHandler = new ExceptionHandler(handler.HandlerType);
+                clonedHandler.CatchType    = handler.CatchType;
+                clonedHandler.TryStart     = handler.TryStart     == null ? null : instructionToInstruction[handler.TryStart];
+                clonedHandler.TryEnd       = handler.TryEnd       == null ? null : instructionToInstruction[handler.TryEnd];
+                clonedHandler.FilterStart  = handler.FilterStart  == null ? null : instructionToInstruction[handler.FilterStart];
+                clonedHandler.HandlerStart = handler.HandlerStart == null ? null : instructionToInstruction[handler.HandlerStart];
+                clonedHandler.HandlerEnd   = handler.HandlerEnd   == null ? null : instructionToInstruction[handler.HandlerEnd];
+
+                clonedMethod.Body.ExceptionHandlers.Add(clonedHandler);
+            }
+
+            // デバッグ情報を複製します。
+            foreach (var sequencePoint in method.DebugInformation.SequencePoints)
+            {
+                var clonedSequencePoint = new SequencePoint(offsetToInstruction[sequencePoint.Offset], sequencePoint.Document);
+                clonedSequencePoint.StartLine   = sequencePoint.StartLine;
+                clonedSequencePoint.EndLine     = sequencePoint.EndLine;
+                clonedSequencePoint.StartColumn = sequencePoint.StartColumn;
+                clonedSequencePoint.EndColumn   = sequencePoint.EndColumn;
+
+                clonedMethod.DebugInformation.SequencePoints.Add(clonedSequencePoint);
+            }
+
+            return clonedMethod;
+        }
+
         #endregion
     }
 }

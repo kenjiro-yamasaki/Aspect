@@ -28,7 +28,6 @@ namespace SoftCube.Aspects
         /// <summary>
         /// アドバイスを注入します。
         /// </summary>
-        /// 
         sealed public override void InjectAdvice()
         {
             using var profile = Profiling.Profiler.Start($"{nameof(OnMethodBoundaryAspect)}.{nameof(InjectAdvice)}");
@@ -57,10 +56,8 @@ namespace SoftCube.Aspects
         /// </summary>
         private void RewriteTargetMethod()
         {
-            // オリジナルターゲットメソッド (ターゲットメソッドの元々のコード) を生成します。
-            var originalTargetMethodBody = TargetMethod.Body;
-            TargetMethod.DebugInformation.SequencePoints.Clear();
-            TargetMethod.Body = new Mono.Cecil.Cil.MethodBody(TargetMethod);
+            // ターゲットメソッドを複製します。
+            var clonedTargetMethod = TargetMethod.Clone();
 
             // ターゲットメソッドを書き換えます。
             int aspectVariable     = default;
@@ -123,13 +120,13 @@ namespace SoftCube.Aspects
                 if (TargetMethod.HasReturnValue())
                 {
                     processor.Load(aspectArgsVariable);
-                    processor.Append(originalTargetMethodBody);
+                    processor.Append(clonedTargetMethod);
                     processor.Box(TargetMethod.ReturnType);
                     processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.ReturnValue));
                 }
                 else
                 {
-                    processor.Append(originalTargetMethodBody);
+                    processor.Append(clonedTargetMethod);
                 }
                 processor.UpdateArgumentsProperty(argumentsVariable, pointerOnly: true);
 
