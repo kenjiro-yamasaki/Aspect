@@ -230,50 +230,115 @@ namespace SoftCube.Aspects
         /// </remarks>
         private void RewriteTargetMethod()
         {
-            if (ThisField == null && !TargetMethod.IsStatic)
+            if (TargetMethod.GetDebuggerStepThroughAttribute() == null)
             {
-                var thisField        = CreateField("<>4__this", FieldAttributes.Public, Module.ImportReference(TargetMethod.DeclaringType));
-                var stateMachineType = StateMachineType.ToSystemType();
-                var builderType      = typeof(AsyncTaskMethodBuilder);
-
                 TargetMethod.Body = new MethodBody(TargetMethod);
+
+                var builderType          = TargetMethod.ReturnType.ToAsyncTaskMethodBuilderType();
                 var stateMachineVariable = TargetMethod.AddVariable(StateMachineType);
                 var builderVariable      = TargetMethod.AddVariable(builderType);
                 var builderField         = GetField("<>t__builder");
 
                 var processor = TargetMethod.Body.GetILProcessor();
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.Emit(OpCodes.Call, Module.ImportReference(typeof(AsyncTaskMethodBuilder).GetMethod(nameof(AsyncTaskMethodBuilder.Create))));
-                processor.Emit(OpCodes.Stfld, builderField);
 
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                if (!TargetMethod.IsStatic)
+                {
+                    processor.LoadAddress(stateMachineVariable);
+                    processor.LoadThis();
+                    processor.Store(ThisField);
+                }
+
+                var parameters = TargetMethod.Parameters;
+                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+                {
+                    var parameter = parameters[parameterIndex];
+                    processor.LoadAddress(stateMachineVariable);
+                    if (TargetMethod.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
+                    processor.Store(GetField(parameter.Name));
+                }
+
+                processor.LoadAddress(stateMachineVariable);
+                processor.CallStatic(builderType, nameof(AsyncTaskMethodBuilder.Create));
+                processor.Store(builderField);
+
+                processor.LoadAddress(stateMachineVariable);
                 processor.Emit(OpCodes.Ldc_I4_M1);
-                processor.Emit(OpCodes.Stfld, GetField("<>1__state"));
+                processor.Store(StateField);
 
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.Emit(OpCodes.Ldarg_0);
-                processor.Store(thisField);
+                processor.Load(stateMachineVariable);
+                processor.Load(builderField);
+                processor.Store(builderVariable);
+
+                processor.LoadAddress(builderVariable);
+                processor.LoadAddress(stateMachineVariable);
+                processor.Call(builderType.GetMethod("Start").MakeGenericMethod(StateMachineType.ToSystemType()));
+                processor.LoadAddress(stateMachineVariable);
+                processor.LoadAddress(builderField);
+                processor.Call(builderType.GetProperty("Task").GetGetMethod());
+                processor.Return();
+            }
+            else
+            {
+                TargetMethod.Body = new MethodBody(TargetMethod);
+
+                var builderType          = TargetMethod.ReturnType.ToAsyncTaskMethodBuilderType();
+                var stateMachineVariable = TargetMethod.AddVariable(StateMachineType);
+                var builderVariable      = TargetMethod.AddVariable(builderType);
+                var builderField         = GetField("<>t__builder");
+
+                var processor = TargetMethod.Body.GetILProcessor();
+                processor.New(StateMachineType);
+                processor.Store(stateMachineVariable);
+
+                if (!TargetMethod.IsStatic)
+                {
+                    processor.Load(stateMachineVariable);
+                    processor.LoadThis();
+                    processor.Store(ThisField);
+                }
 
                 var parameters = TargetMethod.Parameters;
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                 {
                     var parameter = parameters[parameterIndex];
 
-                    processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    processor.Emit(OpCodes.Ldloc, stateMachineVariable);
+                    if (TargetMethod.IsStatic)
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex);
+                    }
+                    else
+                    {
+                        processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                    }
                     processor.Store(GetField(parameter.Name));
                 }
 
-                processor.Emit(OpCodes.Ldloc, stateMachineVariable);
-                processor.Emit(OpCodes.Ldfld, builderField);
-                processor.Emit(OpCodes.Stloc, builderVariable);
+                processor.Load(stateMachineVariable);
+                processor.CallStatic(builderType, nameof(AsyncTaskMethodBuilder.Create));
+                processor.Store(builderField);
 
-                processor.Emit(OpCodes.Ldloca, builderVariable);
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
-                processor.Call(Module.ImportReference(builderType.GetMethod("Start").MakeGenericMethod(stateMachineType)));
-                processor.Emit(OpCodes.Ldloca, stateMachineVariable);
+                processor.Load(stateMachineVariable);
+                processor.Emit(OpCodes.Ldc_I4_M1);
+                processor.Store(StateField);
+
+                processor.Load(stateMachineVariable);
+                processor.Load(builderField);
+                processor.Store(builderVariable);
+
+                processor.LoadAddress(builderVariable);
+                processor.LoadAddress(stateMachineVariable);
+                processor.Call(builderType.GetMethod("Start").MakeGenericMethod(StateMachineType.ToSystemType()));
+                processor.Load(stateMachineVariable);
                 processor.LoadAddress(builderField);
-                processor.Call(Module.ImportReference(builderType.GetProperty("Task").GetGetMethod()));
+                processor.Call(builderType.GetProperty("Task").GetGetMethod());
                 processor.Return();
             }
         }

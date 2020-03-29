@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -46,6 +47,24 @@ namespace SoftCube.Aspects
             }
 
             throw new NotSupportedException($"型[{typeReference.FullName}]の取得に失敗しました。");
+        }
+
+        /// <summary>
+        /// Task、Task<> の TypeReference を AsyncTaskMethodBuilder、AsyncTaskMethodBuilder<> の Type に変換します。
+        /// </summary>
+        /// <param name="taskTypeReference">Task、Task<> の TypeReference。</param>
+        /// <returns>AsyncTaskMethodBuilder、AsyncTaskMethodBuilder<> の Type。</returns>
+        internal static Type ToAsyncTaskMethodBuilderType(this TypeReference taskTypeReference)
+        {
+            if (taskTypeReference is GenericInstanceType taskType)
+            {
+                var returnType = taskType.GenericArguments[0].ToSystemType();
+                return typeof(AsyncTaskMethodBuilder<>).MakeGenericType(returnType);
+            }
+            else
+            {
+                return typeof(AsyncTaskMethodBuilder);
+            }
         }
 
         #endregion

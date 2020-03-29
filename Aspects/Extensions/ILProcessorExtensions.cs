@@ -1250,6 +1250,14 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, method);
         }
 
+        public static void Call(this ILProcessor processor, System.Reflection.MethodInfo method)
+        {
+            var module = processor.Body.Method.Module;
+
+            processor.Emit(OpCodes.Call, module.ImportReference(method));
+        }
+
+
         /// <summary>
         /// 
         /// </summary>

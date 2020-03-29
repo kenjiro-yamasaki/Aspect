@@ -302,32 +302,42 @@ namespace SoftCube.Aspects
         /// </remarks>
         private void RewriteTargetMethod()
         {
-            var targetMethod = TargetMethod;
-            if (ThisField == null && !targetMethod.IsStatic)
+            TargetMethod.Body = new MethodBody(TargetMethod);
+            var processor = TargetMethod.Body.GetILProcessor();
+
+            processor.Emit(OpCodes.Ldc_I4, -2);
+            processor.New(StateMachineType);
+
+            if (!TargetMethod.IsStatic)
             {
-                var thisField = CreateField("<>4__this", FieldAttributes.Public, Module.ImportReference(targetMethod.DeclaringType));
-
-                targetMethod.Body = new Mono.Cecil.Cil.MethodBody(targetMethod);
-                var processor = targetMethod.Body.GetILProcessor();
-
-                processor.Emit(OpCodes.Ldc_I4, -2);
-                processor.New(StateMachineType);
                 processor.Emit(OpCodes.Dup);
                 processor.Emit(OpCodes.Ldarg_0);
-                processor.Store(thisField);
-
-                var parameters = targetMethod.Parameters;
-                for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
-                {
-                    var parameter = parameters[parameterIndex];
-
-                    processor.Emit(OpCodes.Dup);
-                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
-                    processor.Store(GetField("<>3__" + parameter.Name));
-                }
-
-                processor.Emit(OpCodes.Ret);
+                processor.Store(ThisField);
             }
+
+            processor.Emit(OpCodes.Dup);
+            processor.CallStatic(typeof(System.Reflection.MethodBase), nameof(System.Reflection.MethodBase.GetCurrentMethod));
+            processor.Store(MethodField);
+
+            var parameters = TargetMethod.Parameters;
+            for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+            {
+                var parameter = parameters[parameterIndex];
+
+                processor.Emit(OpCodes.Dup);
+
+                if (TargetMethod.IsStatic)
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Ldarg, parameterIndex + 1);
+                }
+                processor.Store(GetField("<>3__" + parameter.Name));
+            }
+
+            processor.Emit(OpCodes.Ret);
         }
 
         /// <summary>

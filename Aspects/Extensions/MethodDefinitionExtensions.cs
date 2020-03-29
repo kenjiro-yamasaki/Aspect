@@ -103,6 +103,16 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        public static CustomAttribute GetDebuggerStepThroughAttribute(this MethodDefinition method)
+        {
+            return method.CustomAttributes.SingleOrDefault(ca => ca.AttributeType.FullName == "System.Diagnostics.DebuggerStepThroughAttribute");
+        }
+
+        /// <summary>
         /// IL コードを最適化します。
         /// </summary>
         /// <param name="method">メソッド。</param>
@@ -266,7 +276,10 @@ namespace SoftCube.Aspects
                 clonedInstruction.Operand = instruction.Operand;
                 processor.Append(clonedInstruction);
 
-                offsetToInstruction.Add(instruction.Offset, clonedInstruction);
+                if (!offsetToInstruction.ContainsKey(instruction.Offset))
+                {
+                    offsetToInstruction.Add(instruction.Offset, clonedInstruction);
+                }
                 instructionToInstruction.Add(instruction, clonedInstruction);
             }
 

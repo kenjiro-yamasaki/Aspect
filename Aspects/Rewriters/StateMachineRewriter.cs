@@ -56,7 +56,12 @@ namespace SoftCube.Aspects
         /// <summary>
         /// This フィールド。
         /// </summary>
-        public FieldDefinition ThisField => StateMachineType.Fields.SingleOrDefault(f => f.Name == "<>4__this");
+        public FieldDefinition ThisField { get; }
+
+        /// <summary>
+        /// Method フィールド。
+        /// </summary>
+        public FieldDefinition MethodField { get; }
 
         /// <summary>
         /// State フィールド。
@@ -108,6 +113,12 @@ namespace SoftCube.Aspects
 
             StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
             ResumeFlagField  = CreateField("*resumeFlag", FieldAttributes.Private, Module.TypeSystem.Boolean);
+            MethodField      = CreateField("*method", FieldAttributes.Public, Module.ImportReference(typeof(System.Reflection.MethodBase)));
+            ThisField        = StateMachineType.Fields.SingleOrDefault(f => f.Name == "<>4__this");
+            if (ThisField == null && !TargetMethod.IsStatic)
+            {
+                ThisField = CreateField("<>4__this", FieldAttributes.Public, Module.ImportReference(targetMethod.DeclaringType));
+            }
 
             MoveNextMethod   = StateMachineType.Methods.Single(m => m.Name == "MoveNext");
         }

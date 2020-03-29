@@ -1,7 +1,4 @@
-﻿using SoftCube.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,44 +15,86 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            var instance = new MyClass();
+            var instance = new Program();
 
-            instance.Method1();
+            var arg0 = 0;
+            var arg1 = "1";
+
+            var task = instance.引数を変更(arg0, arg1);
+            task.Wait();
+            var (result0, result1) = task.Result;
+
 
             Console.ReadKey();
         }
 
-        public class TraceAttribute : OnMethodBoundaryAspect
+        private class ChangeArguments : OnMethodBoundaryAspect
         {
-            public string Category { get; set; }
-
             public override void OnEntry(MethodExecutionArgs args)
             {
-                Logger.Trace("Entering " + args.Method.DeclaringType.FullName + "." + args.Method.Name + " " + Category);
+                for (int argumentIndex = 0; argumentIndex < args.Arguments.Count; argumentIndex++)
+                {
+                    switch (args.Arguments[argumentIndex])
+                    {
+                        case int argument:
+                            args.Arguments[argumentIndex] = argument + 1;
+                            break;
+
+                        case string argument:
+                            args.Arguments[argumentIndex] = (int.Parse(argument) + 1).ToString();
+                            break;
+
+                        case null:
+                            break;
+
+                        default:
+                            throw new NotSupportedException();
+                    }
+                }
             }
         }
 
-        [Trace(Category = "A")]
-        public class MyClass
+        [ChangeArguments]
+        private async Task<(int, string)> 引数を変更(int arg0, string arg1)
         {
-            ////[Trace(Category = "A")]
-            //public MyClass()
-            //{
-            //}
-
-            [Trace(Category = "B")]
-            public void Method1()
+            await Task.Run(() =>
             {
-                Logger.Trace("AAA");
-            }
+                Thread.Sleep(10);
+            });
 
-            public void Method2()
-            {
-            }
-
-            public void Method3()
-            {
-            }
+            return (arg0, arg1);
         }
+
+        //[Fact]
+        //public void 引数を変更_引数2つ_正しくアスペクトが適用される()
+        //{
+        //    var arg0 = 0;
+        //    var arg1 = "1";
+
+        //    var task = 引数を変更(arg0, arg1);
+        //    task.Wait();
+        //    var (result0, result1) = task.Result;
+
+        //    Assert.Equal(1, result0);
+        //    Assert.Equal("2", result1);
+        //}
+        //private static object Instance;
+
+        //private class OnEntrySpy : OnMethodBoundaryAspect
+        //{
+        //    public override void OnEntry(MethodExecutionArgs args)
+        //    {
+        //        Instance = args.Instance;
+        //    }
+        //}
+
+        //[OnEntrySpy]
+        //private async Task メソッド()
+        //{
+        //    await Task.Run(() =>
+        //    {
+        //        Thread.Sleep(10);
+        //    });
+        //}
     }
 }
