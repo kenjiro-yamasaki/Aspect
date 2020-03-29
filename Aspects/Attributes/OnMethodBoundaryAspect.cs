@@ -352,6 +352,7 @@ namespace SoftCube.Aspects
             var stateMachineType     = rewriter.StateMachineType;
 
             var thisField            = rewriter.ThisField;
+            var methodField          = rewriter.MethodField;
             var aspectAttributeField = rewriter.CreateField("*aspect", Mono.Cecil.FieldAttributes.Private, module.ImportReference(customAttribute.AttributeType));
             var argumentsField       = rewriter.CreateField("*arguments", Mono.Cecil.FieldAttributes.Private, module.ImportReference(typeof(Arguments)));
             var aspectArgsField      = rewriter.CreateField("*aspectArgs", Mono.Cecil.FieldAttributes.Private, module.ImportReference(aspectArgsType));
@@ -389,6 +390,12 @@ namespace SoftCube.Aspects
                 processor.Load(insert, argumentsField);
                 processor.New<MethodExecutionArgs>(insert, typeof(object), typeof(Arguments));
                 processor.Store(insert, aspectArgsField);
+
+                processor.LoadThis(insert);
+                processor.Load(insert, aspectArgsField);
+                processor.LoadThis(insert);
+                processor.Load(insert, methodField);
+                processor.SetProperty(insert, typeof(MethodArgs), nameof(MethodArgs.Method));
 
                 processor.LoadThis(insert);
                 processor.Load(insert, aspectAttributeField);

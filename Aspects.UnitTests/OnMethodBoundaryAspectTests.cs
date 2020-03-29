@@ -96,15 +96,17 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class インスタンス
+            public class アスペクト引数
             {
-                private static object Instance;
+                private static object instance;
+                private static System.Reflection.MethodBase method;
 
                 private class OnEntrySpy : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Instance = args.Instance;
+                        instance = args.Instance;
+                        method   = args.Method;
                     }
                 }
 
@@ -118,7 +120,8 @@ namespace SoftCube.Aspects
                 {
                     メソッド();
 
-                    Assert.Same(this, Instance);
+                    Assert.Same(this, instance);
+                    Assert.Equal("メソッド", method.Name);
                 }
             }
 
@@ -1271,15 +1274,17 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class インスタンス
+            public class アスペクト引数
             {
-                private static object Instance;
+                private static object instance;
+                private static System.Reflection.MethodBase method;
 
                 private class OnEntrySpy : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Instance = args.Instance;
+                        instance = args.Instance;
+                        method   = args.Method;
                     }
                 }
 
@@ -1293,7 +1298,8 @@ namespace SoftCube.Aspects
                 {
                     メソッド();
 
-                    Assert.Null(Instance);
+                    Assert.Null(instance);
+                    Assert.Equal("メソッド", method.Name);
                 }
             }
 
@@ -2422,15 +2428,17 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class インスタンス
+            public class アスペクト引数
             {
-                private static object Instance;
+                private static object instance;
+                private static System.Reflection.MethodBase method;
 
                 private class OnEntrySpy : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Instance = args.Instance;
+                        instance = args.Instance;
+                        method   = args.Method;
                     }
                 }
 
@@ -2446,7 +2454,8 @@ namespace SoftCube.Aspects
                 {
                     メソッド().ToList();
 
-                    Assert.Same(this, Instance);
+                    Assert.Same(this, instance);
+                    Assert.Equal("メソッド", method.Name);
                 }
             }
 
@@ -2951,15 +2960,17 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class インスタンス
+            public class アスペクト引数
             {
-                private static object Instance;
+                private static object instance;
+                private static System.Reflection.MethodBase method;
 
                 private class OnEntrySpy : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Instance = args.Instance;
+                        instance = args.Instance;
+                        method   = args.Method;
                     }
                 }
 
@@ -2975,7 +2986,8 @@ namespace SoftCube.Aspects
                 {
                     メソッド().ToList();
 
-                    Assert.Null(Instance);
+                    Assert.Null(instance);
+                    Assert.Equal("メソッド", method.Name);
                 }
             }
 
@@ -3489,15 +3501,17 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class インスタンス
+            public class アスペクト引数
             {
-                private static object Instance;
+                private static object instance;
+                private static System.Reflection.MethodBase method;
 
                 private class OnEntrySpy : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Instance = args.Instance;
+                        instance = args.Instance;
+                        method   = args.Method;
                     }
                 }
 
@@ -3515,7 +3529,8 @@ namespace SoftCube.Aspects
                 {
                     メソッド().Wait();
 
-                    Assert.Same(this, Instance);
+                    Assert.Same(this, instance);
+                    Assert.Equal("メソッド", method.Name);
                 }
             }
 
@@ -4102,15 +4117,17 @@ namespace SoftCube.Aspects
                 }
             }
 
-            public class インスタンス
+            public class アスペクト引数
             {
-                private static object Instance;
+                private static object instance;
+                private static System.Reflection.MethodBase method;
 
                 private class OnEntrySpy : OnMethodBoundaryAspect
                 {
                     public override void OnEntry(MethodExecutionArgs args)
                     {
-                        Instance = args.Instance;
+                        instance = args.Instance;
+                        method   = args.Method;
                     }
                 }
 
@@ -4128,7 +4145,8 @@ namespace SoftCube.Aspects
                 {
                     メソッド().Wait();
 
-                    Assert.Null(Instance);
+                    Assert.Null(instance);
+                    Assert.Equal("メソッド", method.Name);
                 }
             }
 

@@ -248,6 +248,10 @@ namespace SoftCube.Aspects
                     processor.Store(ThisField);
                 }
 
+                processor.LoadAddress(stateMachineVariable);
+                processor.CallStatic(typeof(System.Reflection.MethodBase), nameof(System.Reflection.MethodBase.GetCurrentMethod));
+                processor.Store(MethodField);
+
                 var parameters = TargetMethod.Parameters;
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
                 {
@@ -303,6 +307,10 @@ namespace SoftCube.Aspects
                     processor.LoadThis();
                     processor.Store(ThisField);
                 }
+
+                processor.Load(stateMachineVariable);
+                processor.CallStatic(typeof(System.Reflection.MethodBase), nameof(System.Reflection.MethodBase.GetCurrentMethod));
+                processor.Store(MethodField);
 
                 var parameters = TargetMethod.Parameters;
                 for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
