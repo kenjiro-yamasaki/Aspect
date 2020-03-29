@@ -90,8 +90,8 @@ namespace SoftCube.Aspects
         /// <param name="onExit">OnExit アドバイスの注入処理。</param>
         public void RewriteMoveNextMethod(Action<ILProcessor> onEntry, Action<ILProcessor> onResume, Action<ILProcessor> onYield, Action<ILProcessor> onSuccess, Action<ILProcessor> onException, Action<ILProcessor> onExit)
         {
-            // 新たなメソッドを生成し、MoveNext メソッドのコードをコピーします。
-            CreateOriginalMoveNextMethod();
+            // MoveNext メソッドを複製します。
+            var clonedMoveNextMethod = MoveNextMethod.Clone();
 
             // 元々の MoveNext メソッドを書き換えます。
             {
@@ -185,13 +185,12 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldarg_0);
                     processor.Emit(OpCodes.Ldfld, IsDisposingField);
                     processor.Emit(OpCodes.Ldc_I4_2);
-                    branch[0] = processor.EmitBranch(OpCodes.Beq_S);
+                    branch[0] = processor.EmitBranch(OpCodes.Beq);
 
                     int resultVariable = variables.Count;
                     variables.Add(new VariableDefinition(Module.TypeSystem.Boolean));
 
-                    processor.Emit(OpCodes.Ldarg_0);
-                    processor.Emit(OpCodes.Call, OriginalMoveNextMethod);
+                    processor.Append(clonedMoveNextMethod);
                     processor.Emit(OpCodes.Stloc, resultVariable);
 
                     branch[0].Operand = processor.EmitNop();

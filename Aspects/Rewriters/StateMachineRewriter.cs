@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using SoftCube.Asserts;
 using System;
 using System.Linq;
 
@@ -82,15 +81,6 @@ namespace SoftCube.Aspects
         /// </summary>
         public MethodDefinition MoveNextMethod { get; }
 
-        /// <summary>
-        /// オリジナル MoveNext メソッド。
-        /// </summary>
-        /// <remarks>
-        /// MoveNext メソッドの元々のコードをコピーしたメソッド。
-        /// </remarks>
-        /// <seealso cref="CreateOriginalMoveNextMethod"/>
-        public MethodDefinition OriginalMoveNextMethod { get; private set; }
-
         #endregion
 
         #endregion
@@ -126,27 +116,6 @@ namespace SoftCube.Aspects
         #endregion
 
         #region メソッド
-
-        /// <summary>
-        /// オリジナル MoveNext メソッド (MoveNext メソッドの元々のコード) を生成します。
-        /// </summary>
-        /// <seealso cref="OriginalMoveNextMethod"/>
-        public void CreateOriginalMoveNextMethod()
-        {
-            Assert.Null(OriginalMoveNextMethod);
-
-            OriginalMoveNextMethod = new MethodDefinition("*" + MoveNextMethod.Name, MoveNextMethod.Attributes, MoveNextMethod.ReturnType);;
-            OriginalMoveNextMethod.Body = MoveNextMethod.Body;
-            foreach (var parameter in MoveNextMethod.Parameters)
-            {
-                OriginalMoveNextMethod.Parameters.Add(parameter);
-            }
-            foreach (var sequencePoint in MoveNextMethod.DebugInformation.SequencePoints)
-            {
-                OriginalMoveNextMethod.DebugInformation.SequencePoints.Add(sequencePoint);
-            }
-            StateMachineType.Methods.Add(OriginalMoveNextMethod);
-        }
 
         /// <summary>
         /// フィールドを生成します。

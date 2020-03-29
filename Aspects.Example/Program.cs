@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
 {
@@ -20,7 +18,7 @@ namespace SoftCube.Aspects
         {
             var instance = new MyClass();
 
-            var result = instance.Method1().Result;
+            var result = instance.Method1().ToList();
 
             Console.ReadKey();
         }
@@ -35,31 +33,13 @@ namespace SoftCube.Aspects
             }
         }
 
-        //[Trace(Category = "A")]
         public class MyClass
         {
-            ////[Trace(Category = "A")]
-            //public MyClass()
-            //{
-            //}
-
             [Trace(Category = "B")]
-            public async Task<string> Method1()
+            public IEnumerable<string> Method1()
             {
-                await Task.Run(() =>
-                {
-                    Thread.Sleep(10);
-                });
-
-                return "AAA";
-            }
-
-            public void Method2()
-            {
-            }
-
-            public void Method3()
-            {
+                yield return "AA";
+                yield return "BB";
             }
         }
     }

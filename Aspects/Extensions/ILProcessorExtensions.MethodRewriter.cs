@@ -26,6 +26,13 @@ namespace SoftCube.Aspects
                 processor.Body.Variables.Add(variable);
             }
 
+            int returnVariable = default;
+            if (method.HasReturnValue())
+            {
+                returnVariable = processor.Body.Variables.Count;
+                processor.Body.Variables.Add(new VariableDefinition(method.ReturnType));
+            }
+
             // 命令コレクションを追加します。
             var leaveTarget = processor.Create(OpCodes.Nop);
             foreach (var instruction in method.Body.Instructions)
@@ -84,6 +91,11 @@ namespace SoftCube.Aspects
                 }
                 else if (instruction.OpCode == OpCodes.Ret)
                 {
+                    if (method.HasReturnValue())
+                    {
+                        processor.Emit(OpCodes.Stloc, returnVariable);
+                    }
+
                     if (instruction == method.Body.Instructions.Last())
                     {
                         instruction.OpCode  = OpCodes.Nop;
@@ -98,7 +110,13 @@ namespace SoftCube.Aspects
 
                 processor.Append(instruction);
             }
+
             processor.Append(leaveTarget);
+
+            if (method.HasReturnValue())
+            {
+                processor.Emit(OpCodes.Ldloc, returnVariable);
+            }
 
             //
             foreach (var sequencePoint in method.DebugInformation.SequencePoints)
