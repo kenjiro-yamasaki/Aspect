@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -53,19 +54,15 @@ namespace SoftCube.Aspects
             var instructions = MoveNextMethod.Body.Instructions;
 
             /// 例外ハンドラーを追加します。
-            /// 内側の例外ハンドラーが先になるように並び変えます。
-            /// この順番を間違えるとランタイムエラーが発生します。
             var handlers = MoveNextMethod.Body.ExceptionHandlers;
 
-            var outerCatch      = handlers[0];
+            var outerCatch      = handlers.Where(h => h.HandlerType == ExceptionHandlerType.Catch).Last();
             var innerCatch      = new ExceptionHandler(ExceptionHandlerType.Catch) { CatchType = Module.ImportReference(typeof(Exception)) };
             var innerFinally    = new ExceptionHandler(ExceptionHandlerType.Finally);
             innerCatch.TryStart = innerFinally.TryStart = outerCatch.TryStart;
 
-            handlers.Clear();
             handlers.Add(innerCatch);
             handlers.Add(innerFinally);
-            handlers.Add(outerCatch);
 
             // try
             // {
@@ -111,16 +108,16 @@ namespace SoftCube.Aspects
             //         {
             //             onSuccess();
             //         }
-            Instruction leave;
+            Instruction[] leave = new Instruction[2];
             {
                 var instruction = outerCatch.HandlerStart.Previous;
                 if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
                 {
-                    leave = instruction;
+                    leave[0] = instruction;
                 }
                 else if (instruction.OpCode == OpCodes.Throw)
                 {
-                    leave = processor.InsertLeaveBefore(instruction.Next, OpCodes.Leave);
+                    leave[0] = processor.InsertLeaveBefore(instruction.Next, OpCodes.Leave);
                 }
                 else
                 {
@@ -128,7 +125,7 @@ namespace SoftCube.Aspects
                 }
             }
             {
-                var insert = leave;
+                var insert = leave[0];
                 var branch = new Instruction[2];
 
                 var leaveTarget = processor.InsertNopBefore(insert);                                // try 内の Leave 命令の転送先 (OnYield と OnSuccess の呼び出し処理に転送します)。
@@ -138,18 +135,24 @@ namespace SoftCube.Aspects
                 branch[0] = processor.InsertBranchBefore(insert, OpCodes.Beq);
                 onYield(processor, insert);
                 branch[1] = processor.InsertBranchBefore(insert, OpCodes.Br_S);
-                branch[1].Operand = leave;
+                branch[1].Operand = leave[0];
 
                 branch[0].Operand = processor.InsertNopBefore(insert);
                 onSuccess(processor, insert);
 
                 // try 内の Leave 命令の転送先を書き換えます。
                 // この書き換えにより OnYield と OnSuccess の呼びだし処理に転送します。
+                var innerInstructions = new List<Instruction>();
                 for (var instruction = innerCatch.TryStart; instruction != leaveTarget; instruction = instruction.Next)
                 {
-                    if (instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S)
+                    innerInstructions.Add(instruction);
+                }
+
+                foreach (var instruction in innerInstructions)
+                {
+                    if ((instruction.OpCode == OpCodes.Leave || instruction.OpCode == OpCodes.Leave_S) && !innerInstructions.Contains(instruction.Operand))
                     {
-                        instruction.OpCode  = OpCodes.Br;
+                        instruction.OpCode = OpCodes.Leave;
                         instruction.Operand = leaveTarget;
                     }
                 }
@@ -192,7 +195,9 @@ namespace SoftCube.Aspects
 
                 branch[1].Operand = processor.InsertNopBefore(insert);
                 processor.InsertBefore(insert, OpCodes.Endfinally);
-                innerFinally.HandlerEnd = insert;
+                processor.InsertBefore(insert, OpCodes.Nop);
+                processor.InsertBefore(insert,leave[1] = processor.CreateLeave(OpCodes.Leave));
+                innerFinally.HandlerEnd = leave[1].Previous;
             }
 
             // }
@@ -207,7 +212,7 @@ namespace SoftCube.Aspects
             {
                 var insert = outerCatch.HandlerEnd;
 
-                leave.Operand = outerCatch.HandlerEnd = processor.InsertNopBefore(insert);
+                leave[0].Operand = leave[1].Operand = outerCatch.HandlerEnd = processor.InsertNopBefore(insert);
                 processor.InsertBefore(insert, OpCodes.Ldarg_0);
                 processor.InsertBefore(insert, OpCodes.Ldfld, StateField);
                 processor.InsertBefore(insert, OpCodes.Ldc_I4, -1);

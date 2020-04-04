@@ -1,7 +1,7 @@
 ﻿using SoftCube.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
 {
@@ -18,7 +18,8 @@ namespace SoftCube.Aspects
         {
             var instance = new MyClass();
 
-            var result = instance.Method1().ToList();
+            var result = instance.Method1().Result;
+            Logger.Trace(result);
 
             Console.ReadKey();
         }
@@ -37,12 +38,13 @@ namespace SoftCube.Aspects
         {
             [Trace(Category = "A")]
             [Trace(Category = "B")]
-            public IEnumerable<string> Method1()
+            [Trace(Category = "C")]
+            public async Task<string> Method1()
             {
+                await Task.Run(() => { Thread.Sleep(10); });
                 Logger.Trace("AA");
-                yield return "AA";
-                Logger.Trace("BB");
-                yield return "BB";
+
+                return "A";
             }
         }
     }
