@@ -9,6 +9,7 @@ namespace SoftCube.Aspects
     /// <remarks>
     /// ワイルドカードを使用して複数の要素に適用できるカスタム属性です。
     /// </remarks>
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = true)]
     public abstract class MulticastAttribute : Attribute
     {
         #region プロパティ。

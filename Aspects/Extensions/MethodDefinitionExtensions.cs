@@ -71,7 +71,7 @@ namespace SoftCube.Aspects
                         break;
                     }
                 }
-                methodLevelAsspects.Reverse();
+                //methodLevelAsspects.Reverse();
 
                 //
                 foreach (var methodLevelAspect in methodLevelAsspects)

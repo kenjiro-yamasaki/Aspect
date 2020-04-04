@@ -35,10 +35,13 @@ namespace SoftCube.Aspects
 
         public class MyClass
         {
+            [Trace(Category = "A")]
             [Trace(Category = "B")]
             public IEnumerable<string> Method1()
             {
+                Logger.Trace("AA");
                 yield return "AA";
+                Logger.Trace("BB");
                 yield return "BB";
             }
         }

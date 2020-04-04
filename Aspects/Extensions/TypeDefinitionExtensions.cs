@@ -18,6 +18,12 @@ namespace SoftCube.Aspects
         /// <param name="multicastAttributes">マルチキャスト属性コレクション。</param>
         internal static void InjectAdvice(this TypeDefinition type, IEnumerable<MulticastAttribute> multicastAttributes)
         {
+            // 「CompilerGenerated」属性を持つ型を無視します。
+            if (type.CustomAttributes.Any(ca => ca.AttributeType.Name == "CompilerGeneratedAttribute"))
+            {
+                return;
+            }
+
             // モジュールのマルチキャスト属性を生成します。
             var currentMulticastAttributes = new List<MulticastAttribute>();
             foreach (var customAttribute in type.CustomAttributes.ToList())

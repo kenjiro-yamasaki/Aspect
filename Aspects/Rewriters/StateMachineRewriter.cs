@@ -103,7 +103,7 @@ namespace SoftCube.Aspects
 
             StateField       = StateMachineType.Fields.Single(f => f.Name == "<>1__state");
             ResumeFlagField  = CreateField("*resumeFlag", FieldAttributes.Private, Module.TypeSystem.Boolean);
-            MethodField      = CreateField("*method", FieldAttributes.Public, Module.ImportReference(typeof(System.Reflection.MethodBase)));
+            MethodField      = CreateField("*method", FieldAttributes.Public, Module.ImportReference(typeof(System.Reflection.MethodBase)), reuseIfExist: true);
             ThisField        = StateMachineType.Fields.SingleOrDefault(f => f.Name == "<>4__this");
             if (ThisField == null && !TargetMethod.IsStatic)
             {
@@ -124,11 +124,34 @@ namespace SoftCube.Aspects
         /// <param name="fieldAttributes">フィールドの属性。</param>
         /// <param name="fieldType">フィールドの型。</param>
         /// <returns>フィールド。</returns>
-        public FieldDefinition CreateField(string fieldName, FieldAttributes fieldAttributes, TypeReference fieldType)
+        public FieldDefinition CreateField(string fieldName, FieldAttributes fieldAttributes, TypeReference fieldType, bool reuseIfExist = false)
         {
-            var field = new FieldDefinition(fieldName, fieldAttributes, fieldType);
-            StateMachineType.Fields.Add(field);
-            return field;
+            var field = StateMachineType.Fields.FirstOrDefault(f => f.Name == fieldName);
+            if (field == null)
+            {
+                field = new FieldDefinition(fieldName, fieldAttributes, fieldType);
+                StateMachineType.Fields.Add(field);
+                return field;
+            }
+
+            if (reuseIfExist)
+            {
+                return field;
+            }
+            else
+            {
+                for (int number = 2; true; number++)
+                {
+                    var fieldNameWithNumber = $"{fieldName}{number}";
+
+                    if (!StateMachineType.Fields.Any(f => f.Name == fieldNameWithNumber))
+                    {
+                        field = new FieldDefinition(fieldNameWithNumber, fieldAttributes, fieldType);
+                        StateMachineType.Fields.Add(field);
+                        return field;
+                    }
+                }
+            }
         }
 
         /// <summary>

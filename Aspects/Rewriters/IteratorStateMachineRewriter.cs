@@ -50,7 +50,6 @@ namespace SoftCube.Aspects
         /// <remarks>
         /// Dispose メソッドの元々のコードをコピーしたメソッド。
         /// </remarks>
-        /// <seealso cref="CreateOriginalDisposeMethod"/>
         public MethodDefinition OriginalDisposeMethod { get; set; }
 
         #endregion
@@ -69,7 +68,7 @@ namespace SoftCube.Aspects
             : base(targetMethod, aspectAttribute, aspectArgsType)
         {
             ExitFlagField    = CreateField("*exitFlag", FieldAttributes.Private, Module.TypeSystem.Boolean);
-            IsDisposingField = CreateField("*isDisposing", FieldAttributes.Private, Module.TypeSystem.Int32);
+            IsDisposingField = CreateField("*isDisposing", FieldAttributes.Private, Module.TypeSystem.Int32, reuseIfExist: true);
 
             RewriteTargetMethod();
             RewriteDisposeMethod();
@@ -344,8 +343,27 @@ namespace SoftCube.Aspects
         /// </summary>
         private void RewriteDisposeMethod()
         {
+            var originalMethodName = "*" + DisposeMethod.Name;
+            OriginalDisposeMethod = StateMachineType.Methods.FirstOrDefault(m => m.Name == originalMethodName);
+            if (OriginalDisposeMethod != null)
+            {
+                return;
+            }
+
             // オリジナル Dispose メソッド (Dispose メソッドの元々のコード) を生成します。
-            CreateOriginalDisposeMethod();
+            Assert.NotNull(DisposeMethod);
+            Assert.Null(OriginalDisposeMethod);
+            OriginalDisposeMethod = new MethodDefinition(originalMethodName, DisposeMethod.Attributes, DisposeMethod.ReturnType);
+            OriginalDisposeMethod.Body = DisposeMethod.Body;
+            foreach (var parameter in DisposeMethod.Parameters)
+            {
+                OriginalDisposeMethod.Parameters.Add(parameter);
+            }
+            foreach (var sequencePoint in DisposeMethod.DebugInformation.SequencePoints)
+            {
+                OriginalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
+            StateMachineType.Methods.Add(OriginalDisposeMethod);
 
             // Dispose のメソッドのコードを書き換えます。
             {
@@ -413,28 +431,6 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ret);
                 }
             }
-        }
-
-        /// <summary>
-        /// オリジナル Dispose メソッド (Dispose メソッドの元々のコード) を生成します。
-        /// </summary>
-        /// <seealso cref="OriginalDisposeMethod"/>
-        private void CreateOriginalDisposeMethod()
-        {
-            Assert.NotNull(DisposeMethod);
-            Assert.Null(OriginalDisposeMethod);
-
-            OriginalDisposeMethod = new MethodDefinition("*" + DisposeMethod.Name, DisposeMethod.Attributes, DisposeMethod.ReturnType);
-            OriginalDisposeMethod.Body = DisposeMethod.Body;
-            foreach (var parameter in DisposeMethod.Parameters)
-            {
-                OriginalDisposeMethod.Parameters.Add(parameter);
-            }
-            foreach (var sequencePoint in DisposeMethod.DebugInformation.SequencePoints)
-            {
-                OriginalDisposeMethod.DebugInformation.SequencePoints.Add(sequencePoint);
-            }
-            StateMachineType.Methods.Add(OriginalDisposeMethod);
         }
 
         #endregion
