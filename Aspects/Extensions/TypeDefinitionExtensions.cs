@@ -1,6 +1,8 @@
 ﻿using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -12,7 +14,7 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// アドバイスを注入します。
+        /// 型にアドバイスを注入します。
         /// </summary>
         /// <param name="type">型。</param>
         /// <param name="multicastAttributes">マルチキャスト属性コレクション。</param>
@@ -50,6 +52,20 @@ namespace SoftCube.Aspects
             {
                 nestedType.InjectAdvice(multicastAttributes);
             }
+        }
+
+        /// <summary>
+        /// 型にカスタム属性を追加します。
+        /// </summary>
+        /// <param name="type">型。</param>
+        /// <param name="customAttributeType">カスタム属性の型。</param>
+        public static void AddCustomAttribute(this TypeDefinition type, Type customAttributeType)
+        {
+            var module = type.Module;
+
+            var constructor = module.ImportReference(customAttributeType.GetConstructor(Array.Empty<Type>()));
+            var customAttribute = new CustomAttribute(constructor);
+            type.CustomAttributes.Add(customAttribute);
         }
 
         #endregion

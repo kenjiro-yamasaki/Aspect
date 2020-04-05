@@ -43,9 +43,9 @@ namespace SoftCube.Aspects
             }
         }
 
+        [Trace(Category = "A")]
         public class MyClass
         {
-            [Trace(Category = "A")]
             [Trace(Category = "B")]
             public async Task<string> Method1()
             {
@@ -55,10 +55,10 @@ namespace SoftCube.Aspects
                 return "X";
             }
 
-            [Trace(Category = "A")]
             [Trace(Category = "B")]
             public string Method2()
             {
+
                 Logger.Trace("XX");
                 return "X";
             }

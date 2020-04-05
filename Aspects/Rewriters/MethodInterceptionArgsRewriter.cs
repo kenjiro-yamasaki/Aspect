@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
@@ -60,10 +61,11 @@ namespace SoftCube.Aspects
                 MethodInterceptionArgsImplTypeName = $"*{TargetMethod.Name}<{number}>";
             }
 
-            var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
-            var aspectArgsImplType      = new TypeDefinition(DeclaringType.Namespace, MethodInterceptionArgsImplTypeName, Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference) { IsNestedPrivate = true };
+            var baseType = Module.ImportReference(typeof(MethodInterceptionArgs));
+            var aspectArgsType = new TypeDefinition(DeclaringType.Namespace, MethodInterceptionArgsImplTypeName, Mono.Cecil.TypeAttributes.Class, baseType) { IsNestedPrivate = true };
+            DeclaringType.NestedTypes.Add(aspectArgsType);
 
-            DeclaringType.NestedTypes.Add(aspectArgsImplType);
+            aspectArgsType.AddCustomAttribute(typeof(CompilerGeneratedAttribute));
         }
 
         /// <summary>
@@ -93,7 +95,6 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Ldarg_2);
 
             processor.CallConstructor(typeof(MethodInterceptionArgs), new[] { typeof(object), typeof(Arguments) });
-            //processor.Emit(OpCodes.Call, Module.ImportReference(typeof(MethodInterceptionArgs).GetConstructor(new[] { typeof(object), typeof(Arguments) })));
             processor.Emit(OpCodes.Ret);
         }
 

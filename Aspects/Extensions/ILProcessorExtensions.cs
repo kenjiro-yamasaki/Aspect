@@ -1203,7 +1203,10 @@ namespace SoftCube.Aspects
             //
             processor.Emit(OpCodes.Ldstr, method.DeclaringType.ToSystemType().FullName);
             processor.CallStatic(typeof(Type), nameof(Type.GetType), new [] { typeof(string) });
-            processor.Emit(OpCodes.Ldstr, method.Name);
+            if (!method.IsConstructor)
+            {
+                processor.Emit(OpCodes.Ldstr, method.Name);
+            }
 
             processor.Emit(OpCodes.Ldc_I4, parameters.Count);
             processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(Type)));
@@ -1230,7 +1233,15 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Stelem_Ref);
                 }
             }
-            processor.CallVirtual(typeof(Type), nameof(Type.GetMethod), new [] { typeof(string), typeof(Type[]) });
+
+            if (method.IsConstructor)
+            {
+                processor.CallVirtual(typeof(Type), nameof(Type.GetConstructor), new[] { typeof(Type[]) });
+            }
+            else
+            {
+                processor.CallVirtual(typeof(Type), nameof(Type.GetMethod), new [] { typeof(string), typeof(Type[]) });
+            }
         }
 
         #endregion
