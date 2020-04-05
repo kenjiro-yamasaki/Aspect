@@ -21,7 +21,7 @@ namespace SoftCube.Aspects
         /// <summary>
         /// MethodInterceptionArgs の派生クラスの型名。
         /// </summary>
-        private string MethodInterceptionArgsImplTypeName => TargetMethod.FullName + "+" + nameof(MethodInterceptionArgs);
+        private string MethodInterceptionArgsImplTypeName { get; set; }
 
         #endregion
 
@@ -50,6 +50,16 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void CreateAspectArgsImpl()
         {
+            MethodInterceptionArgsImplTypeName = $"*{nameof(MethodInterceptionArgs)}<{TargetMethod.Name}>";
+            for (int number = 2; true; number++)
+            {
+                if (!DeclaringType.NestedTypes.Any(nt => nt.Name == MethodInterceptionArgsImplTypeName))
+                {
+                    break;
+                }
+                MethodInterceptionArgsImplTypeName = $"*{nameof(MethodInterceptionArgs)}<{TargetMethod.Name}><{number}>";
+            }
+
             var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsImplType      = new TypeDefinition(DeclaringType.Namespace, MethodInterceptionArgsImplTypeName, Mono.Cecil.TypeAttributes.Class, aspectArgsTypeReference) { IsNestedPrivate = true };
 
@@ -64,10 +74,10 @@ namespace SoftCube.Aspects
             var methodAttributes = Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName;
             var constructor      = new MethodDefinition(".ctor", methodAttributes, Module.TypeSystem.Void);
 
-            /// public MethodInterceptionArgsImpl(object instance, Arguments arguments)
-            ///     : base(instance, arguments)
-            /// {
-            /// }
+            // public MethodInterceptionArgsImpl(object instance, Arguments arguments)
+            //     : base(instance, arguments)
+            // {
+            // }
             var instanceParameter  = new ParameterDefinition("instance",  Mono.Cecil.ParameterAttributes.None, Module.TypeSystem.Object);
             var argumentsParameter = new ParameterDefinition("arguments", Mono.Cecil.ParameterAttributes.None, Module.ImportReference(typeof(Arguments)));
             constructor.Parameters.Add(instanceParameter);
@@ -93,7 +103,7 @@ namespace SoftCube.Aspects
         /// <param name="injector">メソッドへの注入。</param>
         public void OverrideInvokeImplMethod(MethodDefinition originalMethod)
         {
-            /// InvokeImpl メソッドのオーバーライドを追加します。
+            // InvokeImpl メソッドのオーバーライドを追加します。
             var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));
             var aspectArgsType          = aspectArgsTypeReference.Resolve();
             var aspectArgsImplType      = DeclaringType.NestedTypes.Single(nt => nt.Name == MethodInterceptionArgsImplTypeName);
@@ -104,25 +114,25 @@ namespace SoftCube.Aspects
             aspectArgsImplType.Methods.Add(overridenInvokeMethod);
             overridenInvokeMethod.Parameters.Add(new ParameterDefinition(argumentsTypeReferernce) { Name = "arguments" });
 
-            /// InvokeImpl メソッドのオーバーライドを実装します。
-            /// protected override object InvokeImpl(Arguments arguments)
-            /// {
-            ///     var arg0 = (TArg0)arguments[0];
-            ///     var arg1 = (TArg1)arguments[1];
-            ///     ...
-            ///     var result = ((Program)base.Instance).OriginalFunc(arg0, arg1, ...);
-            ///     arguments[0] = arg0;
-            ///     arguments[1] = arg1;
-            ///     ...
-            ///     return result;
-            /// }
+            // InvokeImpl メソッドのオーバーライドを実装します。
+            // protected override object InvokeImpl(Arguments arguments)
+            // {
+            //     var arg0 = (TArg0)arguments[0];
+            //     var arg1 = (TArg1)arguments[1];
+            //     ...
+            //     var result = ((Program)base.Instance).OriginalFunc(arg0, arg1, ...);
+            //     arguments[0] = arg0;
+            //     arguments[1] = arg1;
+            //     ...
+            //     return result;
+            // }
             {
                 var processor = overridenInvokeMethod.Body.GetILProcessor();
                 var variables = overridenInvokeMethod.Body.Variables;
 
-                /// var arg0 = (TArg0)arguments[0];
-                /// var arg1 = (TArg1)arguments[1];
-                /// ...
+                // var arg0 = (TArg0)arguments[0];
+                // var arg1 = (TArg1)arguments[1];
+                // ...
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
@@ -169,7 +179,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                /// var result = ((Program)base.Instance).OriginalFunc(arg0, arg1, ...);
+                // var result = ((Program)base.Instance).OriginalFunc(arg0, arg1, ...);
                 if (!originalMethod.IsStatic)
                 {
                     processor.Emit(OpCodes.Ldarg_0);
@@ -203,9 +213,9 @@ namespace SoftCube.Aspects
                     processor.Emit(OpCodes.Ldnull);
                 }
 
-                /// arguments[0] = arg0;
-                /// arguments[1] = arg1;
-                /// ...
+                // arguments[0] = arg0;
+                // arguments[1] = arg1;
+                // ...
                 for (int parameterIndex = 0; parameterIndex < originalMethod.Parameters.Count; parameterIndex++)
                 {
                     var parameter     = originalMethod.Parameters[parameterIndex];
@@ -226,7 +236,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                /// return result;
+                // return result;
                 processor.Emit(OpCodes.Ret);
             }
         }

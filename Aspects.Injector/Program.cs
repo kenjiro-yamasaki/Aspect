@@ -21,7 +21,7 @@ namespace SoftCube.Aspects.Injector
             {
                 using var profile = Profiling.Profiler.Start(nameof(Main));
 
-                /// カスタムコードの注入対象アセンブリファイルパスを取得します。
+                // カスタムコードの注入対象アセンブリファイルパスを取得します。
                 var assemblyFilePath      = args[0];
                 var assemblyDirectoryName = Path.GetDirectoryName(assemblyFilePath);
                 var assemblyFileName      = Path.GetFileName(assemblyFilePath);
@@ -38,10 +38,10 @@ namespace SoftCube.Aspects.Injector
                     assemblyDefinition.Write(copyAssemblyFilePath, new WriterParameters() { WriteSymbols = true });
                 }
 
-                /// 対象アセンブリを含むディレクトリをカレントディレクトリに変更します。
+                // 対象アセンブリを含むディレクトリをカレントディレクトリに変更します。
                 Environment.CurrentDirectory = assemblyDirectoryName;
 
-                /// 対象アセンブリにアスペクト(カスタムコード)を注入します。
+                // 対象アセンブリにアスペクト(カスタムコード)を注入します。
                 Logger.Info($" Injecting assembly {assemblyFilePath}...");
                 using (var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyFilePath, new ReaderParameters() { ReadSymbols = true, ReadWrite = true }))
                 {

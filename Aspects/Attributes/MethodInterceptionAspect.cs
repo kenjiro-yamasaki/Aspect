@@ -71,19 +71,29 @@ namespace SoftCube.Aspects
         {
             var methodAttribute = TargetMethod.Attributes & ~(Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName);
 
-            var OriginalTargetMethod = new MethodDefinition("*" + TargetMethod.Name, methodAttribute, TargetMethod.ReturnType);
-            OriginalTargetMethod.Body = TargetMethod.Body;
+            var methodName = $"*Original<{TargetMethod.Name}>";
+            for (int number = 2; true; number++)
+            {
+                if (!TargetMethod.DeclaringType.Methods.Any(m => m.Name == methodName))
+                {
+                    break;
+                }
+                methodName = $"*Original<{TargetMethod.Name}><{number}>";
+            }
+
+            var originalTargetMethod = new MethodDefinition(methodName, methodAttribute, TargetMethod.ReturnType);
+            originalTargetMethod.Body = TargetMethod.Body;
             foreach (var parameter in TargetMethod.Parameters)
             {
-                OriginalTargetMethod.Parameters.Add(parameter);
+                originalTargetMethod.Parameters.Add(parameter);
             }
             foreach (var sequencePoint in TargetMethod.DebugInformation.SequencePoints)
             {
-                OriginalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                originalTargetMethod.DebugInformation.SequencePoints.Add(sequencePoint);
             }
-            TargetMethod.DeclaringType.Methods.Add(OriginalTargetMethod);
+            TargetMethod.DeclaringType.Methods.Add(originalTargetMethod);
 
-            return OriginalTargetMethod;
+            return originalTargetMethod;
         }
 
         /// <summary>
@@ -126,9 +136,10 @@ namespace SoftCube.Aspects
             processor.Store(aspectArgsVariable);
 
             processor.Load(aspectArgsVariable);
-            processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
+            processor.LoadMethodBase(TargetMethod);
             processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
 
+            //
             processor.Load(aspectAttributeVariable);
             processor.Load(aspectArgsVariable);
             processor.CallVirtual(CustomAttributeType, nameof(OnInvoke));

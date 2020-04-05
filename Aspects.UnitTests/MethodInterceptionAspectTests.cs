@@ -28,7 +28,7 @@ namespace SoftCube.Aspects
             {
                 private static object Instance;
 
-                private class OnEntrySpy : MethodInterceptionAspect
+                private class OnInvokeSpy : MethodInterceptionAspect
                 {
                     public override void OnInvoke(MethodInterceptionArgs args)
                     {
@@ -36,7 +36,7 @@ namespace SoftCube.Aspects
                     }
                 }
 
-                [OnEntrySpy]
+                [OnInvokeSpy]
                 private void メソッド()
                 {
                 }

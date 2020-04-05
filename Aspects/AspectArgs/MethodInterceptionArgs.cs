@@ -6,7 +6,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// メソッドインターセプト引数。
     /// </summary>
-    public abstract class MethodInterceptionArgs : MethodArgs
+    public class MethodInterceptionArgs : MethodArgs
     {
         #region プロパティ
 

@@ -1190,6 +1190,49 @@ namespace SoftCube.Aspects
             }
         }
 
+        /// <summary>
+        /// 末尾に指定メソッドのメソッド情報 <see cref="System.Reflection.MethodBase"/> をロードするコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="method">メソッド。</param>
+        public static void LoadMethodBase(this ILProcessor processor, MethodDefinition method)
+        {
+            var module     = method.Module;
+            var parameters = method.Parameters;
+
+            //
+            processor.Emit(OpCodes.Ldstr, method.DeclaringType.ToSystemType().FullName);
+            processor.CallStatic(typeof(Type), nameof(Type.GetType), new [] { typeof(string) });
+            processor.Emit(OpCodes.Ldstr, method.Name);
+
+            processor.Emit(OpCodes.Ldc_I4, parameters.Count);
+            processor.Emit(OpCodes.Newarr, module.ImportReference(typeof(Type)));
+            for (int parameterIndex = 0; parameterIndex < parameters.Count; parameterIndex++)
+            {
+                var parameter = parameters[parameterIndex];
+                var parameterType = parameter.ParameterType;
+
+                processor.Emit(OpCodes.Dup);
+                processor.Emit(OpCodes.Ldc_I4, parameterIndex);
+
+                if (parameterType.IsByReference)
+                {
+                    var elementType = parameterType.GetElementType();
+                    processor.Emit(OpCodes.Ldstr, elementType.FullName);
+                    processor.CallStatic(typeof(Type), nameof(Type.GetType), new [] { typeof(string) });
+                    processor.CallVirtual(typeof(Type).GetMethod(nameof(Type.MakeByRefType)));
+                    processor.Emit(OpCodes.Stelem_Ref);
+                }
+                else
+                {
+                    processor.Emit(OpCodes.Ldstr, parameterType.FullName);
+                    processor.CallStatic(typeof(Type), nameof(Type.GetType), new [] { typeof(string) });
+                    processor.Emit(OpCodes.Stelem_Ref);
+                }
+            }
+            processor.CallVirtual(typeof(Type), nameof(Type.GetMethod), new [] { typeof(string), typeof(Type[]) });
+        }
+
         #endregion
 
         #region Store
@@ -1250,6 +1293,11 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, method);
         }
 
+        /// <summary>
+        /// 末尾にメソッドを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="method">メソッド。</param>
         public static void Call(this ILProcessor processor, System.Reflection.MethodInfo method)
         {
             var module = processor.Body.Method.Module;
@@ -1257,23 +1305,62 @@ namespace SoftCube.Aspects
             processor.Emit(OpCodes.Call, module.ImportReference(method));
         }
 
-
         /// <summary>
-        /// 
+        /// 末尾に仮想メソッドを呼びだすコードを追加します。
         /// </summary>
         /// <param name="processor">IL プロセッサー。</param>
-        /// <param name="type"></param>
-        /// <param name="argumentTypes"></param>
-        public static void CallConstructor(this ILProcessor processor, Type type, Type[] argumentTypes)
+        /// <param name="method">メソッド。</param>
+        public static void CallVirtual(this ILProcessor processor, MethodReference method)
         {
-            var key = GetMethodKey(type, ".ctor", argumentTypes);
+            processor.Emit(OpCodes.Callvirt, method);
+        }
+
+        /// <summary>
+        /// 末尾に仮想メソッドを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="method">メソッド。</param>
+        public static void CallVirtual(this ILProcessor processor, System.Reflection.MethodInfo method)
+        {
+            var module = processor.Body.Method.Module;
+
+            processor.Emit(OpCodes.Callvirt, module.ImportReference(method));
+        }
+
+        /// <summary>
+        /// 末尾に仮想メソッドを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">メソッドの宣言型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        public static void CallVirtual(this ILProcessor processor, Type type, string methodName)
+        {
+            var key = GetMethodKey(type, methodName);
             if (!MethodCache.ContainsKey(key))
             {
                 var module = processor.Body.Method.Module;
-                MethodCache.Add(key, module.ImportReference(type.GetConstructor(argumentTypes)));
+                MethodCache.Add(key, module.ImportReference(type.GetMethod(methodName)));
             }
 
-            processor.Emit(OpCodes.Call, MethodCache[key]);
+            processor.Emit(OpCodes.Callvirt, MethodCache[key]);
+        }
+
+        /// <summary>
+        /// 末尾に仮想メソッドを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">メソッドの宣言型。</param>
+        /// <param name="methodName">メソッド名。</param>
+        public static void CallVirtual(this ILProcessor processor, Type type, string methodName, Type[] argumentTypes)
+        {
+            var key = GetMethodKey(type, methodName);
+            if (!MethodCache.ContainsKey(key))
+            {
+                var module = processor.Body.Method.Module;
+                MethodCache.Add(key, module.ImportReference(type.GetMethod(methodName, argumentTypes)));
+            }
+
+            processor.Emit(OpCodes.Callvirt, MethodCache[key]);
         }
 
         /// <summary>
@@ -1350,6 +1437,24 @@ namespace SoftCube.Aspects
         {
             var module = processor.Body.Method.Module;
             processor.Emit(OpCodes.Call, module.ImportReference(type.GetMethod(methodName, argumentTypes)));
+        }
+
+        /// <summary>
+        /// 末尾にコンストラクターを呼びだすコードを追加します。
+        /// </summary>
+        /// <param name="processor">IL プロセッサー。</param>
+        /// <param name="type">メソッドの宣言型。</param>
+        /// <param name="argumentTypes">引数型配列。</param>
+        public static void CallConstructor(this ILProcessor processor, Type type, Type[] argumentTypes)
+        {
+            var key = GetMethodKey(type, ".ctor", argumentTypes);
+            if (!MethodCache.ContainsKey(key))
+            {
+                var module = processor.Body.Method.Module;
+                MethodCache.Add(key, module.ImportReference(type.GetConstructor(argumentTypes)));
+            }
+
+            processor.Emit(OpCodes.Call, MethodCache[key]);
         }
 
         #endregion

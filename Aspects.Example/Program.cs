@@ -1,5 +1,6 @@
 ﻿using SoftCube.Logging;
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,21 +17,22 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-            var instance = new MyClass();
 
-            var result = instance.Method1().Result;
+            var arg2 = "1";
+            var result = MyClass.Method1(0, out arg2);
             Logger.Trace(result);
 
             Console.ReadKey();
         }
 
-        public class TraceAttribute : OnMethodBoundaryAspect
+        public class TraceAttribute : MethodInterceptionAspect
         {
             public string Category { get; set; }
 
-            public override void OnEntry(MethodExecutionArgs args)
+            public override void OnInvoke(MethodInterceptionArgs args)
             {
                 Logger.Trace("Entering " + args.Method.DeclaringType.FullName + "." + args.Method.Name + " " + Category);
+                args.Proceed();
             }
         }
 
@@ -38,13 +40,12 @@ namespace SoftCube.Aspects
         {
             [Trace(Category = "A")]
             [Trace(Category = "B")]
-            [Trace(Category = "C")]
-            public async Task<string> Method1()
+            public static string Method1(int arg0, out string arg1)
             {
-                await Task.Run(() => { Thread.Sleep(10); });
-                Logger.Trace("AA");
+                arg1 = default;
 
-                return "A";
+                Logger.Trace("XX");
+                return "X";
             }
         }
     }
