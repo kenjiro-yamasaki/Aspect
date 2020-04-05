@@ -18,8 +18,9 @@ namespace SoftCube.Aspects
         static void Main(string[] args)
         {
 
-            var arg2 = "1";
-            var result = MyClass.Method1(0, out arg2);
+            var instatnce = new MyClass();
+            //var result = instatnce.Method1().Result;
+            var result = instatnce.Method2();
             Logger.Trace(result);
 
             Console.ReadKey();
@@ -34,16 +35,30 @@ namespace SoftCube.Aspects
                 Logger.Trace("Entering " + args.Method.DeclaringType.FullName + "." + args.Method.Name + " " + Category);
                 args.Proceed();
             }
+
+            public override async Task OnInvokeAsync(MethodInterceptionArgs args)
+            {
+                Logger.Trace("Entering " + args.Method.DeclaringType.FullName + "." + args.Method.Name + " " + Category);
+                await args.ProceedAsync();
+            }
         }
 
         public class MyClass
         {
             [Trace(Category = "A")]
             [Trace(Category = "B")]
-            public static string Method1(int arg0, out string arg1)
+            public async Task<string> Method1()
             {
-                arg1 = default;
+                await Task.Run(() => Thread.Sleep(1000));
 
+                Logger.Trace("XX");
+                return "X";
+            }
+
+            [Trace(Category = "A")]
+            [Trace(Category = "B")]
+            public string Method2()
+            {
                 Logger.Trace("XX");
                 return "X";
             }

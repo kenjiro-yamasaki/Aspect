@@ -50,14 +50,14 @@ namespace SoftCube.Aspects
         /// </remarks>
         public void CreateAspectArgsImpl()
         {
-            MethodInterceptionArgsImplTypeName = $"*{nameof(MethodInterceptionArgs)}<{TargetMethod.Name}>";
+            MethodInterceptionArgsImplTypeName = $"*{TargetMethod.Name}";
             for (int number = 2; true; number++)
             {
                 if (!DeclaringType.NestedTypes.Any(nt => nt.Name == MethodInterceptionArgsImplTypeName))
                 {
                     break;
                 }
-                MethodInterceptionArgsImplTypeName = $"*{nameof(MethodInterceptionArgs)}<{TargetMethod.Name}><{number}>";
+                MethodInterceptionArgsImplTypeName = $"*{TargetMethod.Name}<{number}>";
             }
 
             var aspectArgsTypeReference = Module.ImportReference(typeof(MethodInterceptionArgs));

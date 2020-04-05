@@ -71,14 +71,14 @@ namespace SoftCube.Aspects
         {
             var methodAttribute = TargetMethod.Attributes & ~(Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName);
 
-            var methodName = $"*Original<{TargetMethod.Name}>";
+            var methodName = $"*{TargetMethod.Name}";
             for (int number = 2; true; number++)
             {
                 if (!TargetMethod.DeclaringType.Methods.Any(m => m.Name == methodName))
                 {
                     break;
                 }
-                methodName = $"*Original<{TargetMethod.Name}><{number}>";
+                methodName = $"*{TargetMethod.Name}<{number}>";
             }
 
             var originalTargetMethod = new MethodDefinition(methodName, methodAttribute, TargetMethod.ReturnType);
@@ -191,7 +191,7 @@ namespace SoftCube.Aspects
             processor.Store(aspectArgsVariable);
 
             processor.Load(aspectArgsVariable);
-            processor.CallStatic(typeof(MethodBase), nameof(MethodBase.GetCurrentMethod));
+            processor.LoadMethodBase(TargetMethod);
             processor.SetProperty(typeof(MethodArgs), nameof(MethodArgs.Method));
 
             // var stateMachine = new MethodInterceptionAsyncStateMachine(aspectAttribute, aspectArgs);
