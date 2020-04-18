@@ -48,7 +48,6 @@ namespace SoftCube.Aspects
             }
 
             // This method will have 3 Trace aspects with Category set to A, B, C.
-            [Trace(Category = "C")]
             private void Method3()
             {
             }

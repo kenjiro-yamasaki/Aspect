@@ -19,10 +19,7 @@ namespace SoftCube.Aspects
         /// </summary>
         /// <param name="method">メソッド。</param>
         /// <returns>戻り値が存在するか。</returns>
-        public static bool HasReturnValue(this MethodDefinition method)
-        {
-            return method.ReturnType.FullName != "System.Void";
-        }
+        public static bool HasReturnValue(this MethodDefinition method) => method.ReturnType.FullName != "System.Void";
 
         #endregion
 
@@ -71,11 +68,15 @@ namespace SoftCube.Aspects
                         break;
                     }
                 }
-                //methodLevelAsspects.Reverse();
 
                 //
                 foreach (var methodLevelAspect in methodLevelAsspects)
                 {
+                    if (!methodLevelAspect.CanApply(method))
+                    {
+                        continue;
+                    }
+
                     methodLevelAspect.TargetMethod = method;
                     methodLevelAspect.InjectAdvice();
                 }

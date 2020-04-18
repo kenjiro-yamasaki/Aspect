@@ -96,5 +96,24 @@ namespace SoftCube.Aspects
         }
 
         #endregion
+
+        #region メソッド
+
+        /// <summary>
+        /// メソッドにマルチキャスト属性を適用できるか判断します。
+        /// </summary>
+        /// <param name="method">メソッド。</param>
+        /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
+        internal bool CanApply(MethodDefinition method)
+        {
+            if (!AttributeTargetMemberAttributes.CanApply(method))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
     }
 }

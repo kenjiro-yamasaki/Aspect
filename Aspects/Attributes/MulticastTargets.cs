@@ -3,15 +3,15 @@
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// マルチキャストカスタム属性 (<see cref="MulticastAttribute"/>) を適用できるターゲットの要素種類。
+    /// マルチキャスト属性 (<see cref="MulticastAttribute"/>) を適用できるターゲットの要素種類。
     /// </summary>
     [Flags]
     public enum MulticastTargets
     {
         /// <summary>
-        /// 親カスタム属性から継承します。
+        /// 未定義。
         /// </summary>
-        Default = 0,
+        None = 0,
 
         /// <summary>
         /// クラス。
