@@ -44,7 +44,7 @@ namespace SoftCube.Aspects
         Public = 1 << 5,
 
         /// <summary>
-        /// 任意の可視属性。
+        /// 任意の可視属性 (private、protected、internal、internal かつ protected、internal または protected、または public)。
         /// </summary>
         AnyVisibility = Private | Protected | InternalAndProtected | InternalOrProtected | Public,
 
@@ -69,7 +69,7 @@ namespace SoftCube.Aspects
         Abstract = 1 << 8,
 
         /// <summary>
-        /// 具象メソッド (非抽象メソッド)。
+        /// 非抽象メソッド。
         /// </summary>
         NonAbstract = 1 << 9,
 
@@ -81,75 +81,86 @@ namespace SoftCube.Aspects
         /// <summary>
         /// 仮想メソッド。
         /// </summary>
-        Virtual = 2048,
+        Virtual = 1 << 10,
 
         /// <summary>
         /// 非仮想メソッド。
         /// </summary>
-        NonVirtual = 4096,
+        NonVirtual = 1 << 11,
 
-        //
-        // 概要:
-        //     Any virtuality (PostSharp.Extensibility.MulticastAttributes.Virtual | PostSharp.Extensibility.MulticastAttributes.NonVirtual).
-        AnyVirtuality = 6144,
+        /// <summary>
+        /// 任意の仮想性 (仮想メソッド、または非仮想メソッド)。
+        /// </summary>
+        AnyVirtuality = Virtual | NonVirtual,
 
-        //
-        // 概要:
-        //     Managed code implementation.
-        Managed = 8192,
-        //
-        // 概要:
-        //     Non-managed code implementation (external or system).
-        NonManaged = 16384,
-        //
-        // 概要:
-        //     Any implementation (PostSharp.Extensibility.MulticastAttributes.Managed | PostSharp.Extensibility.MulticastAttributes.NonManaged).
-        AnyImplementation = 24576,
-        //
-        // 概要:
-        //     Literal fields.
-        Literal = 32768,
-        //
-        // 概要:
-        //     Non-literal fields.
-        NonLiteral = 65536,
-        //
-        // 概要:
-        //     Any field literality (PostSharp.Extensibility.MulticastAttributes.Literal | PostSharp.Extensibility.MulticastAttributes.NonLiteral).
-        AnyLiterality = 98304,
-        //
-        // 概要:
-        //     Input parameters.
-        InParameter = 131072,
-        //
-        // 概要:
-        //     Compiler-generated code.
-        CompilerGenerated = 262144,
-        //
-        // 概要:
-        //     User-generated code (anything expected PostSharp.Extensibility.MulticastAttributes.CompilerGenerated).
-        UserGenerated = 524288,
-        //
-        // 概要:
-        //     Any code generation (PostSharp.Extensibility.MulticastAttributes.CompilerGenerated
-        //     | PostSharp.Extensibility.MulticastAttributes.UserGenerated)l
-        AnyGeneration = 786432,
-        //
-        // 概要:
-        //     Output (out in C#) parameters.
-        OutParameter = 1048576,
-        //
-        // 概要:
-        //     Input/Output (ref in C#) parameters.
-        RefParameter = 2097152,
-        //
-        // 概要:
-        //     Any kind of parameter passing (PostSharp.Extensibility.MulticastAttributes.InParameter
-        //     | PostSharp.Extensibility.MulticastAttributes.OutParameter | PostSharp.Extensibility.MulticastAttributes.RefParameter).
-        AnyParameter = 3276800,
-        //
-        // 概要:
-        //     All members.
-        All = 4194302
+        /// <summary>
+        /// マネージドコード。
+        /// </summary>
+        Managed = 1 << 12,
+
+        /// <summary>
+        /// 非マネージドコード (external または system)。
+        /// </summary>
+        NonManaged = 1 << 13,
+
+        /// <summary>
+        /// 任意の実装 (マネージドコード、または非マネージドコード)。
+        /// </summary>
+        AnyImplementation = Managed | NonManaged,
+
+        /// <summary>
+        /// リテラルフィールド。
+        /// </summary>
+        Literal = 1 << 14,
+
+        /// <summary>
+        /// 非リテラルフィールド。
+        /// </summary>
+        NonLiteral = 1 << 15,
+
+        /// <summary>
+        /// 任意のリテラル性 (リテラルフィールド、または非リテラルフィールド)。
+        /// </summary>
+        AnyLiterality = Literal | NonLiteral,
+
+        /// <summary>
+        /// 入力パラメーター。
+        /// </summary>
+        InParameter = 1 << 16,
+
+        /// <summary>
+        /// 出力パラメーター。
+        /// </summary>
+        OutParameter = 1 << 17,
+
+        /// <summary>
+        /// 入出力パラメーター (C# では ref パラメーター)。
+        /// </summary>
+        RefParameter = 1 << 18,
+
+        /// <summary>
+        /// 任意のパラメーター (入力パラメータ、出力パラメーター、または入出力パラメーター)。
+        /// </summary>
+        AnyParameter = InParameter | OutParameter | RefParameter,
+
+        /// <summary>
+        /// コンパイラーにより生成されたコード。
+        /// </summary>
+        CompilerGenerated = 1 << 19,
+
+        /// <summary>
+        /// ユーザーにより生成されたコード。
+        /// </summary>
+        UserGenerated = 1 << 20,
+
+        /// <summary>
+        /// 任意のコード生成 (コンパイラーにより生成されたコード、またはユーザーにより生成されたコード)。
+        /// </summary>
+        AnyGeneration = CompilerGenerated | UserGenerated,
+
+        /// <summary>
+        /// すべてのメンバー。
+        /// </summary>
+        All = AnyVisibility | AnyScope | AnyAbstraction | AnyVirtuality | AnyImplementation | AnyLiterality | AnyParameter | AnyGeneration
     }
 }
