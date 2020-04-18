@@ -50,6 +50,16 @@ namespace SoftCube.Aspects
         /// </remarks>
         public bool AttributeExclude { get; set; }
 
+
+
+
+
+
+        //
+        // 概要:
+        //     Gets or sets the kind of elements to which this custom attributes applies.
+        public MulticastTargets AttributeTargetElements { get; set; }
+
         /// <summary>
         /// 属性のターゲット型。
         /// </summary>
@@ -67,6 +77,19 @@ namespace SoftCube.Aspects
         /// ・regex:Namespac.*Nested.*
         /// </remarks>
         public string AttributeTargetTypes { get; set; }
+
+        /// <summary>
+        /// 属性のターゲットメンバー属性。
+        /// </summary>
+        /// <remarks>
+        /// <see cref="AttributeTargetElements"/> がモジュール、アセンブリ、タイプのみの場合は無視されます。
+        /// <see cref="MulticastAttributes"/> はマルチパートフラグです。可視性、スコープ、仮想などの部分があります。
+        /// 1 つのパーツを指定すると、カスタム属性定義で定義された値が上書きされます。指定しない場合、カスタム属性定義で定義された値が継承されます。
+        /// カスタム属性がこれらの属性に制限を適用する場合があることに注意してください。
+        /// たとえば、カスタムメソッドは抽象メソッドでは有効でない場合があります。
+        /// 可能なターゲットのセットを「拡大」することは明らかに許可されていません。
+        /// </remarks>
+        public MulticastAttributes AttributeTargetMemberAttributes { get; set; }
 
         #endregion
 

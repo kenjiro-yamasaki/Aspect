@@ -24,10 +24,6 @@ namespace SoftCube.Aspects
 
         #endregion
 
-        public class 通常のメソッド
-        {
-        }
-
         public class 静的メソッド
         {
             public class イベントハンドラーの呼びだし順序
