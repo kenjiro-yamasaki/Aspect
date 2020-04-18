@@ -772,9 +772,10 @@ namespace SoftCube.Aspects
             var instructions = method.Body.Instructions;
 
             // 属性を生成して、ローカル変数にストアします。
-            var attributeType  = aspectAttribute.AttributeType.Resolve();
-            var argumentTypes  = aspectAttribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
-            var argumentValues = aspectAttribute.ConstructorArguments.Select(a => a.Value);
+            var attributeType       = aspectAttribute.AttributeType.Resolve();
+            var attributeProperties = attributeType.GetProperties();
+            var argumentTypes       = aspectAttribute.ConstructorArguments.Select(a => a.Type.ToSystemType());
+            var argumentValues      = aspectAttribute.ConstructorArguments.Select(a => a.Value);
             foreach (var argumentValue in argumentValues)
             {
                 switch (argumentValue)
@@ -928,7 +929,7 @@ namespace SoftCube.Aspects
                         throw new NotSupportedException();
                 }
 
-                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(attributeType.Properties.Single(p => p.Name == propertyName).SetMethod));
+                processor.InsertBefore(insert, OpCodes.Callvirt, module.ImportReference(attributeProperties.Single(p => p.Name == propertyName).SetMethod));
             }
         }
 

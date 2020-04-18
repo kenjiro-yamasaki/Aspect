@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace SoftCube.Aspects
 {
@@ -66,6 +65,29 @@ namespace SoftCube.Aspects
             var constructor = module.ImportReference(customAttributeType.GetConstructor(Array.Empty<Type>()));
             var customAttribute = new CustomAttribute(constructor);
             type.CustomAttributes.Add(customAttribute);
+        }
+
+        /// <summary>
+        /// 型のプロパティを取得します (基底クラスのプロパティを含む)。
+        /// </summary>
+        /// <param name="type">型。</param>
+        /// <returns>型のプロパティ。</returns>
+        public static IReadOnlyList<PropertyDefinition> GetProperties(this TypeDefinition type)
+        {
+            var properties = new List<PropertyDefinition>();
+
+            while (true)
+            {
+                properties.AddRange(type.Properties);
+
+                if (type.BaseType == null)
+                {
+                    break;
+                }
+                type = type.BaseType.Resolve();
+            }
+
+            return properties;
         }
 
         #endregion
