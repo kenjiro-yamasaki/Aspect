@@ -14,7 +14,6 @@ namespace SoftCube.Aspects
         /// <param name="args">アプリケーション引数。</param>
         static void Main(string[] args)
         {
-
             var instatnce = new MyClass();
             instatnce.Method1();
 
@@ -31,7 +30,7 @@ namespace SoftCube.Aspects
             }
         }
 
-        [Trace(TargetTypes = "SoftCube.*.Program", TargetElements = TargetElements.Method, TargetMemberAttributes = TargetMemberAttributes.Public, Category = "A")]
+        [Trace(TargetTypes = "SoftCube.Aspects.Program+MyClass", TargetElements = TargetElements.Method, TargetMemberAttributes = TargetMemberAttributes.Public, Category = "A")]
         public class MyClass
         {
             // This method will have 1 Trace aspect with Category set to A.

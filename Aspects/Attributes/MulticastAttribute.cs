@@ -101,38 +101,82 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
+        /// 型にマルチキャスト属性を適用できるか判断します。
+        /// </summary>
+        /// <param name="type">型。</param>
+        /// <returns>型にマルチキャスト属性を適用できるか。</returns>
+        internal bool CanApply(TypeDefinition type)
+        {
+            // ターゲットの型でフィルタリングします。
+            if (!string.IsNullOrEmpty(TargetTypes))
+            {
+                // 正規表現パターンを生成します。
+                string regexPattern;
+                if (TargetTypes.StartsWith("regex:"))
+                {
+                    regexPattern = TargetTypes.Substring("regex:".Length);
+                }
+                else
+                {
+                    regexPattern = Regex.Replace(
+                        TargetTypes,
+                        ".",
+                        m =>
+                        {
+                            string s = m.Value;
+                            if (s.Equals("?"))
+                            {
+                                return ".";
+                            }
+                            else if (s.Equals("*"))
+                            {
+                                return ".*";
+                            }
+                            else
+                            {
+                                return Regex.Escape(s);
+                            }
+                        }
+                    );
+                }
+
+                // 型の完全修飾名が正規表現パターンと一致するかを判断します。
+                var typeName = type.FullName.Replace("/", "+");
+                if (!Regex.IsMatch(typeName, regexPattern))
+                {
+                    return false;
+                }
+            }
+
+            // ターゲットの要素種類でフィルタリングします。
+            if (!TargetElements.CanApply(type))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// メソッドにマルチキャスト属性を適用できるか判断します。
         /// </summary>
         /// <param name="method">メソッド。</param>
         /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
         internal bool CanApply(MethodDefinition method)
         {
-            if (!string.IsNullOrEmpty(TargetTypes))
+            // メソッドの宣言型でフィルタリングします。
+            if (!CanApply(method.DeclaringType))
             {
-                var type = method.DeclaringType;
-                var typeName = type.FullName.Replace("/", "+");
-
-                if (TargetTypes.StartsWith("regex:"))
-                {
-                    if (!Regex.IsMatch(typeName, TargetTypes.Substring("regex:".Length)))
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (typeName != TargetTypes)
-                    {
-                        return false;
-                    }
-                }
+                return false;
             }
 
+            // ターゲットの要素種類でフィルタリングします。
             if (!TargetElements.CanApply(method))
             {
                 return false;
             }
 
+            // ターゲットのメンバー属性でフィルタリングします。
             if (!TargetMemberAttributes.CanApply(method))
             {
                 return false;

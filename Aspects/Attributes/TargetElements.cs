@@ -108,14 +108,47 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// メソッドにマルチキャスト属性を適用するかを判断します。
+        /// 型にマルチキャスト属性を適用できるかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <param name="elements">マルチキャスト属性を適用する要素。</param>
+        /// <param name="type">型。</param>
+        /// <returns>型にマルチキャスト属性を適用できるか。</returns>
+        public static bool CanApply(this TargetElements elements, TypeDefinition type)
+        {
+            if (elements.HasAnyType())
+            {
+                if (!type.IsClass && (elements & TargetElements.Class) == TargetElements.None)
+                {
+                    return false;
+                }
+                if (!type.IsEnum && (elements & TargetElements.Enum) == TargetElements.None)
+                {
+                    return false;
+                }
+                if (!type.IsValueType && (elements & TargetElements.Struct) == TargetElements.None)
+                {
+                    return false;
+                }
+                if (!type.IsInterface && (elements & TargetElements.Interface) == TargetElements.None)
+                {
+                    return false;
+                }
+
+                // TODO: デリゲートに対応します。
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// メソッドにマルチキャスト属性を適用できるかを判断します。
+        /// </summary>
+        /// <param name="elements">マルチキャスト属性を適用する要素。</param>
         /// <param name="method">メソッド。</param>
-        /// <returns>メソッドにマルチキャスト属性を適用するか。</returns>
+        /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
         public static bool CanApply(this TargetElements elements, MethodDefinition method)
         {
-            // メンバーによりフィルタリングします。
+            // メンバーでフィルタリングします。
             if (elements.HasAnyMember())
             {
                 if (!method.IsStatic && method.IsConstructor && (elements & TargetElements.InstanceConstructor) == TargetElements.None)

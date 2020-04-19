@@ -587,37 +587,37 @@ namespace SoftCube.Aspects.OnMethodBoundaryAspectTests.Method
         }
     }
 
+    [Trace(TargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.マルチキャスト+MyClass", TargetElements = TargetElements.Method, Category = "A")]
+    [Trace(TargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.マルチキャスト+My*", TargetElements = TargetElements.Method, Category = "B")]
     public class マルチキャスト
     {
-        //public sealed class Trace : OnMethodBoundaryAspect
-        //{
-        //    public string Category { get; set; }
+        public sealed class Trace : OnMethodBoundaryAspect
+        {
+            public string Category { get; set; }
 
-        //    public override void OnEntry(MethodExecutionArgs args)
-        //    {
-        //        Logger.Trace($"{args.Method.Name} {Category}");
-        //    }
-        //}
+            public override void OnEntry(MethodExecutionArgs args)
+            {
+                Logger.Trace($"{Category}");
+            }
+        }
 
-        //[Trace(Category = "A")]
-        //[Trace(AttributeTargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.My*", AttributeTargetMemberAttributes = MulticastAttributes.Public, Category = "B")]
-        //public class MyClass
-        //{
-        //    // This method will have 1 Trace aspect with Category set to A.
-        //    public void Method1()
-        //    {
-        //    }
+        public class MyClass
+        {
+            public void Method()
+            {
+            }
+        }
 
-        //    // This method will have 2 Trace aspects with Category set to A, B
-        //    public void Method2()
-        //    {
-        //    }
+        [Fact]
+        public void TargetTypes_ワイルドカード_適用される()
+        {
+            var appender = TestUtility.CreateAppender();
 
-        //    // This method will have 3 Trace aspects with Category set to A, B, C.
-        //    [Trace(Category = "C")]
-        //    public void Method3()
-        //    {
-        //    }
-        //}
+            new MyClass().Method();
+
+            Assert.Equal($"A B ", appender.ToString());
+        }
+
+
     }
 }

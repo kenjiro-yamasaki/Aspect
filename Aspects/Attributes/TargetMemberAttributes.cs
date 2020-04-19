@@ -173,14 +173,14 @@ namespace SoftCube.Aspects
         #region メソッド
 
         /// <summary>
-        /// メソッドにマルチキャスト属性を適用するかを判断します。
+        /// メソッドにマルチキャスト属性を適用できるかを判断します。
         /// </summary>
         /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
         /// <param name="method">メソッド。</param>
-        /// <returns>メソッドにマルチキャスト属性を適用するか。</returns>
+        /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
         public static bool CanApply(this TargetMemberAttributes attributes, MethodDefinition method)
         {
-            // 可視属性によりフィルタリングします。
+            // 可視属性でフィルタリングします。
             if (attributes.HasAnyVisibility())
             {
                 if (method.IsPrivate && (attributes & TargetMemberAttributes.Private) == TargetMemberAttributes.None)
@@ -209,7 +209,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            // スコープ属性によりフィルタリングします。
+            // スコープ属性でフィルタリングします。
             if (attributes.HasAnyScope())
             {
                 if (method.IsStatic && (attributes & TargetMemberAttributes.Static) == TargetMemberAttributes.None)
@@ -222,7 +222,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            // 抽象性によりフィルタリングします。
+            // 抽象属性でフィルタリングします。
             if (attributes.HasAnyAbstraction())
             {
                 if (method.IsAbstract && (attributes & TargetMemberAttributes.Abstract) == TargetMemberAttributes.None)
@@ -235,7 +235,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            // 仮想性によりフィルタリングします。
+            // 仮想属性でフィルタリングします。
             if (attributes.HasAnyVirtuality())
             {
                 if (method.IsVirtual && (attributes & TargetMemberAttributes.Virtual) == TargetMemberAttributes.None)
@@ -248,7 +248,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            // 実装属性によりフィルタリングします。
+            // 実装属性でフィルタリングします。
             if (attributes.HasAnyImplementation())
             {
                 if (method.IsManaged && (attributes & TargetMemberAttributes.Managed) == TargetMemberAttributes.None)
@@ -261,7 +261,7 @@ namespace SoftCube.Aspects
                 }
             }
 
-            // コード生成属性によりフィルタリングします。
+            // コード生成属性でフィルタリングします。
             if (attributes.HasAnyGeneration())
             {
                 if (method.IsCompilerControlled && (attributes & TargetMemberAttributes.CompilerGenerated) == TargetMemberAttributes.None)
