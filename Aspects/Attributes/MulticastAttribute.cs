@@ -12,7 +12,7 @@ namespace SoftCube.Aspects
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = true)]
     public abstract class MulticastAttribute : Attribute
     {
-        #region プロパティ。
+        #region プロパティ
 
         /// <summary>
         /// カスタム属性。
@@ -71,18 +71,18 @@ namespace SoftCube.Aspects
         /// <summary>
         /// ターゲットの要素種類。
         /// </summary>
-        public MulticastTargets AttributeTargetElements { get; set; }
+        public TargetElements TargetElements { get; set; }
 
         /// <summary>
         /// ターゲットのメンバー属性。
         /// </summary>
         /// <remarks>
-        /// <see cref="AttributeTargetElements"/> にアセンブリ、タイプのみの場合は無視されます。
-        /// <see cref="MulticastAttributes"/> はマルチパーツフラグです (可視性、スコープ、仮想性などのパーツがあります)。
-        /// パーツ内で 1 つでも値を指定すると、カスタム属性定義で定義された値が上書きされます。
-        /// 指定しない場合、カスタム属性定義で定義された値が継承されます。
+        /// <see cref="TargetElements"/> にモジュール、アセンブリ、タイプのみが指定された場合は無視されます。
+        /// <see cref="TargetMemberAttributes"/> はマルチパーツフラグです (可視性、スコープ、仮想性などのパーツがあります)。
+        /// パーツ内で 1 つでも値を指定すると、その値でターゲットをフィルタリングします。
+        /// 指定しない場合、任意の値をターゲットとします。
         /// </remarks>
-        public MulticastAttributes AttributeTargetMemberAttributes { get; set; }
+        public TargetMemberAttributes TargetMemberAttributes { get; set; }
 
         #endregion
 
@@ -106,7 +106,11 @@ namespace SoftCube.Aspects
         /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
         internal bool CanApply(MethodDefinition method)
         {
-            if (!AttributeTargetMemberAttributes.CanApply(method))
+            if (!TargetElements.CanApply(method))
+            {
+                return false;
+            }
+            if (!TargetMemberAttributes.CanApply(method))
             {
                 return false;
             }

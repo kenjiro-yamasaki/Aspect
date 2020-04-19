@@ -34,7 +34,7 @@ namespace SoftCube.Aspects
             }
         }
 
-        [Trace(AttributeTargetMemberAttributes = MulticastAttributes.Public, Category = "A")]
+        [Trace(TargetElements = TargetElements.Method, TargetMemberAttributes = TargetMemberAttributes.Public, Category = "A")]
         public class MyClass
         {
             // This method will have 1 Trace aspect with Category set to A.

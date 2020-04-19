@@ -4,10 +4,10 @@ using System;
 namespace SoftCube.Aspects
 {
     /// <summary>
-    /// マルチキャスト属性 (<see cref="MulticastAttribute"/>) が適用される要素属性。
+    /// マルチキャスト属性を適用するメンバー属性。
     /// </summary>
     [Flags]
-    public enum MulticastAttributes
+    public enum TargetMemberAttributes
     {
         /// <summary>
         /// 未定義。
@@ -75,7 +75,7 @@ namespace SoftCube.Aspects
         NonAbstract = 1 << 9,
 
         /// <summary>
-        /// 任意の抽象性 (抽象メソッド、または非抽象メソッド)。
+        /// 任意の抽象属性 (抽象メソッド、または非抽象メソッド)。
         /// </summary>
         AnyAbstraction = Abstract | NonAbstract,
 
@@ -90,7 +90,7 @@ namespace SoftCube.Aspects
         NonVirtual = 1 << 11,
 
         /// <summary>
-        /// 任意の仮想性 (仮想メソッド、または非仮想メソッド)。
+        /// 任意の仮想属性 (仮想メソッド、または非仮想メソッド)。
         /// </summary>
         AnyVirtuality = Virtual | NonVirtual,
 
@@ -166,109 +166,109 @@ namespace SoftCube.Aspects
     }
 
     /// <summary>
-    /// <see cref="MulticastAttributes"/> の拡張メソッド。
+    /// <see cref="TargetMemberAttributes"/> の拡張メソッド。
     /// </summary>
-    public static class MulticastAttributesExtensions
+    public static class TargetMemberAttributesExtensions
     {
         #region メソッド
 
         /// <summary>
-        /// メソッドにマルチキャスト属性を適用できるか判断します。
+        /// メソッドにマルチキャスト属性を適用するかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
         /// <param name="method">メソッド。</param>
-        /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
-        public static bool CanApply(this MulticastAttributes attributes, MethodDefinition method)
+        /// <returns>メソッドにマルチキャスト属性を適用するか。</returns>
+        public static bool CanApply(this TargetMemberAttributes attributes, MethodDefinition method)
         {
             // 可視属性によりフィルタリングします。
-            if (attributes.HasVisibility())
+            if (attributes.HasAnyVisibility())
             {
-                if (method.IsPrivate && (attributes & MulticastAttributes.Private) == MulticastAttributes.None)
+                if (method.IsPrivate && (attributes & TargetMemberAttributes.Private) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (method.IsFamily && (attributes & MulticastAttributes.Protected) == MulticastAttributes.None)
+                if (method.IsFamily && (attributes & TargetMemberAttributes.Protected) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (method.IsAssembly && (attributes & MulticastAttributes.Internal) == MulticastAttributes.None)
+                if (method.IsAssembly && (attributes & TargetMemberAttributes.Internal) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (method.IsFamilyAndAssembly && (attributes & MulticastAttributes.InternalAndProtected) == MulticastAttributes.None)
+                if (method.IsFamilyAndAssembly && (attributes & TargetMemberAttributes.InternalAndProtected) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (method.IsFamilyOrAssembly && (attributes & MulticastAttributes.InternalOrProtected) == MulticastAttributes.None)
+                if (method.IsFamilyOrAssembly && (attributes & TargetMemberAttributes.InternalOrProtected) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (method.IsPublic && (attributes & MulticastAttributes.Public) == MulticastAttributes.None)
+                if (method.IsPublic && (attributes & TargetMemberAttributes.Public) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
             }
 
             // スコープ属性によりフィルタリングします。
-            if (attributes.HasScope())
+            if (attributes.HasAnyScope())
             {
-                if (method.IsStatic && (attributes & MulticastAttributes.Static) == MulticastAttributes.None)
+                if (method.IsStatic && (attributes & TargetMemberAttributes.Static) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (!method.IsStatic && (attributes & MulticastAttributes.Instance) == MulticastAttributes.None)
+                if (!method.IsStatic && (attributes & TargetMemberAttributes.Instance) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
             }
 
             // 抽象性によりフィルタリングします。
-            if (attributes.HasAbstraction())
+            if (attributes.HasAnyAbstraction())
             {
-                if (method.IsAbstract && (attributes & MulticastAttributes.Abstract) == MulticastAttributes.None)
+                if (method.IsAbstract && (attributes & TargetMemberAttributes.Abstract) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (!method.IsAbstract && (attributes & MulticastAttributes.NonAbstract) == MulticastAttributes.None)
+                if (!method.IsAbstract && (attributes & TargetMemberAttributes.NonAbstract) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
             }
 
             // 仮想性によりフィルタリングします。
-            if (attributes.HasVirtuality())
+            if (attributes.HasAnyVirtuality())
             {
-                if (method.IsVirtual && (attributes & MulticastAttributes.Virtual) == MulticastAttributes.None)
+                if (method.IsVirtual && (attributes & TargetMemberAttributes.Virtual) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (!method.IsVirtual && (attributes & MulticastAttributes.NonVirtual) == MulticastAttributes.None)
+                if (!method.IsVirtual && (attributes & TargetMemberAttributes.NonVirtual) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
             }
 
             // 実装属性によりフィルタリングします。
-            if (attributes.HasImplementation())
+            if (attributes.HasAnyImplementation())
             {
-                if (method.IsManaged && (attributes & MulticastAttributes.Managed) == MulticastAttributes.None)
+                if (method.IsManaged && (attributes & TargetMemberAttributes.Managed) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (!method.IsManaged && (attributes & MulticastAttributes.NonManaged) == MulticastAttributes.None)
+                if (!method.IsManaged && (attributes & TargetMemberAttributes.NonManaged) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
             }
 
             // コード生成属性によりフィルタリングします。
-            if (attributes.HasGeneration())
+            if (attributes.HasAnyGeneration())
             {
-                if (method.IsCompilerControlled && (attributes & MulticastAttributes.CompilerGenerated) == MulticastAttributes.None)
+                if (method.IsCompilerControlled && (attributes & TargetMemberAttributes.CompilerGenerated) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
-                if (!method.IsCompilerControlled && (attributes & MulticastAttributes.UserGenerated) == MulticastAttributes.None)
+                if (!method.IsCompilerControlled && (attributes & TargetMemberAttributes.UserGenerated) == TargetMemberAttributes.None)
                 {
                     return false;
                 }
@@ -278,60 +278,60 @@ namespace SoftCube.Aspects
         }
 
         /// <summary>
-        /// 可視属性が指定されているかを判断します。
+        /// 任意の可視属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>可視属性が指定されているか。</returns>
-        public static bool HasVisibility(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyVisibility) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意の可視属性が指定されているか。</returns>
+        private static bool HasAnyVisibility(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyVisibility) != TargetMemberAttributes.None;
 
         /// <summary>
-        /// スコープ属性が指定されているかを判断します。
+        /// 任意のスコープ属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>スコープ属性が指定されているか。</returns>
-        public static bool HasScope(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyScope) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意のスコープ属性が指定されているか。</returns>
+        private static bool HasAnyScope(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyScope) != TargetMemberAttributes.None;
 
         /// <summary>
-        /// 抽象性が指定されているかを判断します。
+        /// 任意の抽象属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>抽象性が指定されているか。</returns>
-        public static bool HasAbstraction(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyAbstraction) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意の抽象属性が指定されているか。</returns>
+        private static bool HasAnyAbstraction(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyAbstraction) != TargetMemberAttributes.None;
 
         /// <summary>
-        /// 仮想性が指定されているかを判断します。
+        /// 任意の仮想属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>仮想性が指定されているか。</returns>
-        public static bool HasVirtuality(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyVirtuality) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意の仮想属性が指定されているか。</returns>
+        private static bool HasAnyVirtuality(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyVirtuality) != TargetMemberAttributes.None;
 
         /// <summary>
-        /// 実装属性が指定されているかを判断します。
+        /// 任意の実装属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>実装属性が指定されているか。</returns>
-        public static bool HasImplementation(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyImplementation) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意の実装属性が指定されているか。</returns>
+        private static bool HasAnyImplementation(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyImplementation) != TargetMemberAttributes.None;
 
         /// <summary>
-        /// リテラル属性が指定されているかを判断します。
+        /// 任意のリテラル属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>リテラル属性が指定されているか。</returns>
-        public static bool HasLiterality(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyLiterality) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意のリテラル属性が指定されているか。</returns>
+        private static bool HasAnyLiterality(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyLiterality) != TargetMemberAttributes.None;
 
         /// <summary>
-        /// パラメーター属性が指定されているかを判断します。
+        /// 任意のパラメーター属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>パラメーター属性が指定されているか。</returns>
-        public static bool HasParameter(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyParameter) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意のパラメーター属性が指定されているか。</returns>
+        private static bool HasAnyParameter(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyParameter) != TargetMemberAttributes.None;
 
         /// <summary>
-        /// コード生成属性が指定されているかを判断します。
+        /// 任意のコード生成属性が指定されているかを判断します。
         /// </summary>
-        /// <param name="attributes">マルチキャスト属性が適用される要素属性。</param>
-        /// <returns>コード生成属性が指定されているか。</returns>
-        public static bool HasGeneration(this MulticastAttributes attributes) => (attributes & MulticastAttributes.AnyGeneration) != MulticastAttributes.None;
+        /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
+        /// <returns>任意のコード生成属性が指定されているか。</returns>
+        private static bool HasAnyGeneration(this TargetMemberAttributes attributes) => (attributes & TargetMemberAttributes.AnyGeneration) != TargetMemberAttributes.None;
 
         #endregion
     }
