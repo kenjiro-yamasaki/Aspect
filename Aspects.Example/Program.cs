@@ -1,8 +1,5 @@
 ﻿using SoftCube.Logging;
 using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SoftCube.Aspects
 {
@@ -34,7 +31,7 @@ namespace SoftCube.Aspects
             }
         }
 
-        [Trace(TargetElements = TargetElements.Method, TargetMemberAttributes = TargetMemberAttributes.Public, Category = "A")]
+        [Trace(TargetTypes = "SoftCube.*.Program", TargetElements = TargetElements.Method, TargetMemberAttributes = TargetMemberAttributes.Public, Category = "A")]
         public class MyClass
         {
             // This method will have 1 Trace aspect with Category set to A.

@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using System;
+using System.Text.RegularExpressions;
 
 namespace SoftCube.Aspects
 {
@@ -66,7 +67,7 @@ namespace SoftCube.Aspects
         /// ・Namespace.OuterType`1+NestedType`2
         /// ・regex:Namespac.*Nested.*
         /// </remarks>
-        public string AttributeTargetTypes { get; set; }
+        public string TargetTypes { get; set; }
 
         /// <summary>
         /// ターゲットの要素種類。
@@ -106,10 +107,32 @@ namespace SoftCube.Aspects
         /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
         internal bool CanApply(MethodDefinition method)
         {
+            if (!string.IsNullOrEmpty(TargetTypes))
+            {
+                var type = method.DeclaringType;
+                var typeName = type.FullName.Replace("/", "+");
+
+                if (TargetTypes.StartsWith("regex:"))
+                {
+                    if (!Regex.IsMatch(typeName, TargetTypes.Substring("regex:".Length)))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (typeName != TargetTypes)
+                    {
+                        return false;
+                    }
+                }
+            }
+
             if (!TargetElements.CanApply(method))
             {
                 return false;
             }
+
             if (!TargetMemberAttributes.CanApply(method))
             {
                 return false;
