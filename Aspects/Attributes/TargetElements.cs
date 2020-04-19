@@ -151,17 +151,23 @@ namespace SoftCube.Aspects
             // メンバーでフィルタリングします。
             if (elements.HasAnyMember())
             {
-                if (!method.IsStatic && method.IsConstructor && (elements & TargetElements.InstanceConstructor) == TargetElements.None)
+                if (method.IsConstructor)
                 {
-                    return false;
+                    if (!method.IsStatic && (elements & TargetElements.InstanceConstructor) == TargetElements.None)
+                    {
+                        return false;
+                    }
+                    if (method.IsStatic && (elements & TargetElements.StaticConstructor) == TargetElements.None)
+                    {
+                        return false;
+                    }
                 }
-                if (method.IsStatic && method.IsConstructor && (elements & TargetElements.StaticConstructor) == TargetElements.None)
+                else
                 {
-                    return false;
-                }
-                if ((elements & TargetElements.Method) == TargetElements.None)
-                {
-                    return false;
+                    if ((elements & TargetElements.Method) == TargetElements.None)
+                    {
+                        return false;
+                    }
                 }
             }
 
