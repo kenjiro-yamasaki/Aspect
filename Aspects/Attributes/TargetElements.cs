@@ -103,7 +103,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// <see cref="TargetElements"/> の拡張メソッド。
     /// </summary>
-    public static class TargetElementsExtensions
+    internal static class TargetElementsExtensions
     {
         #region メソッド
 
@@ -113,7 +113,7 @@ namespace SoftCube.Aspects
         /// <param name="elements">マルチキャスト属性を適用する要素。</param>
         /// <param name="type">型。</param>
         /// <returns>型にマルチキャスト属性を適用できるか。</returns>
-        public static bool CanApply(this TargetElements elements, TypeDefinition type)
+        internal static bool CanApply(this TargetElements elements, TypeDefinition type)
         {
             if (elements.HasAnyType())
             {
@@ -146,7 +146,7 @@ namespace SoftCube.Aspects
         /// <param name="elements">マルチキャスト属性を適用する要素。</param>
         /// <param name="method">メソッド。</param>
         /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
-        public static bool CanApply(this TargetElements elements, MethodDefinition method)
+        internal static bool CanApply(this TargetElements elements, MethodDefinition method)
         {
             // メンバーでフィルタリングします。
             if (elements.HasAnyMember())

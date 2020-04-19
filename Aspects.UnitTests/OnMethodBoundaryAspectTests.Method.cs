@@ -587,36 +587,61 @@ namespace SoftCube.Aspects.OnMethodBoundaryAspectTests.Method
         }
     }
 
-    [Trace(TargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.マルチキャスト+MyClass", TargetElements = TargetElements.Method, Category = "A")]
-    [Trace(TargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.マルチキャスト+My*", TargetElements = TargetElements.Method, Category = "B")]
     public class マルチキャスト
     {
-        public sealed class Trace : OnMethodBoundaryAspect
+        public class Trace : OnMethodBoundaryAspect
         {
             public string Category { get; set; }
 
-            public override void OnEntry(MethodExecutionArgs args)
+            public override void OnEntry(MethodExecutionArgs args) => Logger.Trace($"{Category}");
+        }
+
+        [Trace(Category = "A", TargetElements = TargetElements.Method, TargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.マルチキャスト+TargetTypes+NonGeneric")]
+        [Trace(Category = "B", TargetElements = TargetElements.Method, TargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.マルチキャスト+TargetTypes+Generic`2")]
+        [Trace(Category = "C", TargetElements = TargetElements.Method, TargetTypes = "*NonGeneric")]
+        [Trace(Category = "D", TargetElements = TargetElements.Method, TargetTypes = "*Generic`2")]
+        [Trace(Category = "E", TargetElements = TargetElements.Method, TargetTypes = "SoftCube*NonGeneric")]
+        [Trace(Category = "F", TargetElements = TargetElements.Method, TargetTypes = "SoftCube*Generic`2")]
+        [Trace(Category = "G", TargetElements = TargetElements.Method, TargetTypes = "SoftCube.Aspects.OnMethodBoundaryAspectTests.Method.*")]
+        [Trace(Category = "H", TargetElements = TargetElements.Method, TargetTypes = @"regex:.*\+NonGeneric$")]
+        [Trace(Category = "I", TargetElements = TargetElements.Method, TargetTypes = @"regex:.*\+Generic`2$")]
+        public class TargetTypes
+        {
+            public class NonGeneric
             {
-                Logger.Trace($"{Category}");
+                public void Method()
+                {
+                }
+            }
+
+            public class Generic<T1, T2>
+            {
+                public void Method()
+                {
+                }
+            }
+
+            [Fact]
+            public void 非ジェネリック型_適用される()
+            {
+                var appender = TestUtility.CreateAppender();
+
+                new NonGeneric().Method();
+
+                Assert.Equal($"A C E G H ", appender.ToString());
+            }
+
+            [Fact]
+            public void ジェネリック型_適用される()
+            {
+                var appender = TestUtility.CreateAppender();
+
+                new Generic<int, int>().Method();
+
+                Assert.Equal($"B D F G I ", appender.ToString());
             }
         }
 
-        public class MyClass
-        {
-            public void Method()
-            {
-            }
-        }
-
-        [Fact]
-        public void TargetTypes_ワイルドカード_適用される()
-        {
-            var appender = TestUtility.CreateAppender();
-
-            new MyClass().Method();
-
-            Assert.Equal($"A B ", appender.ToString());
-        }
 
 
     }

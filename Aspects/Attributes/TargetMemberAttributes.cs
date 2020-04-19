@@ -168,7 +168,7 @@ namespace SoftCube.Aspects
     /// <summary>
     /// <see cref="TargetMemberAttributes"/> の拡張メソッド。
     /// </summary>
-    public static class TargetMemberAttributesExtensions
+    internal static class TargetMemberAttributesExtensions
     {
         #region メソッド
 
@@ -178,7 +178,7 @@ namespace SoftCube.Aspects
         /// <param name="attributes">マルチキャスト属性を適用するメンバー属性。</param>
         /// <param name="method">メソッド。</param>
         /// <returns>メソッドにマルチキャスト属性を適用できるか。</returns>
-        public static bool CanApply(this TargetMemberAttributes attributes, MethodDefinition method)
+        internal static bool CanApply(this TargetMemberAttributes attributes, MethodDefinition method)
         {
             // 可視属性でフィルタリングします。
             if (attributes.HasAnyVisibility())
